@@ -1,0 +1,104 @@
+{
+  "_source": "Auto-synced from database/products — run sync_products.py to refresh",
+  "_instructions": "ONLY show products from this file. Never invent products from training memory.",
+  "catalog": [
+    {
+      "id": "0101",
+      "name": "King size 6ft by 6.5ft bed",
+      "category": "Beds & Bed sets",
+      "price": {
+        "amount": 88000,
+        "currency": "PKR"
+      },
+      "image": "/home/it-admin/wa-lead-gen/database/images/0101.jpg",
+      "link": "https://renovate.pk/product/item-0101/",
+      "availability": "In Stock"
+    },
+    {
+      "id": "0102",
+      "name": "King size 6ft by 6.5ft bed along with 2 side tables",
+      "category": "Beds & Bed sets",
+      "price": {
+        "amount": 120000,
+        "currency": "PKR"
+      },
+      "image": "/home/it-admin/wa-lead-gen/database/images/0102.jpg",
+      "link": "https://renovate.pk/product/item-0102/",
+      "availability": "In Stock"
+    },
+    {
+      "id": "5977",
+      "name": "King size 6ft by 6.5ft bed along with 2 side tables",
+      "category": "Beds & Bed sets",
+      "price": {
+        "amount": 88000,
+        "currency": "PKR"
+      },
+      "image": "/home/it-admin/wa-lead-gen/database/images/5977.jpg",
+      "link": "https://renovate.pk/product/item-5977/",
+      "availability": "In Stock"
+    },
+    {
+      "id": "5476",
+      "name": "King size 6ft by 6.5ft bed along with 2 side tables",
+      "category": "Beds & Bed sets",
+      "price": {
+        "amount": 120000,
+        "currency": "PKR"
+      },
+      "image": "/home/it-admin/wa-lead-gen/database/images/5476.jpg",
+      "link": "https://renovate.pk/product/item-5476/",
+      "availability": "In Stock"
+    },
+    {
+      "id": "5903",
+      "name": "King size 6ft by 6.5ft bed along with 2 side tables",
+      "category": "Beds & Bed sets",
+      "price": {
+        "amount": 120000,
+        "currency": "PKR"
+      },
+      "image": "/home/it-admin/wa-lead-gen/database/images/5903.jpg",
+      "link": "https://renovate.pk/product/item-5903/",
+      "availability": "In Stock"
+    },
+    {
+      "id": "5978",
+      "name": "King size 6ft by 6.5ft bed along with 2 side tables",
+      "category": "Beds & Bed sets",
+      "price": {
+        "amount": 85000,
+        "currency": "PKR"
+      },
+      "image": "/home/it-admin/wa-lead-gen/database/images/5978.jpg",
+      "link": "https://renovate.pk/product/item-5978/",
+      "availability": "In Stock"
+    }
+  ],
+  "faq": [
+    {
+      "question": "Do you offer home delivery?",
+      "answer": "Yes! All products include home delivery across Pakistan. Typically 3–7 days for in-stock items."
+    },
+    {
+      "question": "Do you offer installation?",
+      "answer": "Yes — installation is available. Please mention it when placing your order."
+    },
+    {
+      "question": "What payment methods do you accept?",
+      "answer": "Bank transfer, Easypaisa, JazzCash, and cash on delivery for in-stock items."
+    },
+    {
+      "question": "Do you offer instalment plans?",
+      "answer": "Yes — instalment options are available. Ask our team for details."
+    },
+    {
+      "question": "Can I see the furniture in person?",
+      "answer": "Absolutely! Reply 'visit' or 'showroom' and I'll share directions and opening hours."
+    },
+    {
+      "question": "How do I speak to a real person?",
+      "answer": "Just say 'real person', 'speak to someone', or 'human' — I'll immediately alert our team."
+    }
+  ]
+}
