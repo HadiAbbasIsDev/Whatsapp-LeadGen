@@ -49,15 +49,20 @@ def parse_products(text: str) -> list:
         lines = [l.strip() for l in block.splitlines() if l.strip()]
         entry = {}
         for line in lines:
-            m = re.match(r'^(link|productname|category|price)\s*:?\s*(.+)$', line, re.IGNORECASE)
+            m = re.match(r'^(link|productname|category|price|image|dimensions)\s*:?\s*(.+)$', line, re.IGNORECASE)
             if m:
                 entry[m.group(1).lower()] = m.group(2).strip()
 
         link = entry.get("link", "")
-        id_match = re.search(r'item-(\d+)', link)
-        if not id_match:
-            continue
-        item_id = id_match.group(1)
+        id_match = re.search(r'item-([A-Za-z0-9]+)', link, re.IGNORECASE)
+        if id_match:
+            item_id = id_match.group(1)
+        else:
+            # non 'item-XXXX' permalink: fall back to the URL slug so nothing is dropped
+            slug = re.sub(r'/+$', '', link).split('/')[-1]
+            if not slug:
+                continue
+            item_id = slug
 
         price_raw = entry.get("price", "0").split('.')[0]
         price_clean = re.sub(r'[^\d]', '', price_raw)
@@ -74,9 +79,10 @@ def parse_products(text: str) -> list:
         products.append({
             "id": item_id,
             "name": entry.get("productname", "").strip(),
-            "category": entry.get("category", "").replace("%", "&").strip(),
+            "category": entry.get("category", "").replace("%", "&").strip() or "Furniture",
             "price": {"amount": price_val, "currency": "PKR"},
-            "image": img_path or str((IMG_DIR / f"{item_id}.jpg").resolve()),
+            "dimensions": entry.get("dimensions", "").strip(),
+            "image": img_path or entry.get("image", "").strip() or str((IMG_DIR / f"{item_id}.jpg").resolve()),
             "link": link,
             "availability": "In Stock"
         })
