@@ -14,11 +14,7 @@ import json
 import time
 from datetime import datetime
 
-ADMINS = [
-    "+923110800256",
-    "+923332456988",
-    "+923369381947",
-]
+ADMINS = ["+923362615506"]
 
 ALERTS_FILE = "data/admin_alerts.json"
 

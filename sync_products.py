@@ -68,13 +68,27 @@ def parse_products(text: str) -> list:
         price_clean = re.sub(r'[^\d]', '', price_raw)
         price_val = int(price_clean) if price_clean else 0
 
-        # Find matching image — use absolute path so openclaw can resolve it
+        # Resolve the image to a PORTABLE reference. Order of preference:
+        #   1. A real http(s) URL from the source (works on any machine).
+        #   2. A local image in database/images/<id>.<ext> (resolved on THIS machine).
+        # Never emit a foreign absolute path (e.g. a Windows "D:\..." path copied
+        # from another machine) — those break on the server that runs the bot.
+        src_image = entry.get("image", "").strip()
+        is_url = src_image.lower().startswith(("http://", "https://"))
+        is_foreign_path = ("\\" in src_image) or bool(re.match(r"^[A-Za-z]:", src_image))
+
         img_path = None
-        for ext in ("jpg", "jpeg", "png", "webp"):
-            candidate = IMG_DIR / f"{item_id}.{ext}"
-            if candidate.exists():
-                img_path = str(candidate.resolve())
-                break
+        if is_url:
+            img_path = src_image
+        else:
+            for ext in ("jpg", "jpeg", "png", "webp"):
+                candidate = IMG_DIR / f"{item_id}.{ext}"
+                if candidate.exists():
+                    img_path = str(candidate.resolve())
+                    break
+            # Only trust the source value if it's not a foreign machine path.
+            if not img_path and src_image and not is_foreign_path:
+                img_path = src_image
 
         products.append({
             "id": item_id,
@@ -82,7 +96,7 @@ def parse_products(text: str) -> list:
             "category": entry.get("category", "").replace("%", "&").strip() or "Furniture",
             "price": {"amount": price_val, "currency": "PKR"},
             "dimensions": entry.get("dimensions", "").strip(),
-            "image": img_path or entry.get("image", "").strip() or str((IMG_DIR / f"{item_id}.jpg").resolve()),
+            "image": img_path or str((IMG_DIR / f"{item_id}.jpg").resolve()),
             "link": link,
             "availability": "In Stock"
         })
@@ -105,10 +119,14 @@ def main():
 
     OUT_FILE.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"[sync] {len(catalog)} products written to {OUT_FILE}")
+    missing = 0
     for p in catalog:
-        img_exists = Path(p["image"]).exists()
-        status = "OK" if img_exists else "MISSING IMAGE"
-        print(f"  [{status}] {p['id']} — {p['name']} — PKR {p['price']['amount']:,}")
+        img = p["image"]
+        img_ok = img.lower().startswith(("http://", "https://")) or Path(img).exists()
+        if not img_ok:
+            missing += 1
+            print(f"  [MISSING IMAGE] {p['id']} — {p['name']} — PKR {p['price']['amount']:,}")
+    print(f"[sync] images: {len(catalog) - missing} OK, {missing} missing")
 
 
 if __name__ == "__main__":

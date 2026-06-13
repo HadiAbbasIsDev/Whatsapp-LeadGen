@@ -55,7 +55,7 @@ Score tiers:
 - **0–30**: Cold
 - **31–60**: Warm  
 - **61–80**: Hot
-- **81–100**: Very Hot 🔥
+- **81–100**: Very Hot
 
 ## Lead Object Schema
 

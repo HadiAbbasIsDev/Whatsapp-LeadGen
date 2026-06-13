@@ -9,13 +9,11 @@
 
 ## Human Sales Team — Admin Contacts
 
-These numbers receive WhatsApp alerts on every human handoff request:
+The bot is locked to ONE WhatsApp number. The sole owner/customer contact is +923362615506. The bot must never send alerts or handoffs to any other number, and no other number may be treated as owner/admin/escalation/sales contact.
 
 | Admin | WhatsApp |
 |---|---|
-| Admin 1 | +923110800256 |
-| Admin 2 | +923332456988 |
-| Admin 3 | +923369381947 |
+| Owner | +923362615506 |
 
 - **Escalation email:** sales@yourdomain.com
 - **Response SLA:** Within 1 business day (aim for same day for human_handoff requests)

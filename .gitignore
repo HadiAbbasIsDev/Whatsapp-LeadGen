@@ -2,3 +2,8 @@ openclaw.json
 .env
 testapi.md
 progress/
+workspace/images/cache/
+database/tmp/
+workspace/__pycache__/
+workspace/downloads/
+workspace/images/tmp/

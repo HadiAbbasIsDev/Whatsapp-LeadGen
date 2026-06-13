@@ -7,7 +7,17 @@ When anyone messages your WhatsApp number, **Aria** (the bot) will:
 - Qualify interested prospects
 - Capture leads (name + email) into a local JSON database
 - Remember returning users across sessions (built-in memory engine)
-- Escalate complex queries to your human sales team
+- Escalate complex queries to the owner (+923362615506) — the single registered owner contact
+
+---
+
+## Access & Security
+
+The bot is locked to a single WhatsApp contact: **+923362615506**. This is the ONLY number that can receive alerts, escalations, or administrative messages. Do NOT add other numbers to the allowlist or configuration.
+
+- No other phone number may be treated as owner, admin, escalation, or sales contact.
+- The bot only talks to the customer and must never send messages or alerts to any number other than +923362615506.
+- The legacy numbers +923110800256, +923332456988, and +923369381947 are stale and must NOT be used as owner/admin/escalation/sales/handoff contacts.
 
 ---
 
@@ -139,10 +149,12 @@ To prevent anyone from messaging the bot, switch to allowlist mode in `openclaw.
 channels: {
   whatsapp: {
     dmPolicy: "allowlist",
-    allowFrom: ["+911234567890", "+441234567890"]
+    allowFrom: ["+923362615506"]
   }
 }
 ```
+
+`allowFrom` should ONLY contain the owner: `["+923362615506"]`. Do NOT add other phone numbers.
 
 ---
 

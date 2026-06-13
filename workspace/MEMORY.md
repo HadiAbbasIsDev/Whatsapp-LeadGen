@@ -5,13 +5,19 @@ The agent appends entries here using the format below.
 
 ---
 
+## CRITICAL: Single-Owner Access Control
+
+This bot is locked to ONE WhatsApp customer: +923362615506. No other phone number may be treated as owner/admin/escalation/sales contact. All handoff/escalation/sales notifications go ONLY to +923362615506.
+
+---
+
 ## Business Context
 
 - **Business name:** renovate.pk
 - **Industry:** Furniture retail — beds, bedroom sets, sofas, dining sets, office furniture
 - **Website:** https://renovate.pk
 - **WhatsApp number:** (the number this bot is running on)
-- **Human sales contact:** +923110800256, +923332456988, +923369381947
+- **Human sales contact:** +923362615506
 - **Currency:** PKR (Pakistani Rupees)
 
 ---
