@@ -62,7 +62,7 @@ When showing multiple products (e.g. "show me all beds"):
 When user first asks "what do you have" or "what categories":
 
 ```
-Welcome to Hilius Solution! 🛋️ Here's what we carry:
+Welcome to renovate.pk! 🛋️ Here's what we carry:
 
 🛏️ *Beds & Bedroom Sets*
 🍽️ *Dining & Kitchen*

@@ -85,7 +85,7 @@ def main():
         f"🛋️ *Interested in:* {args.products}\n"
         f"🕐 *Time:* {now}\n\n"
         f"Please follow up as soon as possible.\n"
-        f"— Aria (Hilius Solution Bot)"
+        f"— Aria (renovate.pk Bot)"
     )
 
     print(f"Notifying {len(ADMINS)} admins...")

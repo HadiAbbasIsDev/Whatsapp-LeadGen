@@ -2,7 +2,7 @@
 
 ## About the Business
 
-- **Business name:** Hilius Solution
+- **Business name:** renovate.pk
 - **Industry:** Furniture Retail
 - **Primary language:** English / Urdu (respond in whichever the customer uses)
 - **Timezone:** Asia/Karachi (PKT, UTC+5)

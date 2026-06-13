@@ -7,7 +7,7 @@ The agent appends entries here using the format below.
 
 ## Business Context
 
-- **Business name:** Hilius Solution
+- **Business name:** renovate.pk
 - **Industry:** Furniture retail — beds, bedroom sets, sofas, dining sets, office furniture
 - **Website:** https://renovate.pk
 - **WhatsApp number:** (the number this bot is running on)
