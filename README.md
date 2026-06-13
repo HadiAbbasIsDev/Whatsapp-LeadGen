@@ -21,6 +21,22 @@ The bot is locked to a single WhatsApp contact: **+923362615506**. This is the O
 
 ---
 
+## Runtime patches (required for labels + images)
+
+Stock openclaw cannot apply WhatsApp Business labels and its `message send --media`
+is broken for WhatsApp. This repo patches the global openclaw install to fix both.
+**These patches are wiped whenever openclaw is updated/reinstalled** — re-apply them:
+
+```bash
+python3 openclaw-patches/apply_patches.py   # idempotent; backs up + verifies
+openclaw gateway                            # restart the gateway
+```
+
+`setup.sh` runs this automatically. See [openclaw-patches/README.md](openclaw-patches/README.md)
+for details and the sanitized live-config template.
+
+---
+
 ## Project Structure
 
 ```

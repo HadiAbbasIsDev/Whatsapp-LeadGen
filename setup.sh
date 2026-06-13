@@ -51,7 +51,13 @@ echo "→ Installing WhatsApp channel plugin..."
 openclaw plugins install @openclaw/whatsapp 2>/dev/null || echo "  (already installed or skipping)"
 echo "✓ WhatsApp plugin ready"
 
-# ── 5. Ensure workspace data files exist ─────────────────────
+# ── 5. Apply openclaw runtime patches (labels + reliable images) ──
+echo ""
+echo "→ Applying openclaw runtime patches (labels + image sending)..."
+python3 "$(dirname "$0")/openclaw-patches/apply_patches.py" || \
+  echo "  (patch step skipped/failed — see openclaw-patches/README.md)"
+
+# ── 6. Ensure workspace data files exist ─────────────────────
 LEADS_FILE="$(dirname "$0")/workspace/data/leads.json"
 if [ ! -f "$LEADS_FILE" ]; then
   echo '{"leads":[]}' > "$LEADS_FILE"
