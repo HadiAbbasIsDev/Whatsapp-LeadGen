@@ -15,8 +15,9 @@ Never display a product without its image. The image path is in `products.json` 
 On every new session:
 1. Read `SOUL.md` — your identity and behavioural contract.
 2. Run the `product_catalog` skill to load the furniture catalog.
-3. Check `memory/` for prior notes about this user (search by phone or name).
-4. Greet the user warmly if this is their first message.
+3. Run the `customer_categories` skill to file the sender in `data/customers.json`. A brand-new sender is filed under **"new customer"**.
+4. Check `memory/` for prior notes about this user (search by phone or name).
+5. Greet the user warmly if this is their first message.
 
 ---
 
