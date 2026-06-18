@@ -1,7 +1,8 @@
 	// --- BEGIN openclaw label-probe (read-only) ---
 	try {
 		const __ocLabelDir = __ocHomedir() + "/.openclaw";
-		const __ocLabels = {};
+		let __ocLabels = {};
+		try { __ocLabels = JSON.parse(__ocReadFile(__ocLabelDir + "/whatsapp-labels.json", "utf8")) || {}; } catch {}
 		attachEmitterListener(sock.ev, "labels.edit", (label) => {
 			try {
 				__ocLabels[label.id] = { id: label.id, name: label.name, color: label.color, deleted: !!label.deleted, predefinedId: label.predefinedId ?? null };
@@ -17,7 +18,7 @@
 			(async () => {
 				try {
 					if (typeof sock.resyncAppState === "function") {
-						await sock.resyncAppState(["critical_block", "critical_unblock_low", "regular_high", "regular"], false);
+						await sock.resyncAppState(["critical_block", "critical_unblock_low", "regular_high", "regular"], true);
 						inboundLogger.info({}, "[label-probe] resyncAppState done");
 					} else inboundLogger.warn({}, "[label-probe] resyncAppState missing");
 				} catch (e) { try { inboundLogger.warn({ error: String(e) }, "[label-probe] resync failed"); } catch {} }
@@ -29,7 +30,7 @@
 	// --- END openclaw label-probe ---
 	// --- BEGIN openclaw label-reconciler (customers.json -> WhatsApp labels) ---
 	try {
-		const __ocApplied = new Set();
+		const __ocApplied = new Map();
 		const __ocJidFromPhone = (phone) => {
 			const digits = String(phone || "").replace(/\D/g, "");
 			if (!digits) return null;
@@ -66,17 +67,25 @@
 			if (!list.length) return;
 			const labelMap = __ocLoadLabelMap();
 			if (!Object.keys(labelMap).length) return;
+			const __ocCats = ["new customer", "important", "hot leads"];
 			for (const c of list) {
 				const jid = __ocJidFromPhone(c && c.phone);
 				const cat = c && c.category ? String(c.category).trim().toLowerCase() : "";
 				const labelId = labelMap[cat];
 				if (!jid || !labelId) continue;
-				const key = jid + "#" + labelId;
-				if (__ocApplied.has(key)) continue;
+				if (__ocApplied.get(jid) === cat) continue;
 				try {
 					if (typeof sock.addChatLabel === "function") {
 						await sock.addChatLabel(jid, labelId);
-						__ocApplied.add(key);
+						// Swap: remove the OTHER category labels so the chat reflects only the current category
+						for (const other of __ocCats) {
+							if (other === cat) continue;
+							const otherId = labelMap[other];
+							if (otherId && typeof sock.removeChatLabel === "function") {
+								try { await sock.removeChatLabel(jid, otherId); } catch {}
+							}
+						}
+						__ocApplied.set(jid, cat);
 						inboundLogger.info({ jid, labelId, category: cat }, "[label-reconciler] applied label");
 					}
 				} catch (e) { try { inboundLogger.warn({ jid, labelId, error: String(e) }, "[label-reconciler] apply failed"); } catch {} }
