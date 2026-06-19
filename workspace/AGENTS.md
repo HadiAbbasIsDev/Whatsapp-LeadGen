@@ -27,7 +27,7 @@ The script looks up each product, downloads its image, builds the caption, and s
 On every new session:
 1. Read `SOUL.md` — your identity and behavioural contract.
 2. Run the `product_catalog` skill to load the furniture catalog.
-3. Run the `customer_categories` skill to file the sender in `data/customers.json`. A brand-new sender is filed under **"new customer"**.
+3. Run the `customer_categories` skill to record the sender in the database (via `db.py`). A brand-new sender is filed under **"new customer"**.
 4. Check `memory/` for prior notes about this user (search by phone or name).
 5. Greet the user warmly if this is their first message.
 
@@ -109,6 +109,5 @@ Do NOT delay or ask unnecessary questions before triggering the handoff.
 ## Tool Notes
 
 - File reads: use built-in file-read tool with paths relative to this workspace.
-- Lead writes: always use the `lead_capture` skill — never write to `leads.json` directly.
+- Customer & lead data: the source of truth is the SQLite DB (`data/leadgen.db`), written only via `db.py` (the `customer_categories` and `lead_capture` skills). Never edit `customers.json`/`leads.json` by hand — `customers.json` is an auto-generated mirror for the label sync.
 - Admin alerts: always use the `human_handoff` skill for human escalation.
-- Score refresh: after every lead save, run `python3 ./update_lead_scores.py`.

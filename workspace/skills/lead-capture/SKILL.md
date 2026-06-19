@@ -26,13 +26,27 @@ Optional but valuable:
 
 ## How to Save a Lead
 
-1. Read the current `./data/leads.json` file.
-2. Compute the **lead score** using the scoring rules below.
-3. Build a new lead object following the schema below.
-4. Append it to the `leads` array (or update if phone already exists).
-5. Write the updated JSON back to `./data/leads.json`.
-6. Update the lead scores sheet — run: `python3 ./update_lead_scores.py` using the shell tool.
-7. Append a summary note to `MEMORY.md` under "User Notes".
+Leads are stored in the **SQLite database** (`./data/leadgen.db`) via `db.py`.
+**Never write `./data/leads.json` directly** — it is legacy/unsafe under concurrency.
+
+1. Compute the **lead score** and **tier** using the rules below.
+2. Save the lead with one command (it also updates the customer record + lead score):
+
+```
+python3 /home/it-admin/wa-lead-gen/workspace/db.py add-lead \
+  --phone "<sender_e164>" \
+  --name "<name or skip>" \
+  --email "<email or skip>" \
+  --products "<comma-separated product names, e.g. King bed,Side table>" \
+  --pain "<pain point or skip>" \
+  --intent "<trial|demo_request|human_handoff|general_interest>" \
+  --score <0-100> \
+  --tier "<Cold|Warm|Hot|Very Hot>"
+```
+
+3. If the lead is high-intent, also move them up a category, e.g.:
+   `python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender_e164>" --category "hot leads"`
+4. Append a short summary note to `MEMORY.md` under "User Notes".
 
 ## Lead Score Calculation
 
@@ -81,7 +95,6 @@ Score tiers:
 
 ## After Saving
 
-- Run `python3 ./update_lead_scores.py` to refresh the Excel sheet.
 - Confirm to the user their details have been noted.
 - Give realistic expectation: "Our team will be in touch within 1 business day."
 - Continue the conversation naturally.

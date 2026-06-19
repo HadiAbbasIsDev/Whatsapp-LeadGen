@@ -7,6 +7,7 @@ Type=simple
 User=it-admin
 WorkingDirectory=/home/it-admin/wa-lead-gen
 Environment=PATH=/usr/local/node-v22.21.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=OPENCLAW_AUTO_UPDATE=0
 # Optionally pin the admin password instead of the generated one:
 # Environment=ADMIN_PASS=your-strong-password
 ExecStart=/usr/bin/python3 /home/it-admin/wa-lead-gen/admin/app.py

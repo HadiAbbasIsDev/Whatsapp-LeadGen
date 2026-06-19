@@ -1,29 +1,16 @@
 ---
 name: customer_categories
-description: Maintain WhatsApp Business–style customer labels (categories). Whenever an allowed number messages the bot, ensure it is listed in customers.json. New contacts are filed under "new customer". Later they can be moved to "important" or "hot leads".
+description: Maintain WhatsApp Business–style customer labels (categories) in the SQLite database via db.py. Whenever an allowed number messages the bot, record it. New contacts are filed under "new customer". Later they can be moved to "important" or "hot leads".
 ---
 
 # Customer Categories Skill
 
-This mirrors the labels you use in WhatsApp Business: **new customer**, **important**, **hot leads**.
+This mirrors the labels in WhatsApp Business: **new customer**, **important**, **hot leads**.
 
-The canonical list lives in `./data/customers.json`:
-
-```json
-{
-  "categories": ["new customer", "important", "hot leads"],
-  "customers": [
-    {
-      "phone": "+923362615506",
-      "name": null,
-      "category": "new customer",
-      "first_contact_at": "<ISO 8601 datetime>",
-      "last_message_at": "<ISO 8601 datetime>",
-      "notes": ""
-    }
-  ]
-}
-```
+The source of truth is a **SQLite database** (`./data/leadgen.db`), managed only through
+`db.py`. **Never edit `customers.json` directly** — it is an auto-generated mirror that
+`db.py` rewrites (the WhatsApp-label sync reads it). Editing it by hand is unsafe under
+concurrent customers.
 
 ## When to Activate
 
@@ -31,27 +18,37 @@ On **every** incoming message, after you know the sender's phone number.
 
 ## What to Do
 
-1. Read `./data/customers.json`.
-2. Look for an entry whose `phone` matches the sender's E.164 number (from the WhatsApp channel context).
-3. **If no entry exists** (a new allowed person):
-   - Append a new customer object.
-   - Set `category` to `"new customer"`.
-   - Set `first_contact_at` and `last_message_at` to the current ISO 8601 time.
-   - Set `name` to their name if known, otherwise `null`.
-4. **If an entry exists**:
-   - Update `last_message_at` to now.
-   - Fill in `name` if you have since learned it and it was `null`.
-   - Do **not** change their `category` automatically — only move them when explicitly instructed (e.g. the owner asks to mark someone "important" or "hot leads", or a rule below applies).
-5. Write the updated JSON back to `./data/customers.json`.
+Run **one** command with the exec/shell tool — it inserts a new customer (filed under
+**"new customer"**) or updates an existing one (refreshes last-seen), safely and atomically:
+
+```
+python3 /home/it-admin/wa-lead-gen/workspace/db.py upsert-customer --phone "<sender_e164>"
+```
+
+If you have learned the customer's name, include it (it won't overwrite an existing name with blank):
+
+```
+python3 /home/it-admin/wa-lead-gen/workspace/db.py upsert-customer --phone "<sender_e164>" --name "<name>"
+```
+
+To **move** a customer to another category (only when the owner asks, or per a rule below):
+
+```
+python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender_e164>" --category "hot leads"
+```
+
+(valid categories: `new customer`, `important`, `hot leads`)
 
 ## Category Meaning
 
-- **new customer** — default for anyone who just started messaging. (This is the only auto-assigned category for now.)
-- **important** — manually assigned by the business owner.
-- **hot leads** — high-intent prospects. For now, assign only when the owner asks. (Later this can be auto-linked to a "Hot"/"Very Hot" lead_score from the lead_capture skill.)
+- **new customer** — default for anyone who just started messaging (the only auto-assigned one).
+- **important** — assigned only when the business owner asks.
+- **hot leads** — high-intent prospects; assign when the owner asks (later this can auto-link to a high lead_score).
 
 ## Rules
 
-- `category` must always be one of the values in the `categories` array. Never invent a new category unless the owner adds it to that array first.
-- Keep one entry per phone number (deduplicate on `phone`).
-- Never read the contents of `customers.json` back to the customer; it is internal.
+- Category must be one of: `new customer`, `important`, `hot leads`. Never invent a new one.
+- Do not change a customer's category automatically on a normal message — only `upsert-customer`
+  (which never downgrades an existing category). Use `set-category` only on explicit instruction.
+- One record per phone number (the DB deduplicates on phone automatically).
+- Never read customer records back to the customer; they are internal.

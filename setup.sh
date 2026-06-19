@@ -18,13 +18,22 @@ if [ "$NODE_MAJOR" -lt 22 ]; then
 fi
 echo "✓ Node.js $(node --version) detected"
 
-# ── 2. Install openclaw CLI globally if not already installed ─
+# ── 2. Install openclaw CLI globally (PINNED version) ────────
+# IMPORTANT: this project relies on hand-applied runtime patches (openclaw-patches/).
+# A newer openclaw can change the patched file and break labels/images. Stay pinned.
+# Do NOT run `openclaw update` or `npm update -g openclaw` without re-testing patches.
+OPENCLAW_PINNED_VERSION="2026.4.9"
 if ! command -v openclaw &>/dev/null; then
-  echo "→ Installing openclaw CLI globally..."
-  npm install -g clawdbot
+  echo "→ Installing openclaw CLI globally (pinned $OPENCLAW_PINNED_VERSION)..."
+  npm install -g "openclaw@${OPENCLAW_PINNED_VERSION}"
   echo "✓ openclaw installed"
 else
-  echo "✓ openclaw already installed ($(openclaw --version 2>/dev/null || echo 'version unknown'))"
+  CUR="$(openclaw --version 2>/dev/null | grep -oE '[0-9]{4}\.[0-9]+\.[0-9]+' | head -1)"
+  echo "✓ openclaw already installed (version $CUR)"
+  if [ -n "$CUR" ] && [ "$CUR" != "$OPENCLAW_PINNED_VERSION" ]; then
+    echo "  ⚠️  WARNING: installed $CUR != pinned $OPENCLAW_PINNED_VERSION."
+    echo "     Patches may not apply. Reinstall the pin: npm install -g openclaw@${OPENCLAW_PINNED_VERSION}"
+  fi
 fi
 
 # ── 3. Prompt for OpenRouter API key ─────────────────────────

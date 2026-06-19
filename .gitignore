@@ -9,3 +9,14 @@ workspace/downloads/
 workspace/images/tmp/
 admin/admin_password.txt
 admin/__pycache__/
+# data / PII (generated or sensitive — never commit)
+workspace/data/leadgen.db
+workspace/data/leadgen.db-wal
+workspace/data/leadgen.db-shm
+workspace/data/leadgen.db.tmp.*
+workspace/data/customers.json
+workspace/data/customers.json.tmp.*
+workspace/data/leads.json
+workspace/data/admin_alerts.json
+workspace/data/lead_scores.xlsx
+wa-lead-gen-backups/

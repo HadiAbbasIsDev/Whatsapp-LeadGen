@@ -18,6 +18,7 @@ import json
 import os
 import re
 import secrets
+import sqlite3
 import subprocess
 import time
 from functools import wraps
@@ -28,6 +29,8 @@ from flask import Flask, Response, jsonify, request
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GATEWAY_LOG = os.path.join(REPO, "progress", "gateway.log")
 CUSTOMERS_FILE = os.path.join(REPO, "workspace", "data", "customers.json")
+DB_FILE = os.path.join(REPO, "workspace", "data", "leadgen.db")
+CATEGORIES = ["new customer", "important", "hot leads"]
 PATCHER = os.path.join(REPO, "openclaw-patches", "apply_patches.py")
 NODE_BIN = "/usr/local/node-v22.21.1/bin"
 PASSWORD_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "admin_password.txt")
@@ -132,6 +135,7 @@ def start_gateway():
         return {"ok": True, "message": "Already running"}
     env = os.environ.copy()
     env["PATH"] = NODE_BIN + ":" + env.get("PATH", "")
+    env["OPENCLAW_AUTO_UPDATE"] = "0"  # never auto-update (would wipe our patches)
     # ensure patches are applied (idempotent) before launch
     try:
         subprocess.run(["python3", PATCHER], cwd=REPO, env=env, capture_output=True, text=True, timeout=60)
@@ -178,20 +182,32 @@ def _alive(pid):
 
 
 # ---- customer data ---------------------------------------------------
-def load_customers():
-    try:
-        d = json.load(open(CUSTOMERS_FILE))
-    except Exception:
-        return {"categories": [], "customers": []}
-    cats = d.get("categories", [])
-    custs = d.get("customers", [])
-    counts = {c: 0 for c in cats}
+def _tally(custs):
+    counts = {c: 0 for c in CATEGORIES}
     for c in custs:
-        cat = (c.get("category") or "").strip().lower()
-        for k in counts:
-            if k.lower() == cat:
-                counts[k] += 1
-    return {"categories": cats, "counts": counts, "customers": custs, "total": len(custs)}
+        k = (c.get("category") or "").strip().lower()
+        if k in counts:
+            counts[k] += 1
+    return {"categories": CATEGORIES, "counts": counts, "customers": custs, "total": len(custs)}
+
+
+def load_customers():
+    # Source of truth is the SQLite DB (read-only). Fall back to the JSON mirror.
+    try:
+        conn = sqlite3.connect(f"file:{DB_FILE}?mode=ro", uri=True, timeout=5)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT phone, name, email, category, lead_score, status, first_contact_at, last_message_at "
+            "FROM customers ORDER BY last_message_at DESC"
+        ).fetchall()
+        conn.close()
+        return _tally([dict(r) for r in rows])
+    except Exception:
+        try:
+            d = json.load(open(CUSTOMERS_FILE))
+            return _tally(d.get("customers", []))
+        except Exception:
+            return _tally([])
 
 
 # ---- routes ----------------------------------------------------------
