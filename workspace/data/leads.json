@@ -1,3 +1,21 @@
 {
-  "leads": []
+  "leads": [
+    {
+      "id": "LEAD-1750253100000",
+      "captured_at": "2026-06-18T07:25:00+05:00",
+      "channel": "whatsapp",
+      "phone": "+923362615506",
+      "name": "Hadi",
+      "email": "xyz@gmail.com",
+      "products_of_interest": [
+        { "id": "5978", "name": "King size 6ft by 6.5ft bed along with 2 side tables", "price_pkr": 85000 }
+      ],
+      "pain_point": "",
+      "intent": "general_interest",
+      "notes": "Wants to buy item 5978. King size bed with side tables at 85k.",
+      "lead_score": 50,
+      "score_tier": "Warm",
+      "status": "new"
+    }
+  ]
 }

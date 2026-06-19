@@ -24,6 +24,11 @@ This bot is locked to ONE WhatsApp customer: +923362615506. No other phone numbe
 
 ## User Notes
 
+### +923362615506 | Hadi | 2026-06-18
+- Interested in: King size 6ft by 6.5ft bed with 2 side tables (item 5978, PKR 85,000)
+- Email: xyz@gmail.com
+- Status: lead saved (Warm, score 50)
+
 <!-- The agent will append entries like this:
 ### +92XXXXXXXXXX | Customer Name | 2026-04-18
 - Interested in: King size bed (item-0101)
