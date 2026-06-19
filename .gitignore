@@ -7,3 +7,5 @@ database/tmp/
 workspace/__pycache__/
 workspace/downloads/
 workspace/images/tmp/
+admin/admin_password.txt
+admin/__pycache__/
