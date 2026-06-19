@@ -1,0 +1,18 @@
+services:
+  bot:
+    build: .
+    image: wa-lead-gen:latest
+    container_name: wa-lead-gen
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8088:8088"          # admin dashboard (gateway control port 18789 stays internal)
+    volumes:
+      - openclaw-data:/home/it-admin/.openclaw                       # WhatsApp creds, config, labels
+      - db-data:/home/it-admin/wa-lead-gen/workspace/data            # SQLite DB + catalog + leads
+      - backups:/home/it-admin/wa-lead-gen-backups                   # backups (run scripts/backup.sh)
+
+volumes:
+  openclaw-data:
+  db-data:
+  backups:

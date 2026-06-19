@@ -1,0 +1,29 @@
+# VCS / local
+.git
+.gitignore
+
+# secrets & local-only
+.env
+testapi.md
+admin/admin_password.txt
+
+# local progress / large backups (recreated in-container)
+progress/
+
+# generated / ephemeral data (lives in volumes at runtime)
+workspace/data/leadgen.db
+workspace/data/leadgen.db-wal
+workspace/data/leadgen.db-shm
+workspace/data/customers.json
+workspace/data/leads.json
+workspace/data/admin_alerts.json
+workspace/data/lead_scores.xlsx
+workspace/images/cache
+workspace/images/tmp
+workspace/downloads
+database/tmp
+
+# python / node cruft
+**/__pycache__
+*.pyc
+node_modules

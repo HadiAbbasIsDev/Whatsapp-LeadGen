@@ -33,6 +33,10 @@ DB_FILE = os.path.join(REPO, "workspace", "data", "leadgen.db")
 CATEGORIES = ["new customer", "important", "hot leads"]
 PATCHER = os.path.join(REPO, "openclaw-patches", "apply_patches.py")
 NODE_BIN = "/usr/local/node-v22.21.1/bin"
+# When running under supervisor (Docker), drive the gateway via supervisorctl
+# instead of spawning/killing it directly.
+SUPERVISOR_NAME = os.environ.get("GATEWAY_SUPERVISOR")  # e.g. "gateway"
+SUPERVISOR_CONF = os.environ.get("SUPERVISOR_CONF", "")
 PASSWORD_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "admin_password.txt")
 HOST = os.environ.get("ADMIN_HOST", "0.0.0.0")
 PORT = int(os.environ.get("ADMIN_PORT", "8088"))
@@ -130,9 +134,24 @@ def gateway_status():
     }
 
 
+def _supervisorctl(action):
+    cmd = ["supervisorctl"]
+    if SUPERVISOR_CONF:
+        cmd += ["-c", SUPERVISOR_CONF]
+    cmd += [action, SUPERVISOR_NAME]
+    return subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+
 def start_gateway():
     if is_running():
         return {"ok": True, "message": "Already running"}
+    if SUPERVISOR_NAME:
+        _supervisorctl("start")
+        for _ in range(20):
+            if is_running():
+                break
+            time.sleep(0.5)
+        return {"ok": is_running(), "message": "Starting…"}
     env = os.environ.copy()
     env["PATH"] = NODE_BIN + ":" + env.get("PATH", "")
     env["OPENCLAW_AUTO_UPDATE"] = "0"  # never auto-update (would wipe our patches)
@@ -157,6 +176,10 @@ def start_gateway():
 
 
 def stop_gateway():
+    if SUPERVISOR_NAME:
+        _supervisorctl("stop")
+        time.sleep(2)
+        return {"ok": not is_running(), "message": "Stopped"}
     pids = gateway_pids()
     # also catch the parent launcher
     try:

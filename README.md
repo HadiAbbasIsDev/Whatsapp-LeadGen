@@ -35,6 +35,43 @@ openclaw gateway                            # restart the gateway
 `setup.sh` runs this automatically. See [openclaw-patches/README.md](openclaw-patches/README.md)
 for details and the sanitized live-config template.
 
+> **Using Docker?** The patches are **baked into the image at build time** (and openclaw
+> is pinned), so they're permanent — you don't run this manually. See below.
+
+---
+
+## Run with Docker (recommended)
+
+The whole bot runs in one container — openclaw (pinned + pre-patched), the SQLite
+data store, and the admin dashboard, managed by supervisor.
+
+```bash
+git clone <this-repo> && cd wa-lead-gen
+cp .env.example .env          # then edit .env: DEEPSEEK_API_KEY, ALLOWED_NUMBER, ADMIN_PASS
+docker compose up -d --build
+```
+
+Then **link WhatsApp once** (scan the QR with the phone that will run the bot):
+
+```bash
+docker compose exec bot openclaw channels login --channel whatsapp
+docker compose restart        # pick up the linked session
+```
+
+- **Admin dashboard:** http://localhost:8088 (login `admin` / your `ADMIN_PASS`) —
+  Start/Stop the bot, see status, monitor customers by label.
+- **Logs:** `docker compose logs -f` (dashboard) · `docker compose exec bot tail -f progress/gateway.log` (gateway).
+- **Data persists** in named volumes (`openclaw-data` = WhatsApp creds/config/labels,
+  `db-data` = SQLite + catalog, `backups`). Container restarts keep your session and data.
+
+**Notes & limits**
+- Each deployment links its **own** WhatsApp number (a linked session can't be shared)
+  and uses its **own** API keys in `.env`.
+- The gateway auto-starts with the container; the dashboard's kill-switch still works
+  (it drives supervisor).
+- `.env` is gitignored — never commit your keys.
+- To back up: `docker compose exec bot bash scripts/backup.sh` (writes to the `backups` volume).
+
 ---
 
 ## Project Structure
