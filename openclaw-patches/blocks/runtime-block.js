@@ -99,7 +99,10 @@
 	try {
 		const __ocQueueFile = __ocHomedir() + "/.openclaw/wa-media-queue.jsonl";
 		const __ocDoneFile = __ocHomedir() + "/.openclaw/wa-media-done.jsonl";
+		// Start at the END of any existing queue so we never re-send jobs from
+		// previous sessions on startup — only process jobs appended from now on.
 		let __ocQOffset = 0;
+		try { __ocQOffset = __ocReadFile(__ocQueueFile, "utf8").length; } catch {}
 		const __ocProcessQueue = async () => {
 			let content;
 			try { content = __ocReadFile(__ocQueueFile, "utf8"); } catch { return; }
