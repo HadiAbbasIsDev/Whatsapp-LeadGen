@@ -33,7 +33,10 @@ DB_PATH = os.path.join(DATA, "leadgen.db")
 CUSTOMERS_JSON = os.path.join(DATA, "customers.json")
 LEADS_JSON = os.path.join(DATA, "leads.json")
 
-CATEGORIES = ["new customer", "important", "hot leads"]
+# Status categories (mirror the WhatsApp Business "Lists" from the lead-gen SOP).
+CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complains"]
+# Human-owner lists — a parallel labelling dimension (a chat can be e.g. "hot leads" AND "ahsan").
+OWNERS = ["ahsan", "ahmed", "imran", "rafay"]
 PKT = timezone(timedelta(hours=5))  # Pakistan time, matches existing timestamps
 
 
@@ -51,6 +54,25 @@ def connect():
     return conn
 
 
+# SOP columns added on top of the original customers table. Kept in one place so the
+# migration (existing DBs) and the CREATE TABLE (fresh DBs) can't drift apart.
+NEW_CUSTOMER_COLUMNS = {
+    "owner": "TEXT",                       # ahsan/ahmed/imran/rafay or NULL
+    "human_owned": "INTEGER DEFAULT 0",    # 1 = a human took over; the bot stays silent
+    "followup_stage": "INTEGER DEFAULT 0", # 0..3 weekly follow-ups before junk
+    "next_followup_at": "TEXT",            # ISO time the next follow-up is due
+}
+
+
+def migrate(conn):
+    """Idempotently add the SOP columns to an existing customers table."""
+    existing = {r["name"] for r in conn.execute("PRAGMA table_info(customers)").fetchall()}
+    for col, decl in NEW_CUSTOMER_COLUMNS.items():
+        if col not in existing:
+            conn.execute(f"ALTER TABLE customers ADD COLUMN {col} {decl}")
+    conn.commit()
+
+
 def init_schema(conn):
     conn.executescript(
         """
@@ -61,6 +83,10 @@ def init_schema(conn):
             category         TEXT DEFAULT 'new customer',
             lead_score       INTEGER,
             status           TEXT,
+            owner            TEXT,
+            human_owned      INTEGER DEFAULT 0,
+            followup_stage   INTEGER DEFAULT 0,
+            next_followup_at TEXT,
             first_contact_at TEXT,
             last_message_at  TEXT,
             notes            TEXT,
@@ -80,7 +106,13 @@ def init_schema(conn):
             status               TEXT,
             notes                TEXT
         );
+        """
+    )
+    migrate(conn)  # add SOP columns to a pre-existing customers table BEFORE indexing them
+    conn.executescript(
+        """
         CREATE INDEX IF NOT EXISTS idx_customers_category ON customers(category);
+        CREATE INDEX IF NOT EXISTS idx_customers_followup ON customers(next_followup_at);
         CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads(phone);
         """
     )
@@ -95,15 +127,21 @@ def norm_category(cat):
 def export_customers(conn):
     """Write customers.json atomically so the label reconciler stays in sync."""
     rows = conn.execute(
-        "SELECT phone, name, category, first_contact_at, last_message_at, notes FROM customers ORDER BY last_message_at DESC"
+        "SELECT phone, name, category, owner, human_owned, followup_stage, next_followup_at, "
+        "first_contact_at, last_message_at, notes FROM customers ORDER BY last_message_at DESC"
     ).fetchall()
     out = {
         "categories": CATEGORIES,
+        "owners": OWNERS,
         "customers": [
             {
                 "phone": r["phone"],
                 "name": r["name"],
                 "category": r["category"] or "new customer",
+                "owner": r["owner"],
+                "human_owned": bool(r["human_owned"]),
+                "followup_stage": r["followup_stage"] or 0,
+                "next_followup_at": r["next_followup_at"],
                 "first_contact_at": r["first_contact_at"],
                 "last_message_at": r["last_message_at"],
                 "notes": r["notes"] or "",
@@ -149,6 +187,72 @@ def set_category(conn, phone, category):
 
 def touch(conn, phone):
     upsert_customer(conn, phone)
+
+
+# ---- SOP operations (owner routing, human handoff, follow-up timers) -------
+def set_owner(conn, phone, owner):
+    """Assign a chat to a human-owner list (ahsan/ahmed/imran/rafay), or clear with 'none'."""
+    o = (owner or "").strip().lower()
+    if o in ("", "none", "null"):
+        o = None
+    elif o not in OWNERS:
+        sys.exit(f"Invalid owner '{owner}'. Must be one of: {OWNERS} (or none)")
+    upsert_customer(conn, phone)
+    # assigning an owner implies a human took over; clearing it leaves human_owned untouched
+    conn.execute(
+        "UPDATE customers SET owner=?, human_owned=CASE WHEN ? IS NULL THEN human_owned ELSE 1 END, updated_at=? WHERE phone=?",
+        (o, o, now_iso(), phone),
+    )
+    conn.commit()
+    export_customers(conn)
+
+
+def set_human_owned(conn, phone, value):
+    """Pause/resume the bot for a chat. 1 = a human owns it (bot stays silent)."""
+    val = 1 if str(value).strip().lower() in ("1", "true", "yes", "on") else 0
+    upsert_customer(conn, phone)
+    conn.execute("UPDATE customers SET human_owned=?, updated_at=? WHERE phone=?", (val, now_iso(), phone))
+    conn.commit()
+    export_customers(conn)
+
+
+def schedule_followup(conn, phone, days, stage=None):
+    """Set the next follow-up time (now + days) and bump the stage. Driven by followup_scheduler.py."""
+    upsert_customer(conn, phone)
+    nxt = (datetime.now(PKT) + timedelta(days=float(days))).isoformat(timespec="seconds")
+    if stage is None:
+        conn.execute(
+            "UPDATE customers SET next_followup_at=?, followup_stage=COALESCE(followup_stage,0)+1, updated_at=? WHERE phone=?",
+            (nxt, now_iso(), phone),
+        )
+    else:
+        conn.execute(
+            "UPDATE customers SET next_followup_at=?, followup_stage=?, updated_at=? WHERE phone=?",
+            (nxt, int(stage), now_iso(), phone),
+        )
+    conn.commit()
+    export_customers(conn)
+
+
+def clear_followup(conn, phone):
+    """Stop the follow-up cycle (e.g. the customer replied)."""
+    upsert_customer(conn, phone)
+    conn.execute(
+        "UPDATE customers SET next_followup_at=NULL, followup_stage=0, updated_at=? WHERE phone=?",
+        (now_iso(), phone),
+    )
+    conn.commit()
+    export_customers(conn)
+
+
+def due_followups(conn):
+    """Print customers whose follow-up is due (next_followup_at <= now). Consumed by followup_scheduler.py."""
+    rows = conn.execute(
+        "SELECT phone, name, category, owner, human_owned, followup_stage, next_followup_at, last_message_at "
+        "FROM customers WHERE next_followup_at IS NOT NULL AND next_followup_at <= ? ORDER BY next_followup_at",
+        (now_iso(),),
+    ).fetchall()
+    print(json.dumps([dict(r) for r in rows], indent=2, ensure_ascii=False))
 
 
 def add_lead(conn, phone, name=None, email=None, products=None, pain=None, intent=None, score=None, tier=None, notes=None, status="new"):
@@ -252,6 +356,12 @@ def main():
     p = sub.add_parser("touch"); p.add_argument("--phone", required=True)
     p = sub.add_parser("list-customers"); p.add_argument("--category")
 
+    p = sub.add_parser("set-owner"); p.add_argument("--phone", required=True); p.add_argument("--owner", required=True)
+    p = sub.add_parser("set-human-owned"); p.add_argument("--phone", required=True); p.add_argument("--value", required=True)
+    p = sub.add_parser("schedule-followup"); p.add_argument("--phone", required=True); p.add_argument("--days", required=True); p.add_argument("--stage")
+    p = sub.add_parser("clear-followup"); p.add_argument("--phone", required=True)
+    sub.add_parser("due-followups")
+
     p = sub.add_parser("add-lead"); p.add_argument("--phone", required=True)
     for opt in ("name", "email", "products", "pain", "intent", "tier", "notes", "status"):
         p.add_argument("--" + opt)
@@ -293,6 +403,16 @@ def dispatch(conn, args):
         counts(conn)
     elif args.cmd == "list-customers":
         list_customers(conn, args.category)
+    elif args.cmd == "set-owner":
+        set_owner(conn, args.phone, args.owner); print(json.dumps({"ok": True}))
+    elif args.cmd == "set-human-owned":
+        set_human_owned(conn, args.phone, args.value); print(json.dumps({"ok": True}))
+    elif args.cmd == "schedule-followup":
+        schedule_followup(conn, args.phone, args.days, args.stage); print(json.dumps({"ok": True}))
+    elif args.cmd == "clear-followup":
+        clear_followup(conn, args.phone); print(json.dumps({"ok": True}))
+    elif args.cmd == "due-followups":
+        due_followups(conn)
     elif args.cmd == "export-customers":
         export_customers(conn); print(json.dumps({"ok": True}))
 

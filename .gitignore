@@ -20,3 +20,4 @@ workspace/data/leads.json
 workspace/data/admin_alerts.json
 workspace/data/lead_scores.xlsx
 wa-lead-gen-backups/
+workspace/data/outbox.jsonl

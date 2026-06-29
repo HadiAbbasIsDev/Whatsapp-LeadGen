@@ -1,0 +1,4 @@
+# Force LF so Windows clones do not break bash shebangs / python (the CRLF crash).
+*.sh text eol=lf
+*.py text eol=lf
+docker/entrypoint.sh text eol=lf
