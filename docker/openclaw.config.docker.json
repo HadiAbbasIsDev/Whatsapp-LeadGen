@@ -123,25 +123,14 @@
       "whatsapp": {
         "enabled": true
       },
+      "kapso-whatsapp": {
+        "enabled": true
+      },
       "openrouter": {
         "enabled": true
       },
       "deepseek": {
         "enabled": true
-      }
-    },
-    "load": {
-      "paths": [
-        "/usr/local/lib/node_modules/openclaw/dist/extensions/whatsapp"
-      ]
-    },
-    "installs": {
-      "whatsapp": {
-        "source": "path",
-        "spec": "@openclaw/whatsapp",
-        "sourcePath": "/usr/local/lib/node_modules/openclaw/dist/extensions/whatsapp",
-        "installPath": "/usr/local/lib/node_modules/openclaw/dist/extensions/whatsapp",
-        "installedAt": "2026-04-18T12:28:32.128Z"
       }
     }
   },
