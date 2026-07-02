@@ -11,6 +11,7 @@ CLI (used by the agent's skills):
   python3 db.py init
   python3 db.py upsert-customer --phone +923... [--name N] [--email E] [--category C] [--notes ...]
   python3 db.py set-category --phone +923... --category "hot leads"
+  python3 db.py set-cadence-status --phone +923... --cadence-status "followup"
   python3 db.py touch --phone +923...
   python3 db.py add-lead --phone +923... [--name N] [--email E] [--products "a,b"] \
                          [--pain ...] [--intent trial] [--score 60] [--tier Hot] [--notes ...]
@@ -33,7 +34,7 @@ DB_PATH = os.path.join(DATA, "leadgen.db")
 CUSTOMERS_JSON = os.path.join(DATA, "customers.json")
 LEADS_JSON = os.path.join(DATA, "leads.json")
 
-CATEGORIES = ["new customer", "important", "hot leads"]
+CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]
 PKT = timezone(timedelta(hours=5))  # Pakistan time, matches existing timestamps
 
 
@@ -59,6 +60,8 @@ def init_schema(conn):
             name             TEXT,
             email            TEXT,
             category         TEXT DEFAULT 'new customer',
+            previous_owner   TEXT,
+            cadence_status   TEXT,
             lead_score       INTEGER,
             status           TEXT,
             first_contact_at TEXT,
@@ -84,12 +87,33 @@ def init_schema(conn):
         CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads(phone);
         """
     )
+    # Add cadence_status and previous_owner columns to existing tables (safe if already present)
+    try:
+        conn.execute("ALTER TABLE customers ADD COLUMN cadence_status TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE customers ADD COLUMN previous_owner TEXT")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
 
 
 def norm_category(cat):
     c = (cat or "").strip().lower()
     return c if c in CATEGORIES else None
+
+
+CADENCE_STATUSES = [None, "followup", "junk"]
+
+
+def norm_cadence_status(s):
+    v = (s or "").strip().lower()
+    if v in ("", "none", "null"):
+        return None
+    if v in ("followup", "junk"):
+        return v
+    return None  # invalid → treat as clear
 
 
 def export_customers(conn):
@@ -118,33 +142,73 @@ def export_customers(conn):
 
 
 # ---- operations ------------------------------------------------------
-def upsert_customer(conn, phone, name=None, email=None, category=None, notes=None, status=None):
-    # Atomic UPSERT — no check-then-insert race even with concurrent writers on the same phone.
-    cat = norm_category(category)
+def upsert_customer(conn, phone, name=None, email=None, notes=None, status=None):
+    """Write non-category fields only. Category is managed EXCLUSIVELY by set_category().
+    This function MUST NOT write to the category column."""
     ts = now_iso()
     conn.execute(
-        "INSERT INTO customers (phone,name,email,category,status,first_contact_at,last_message_at,notes,updated_at) "
-        "VALUES (:phone,:name,:email,:cat_ins,:status,:ts,:ts,:notes,:ts) "
+        "INSERT INTO customers (phone,name,email,status,first_contact_at,last_message_at,notes,updated_at) "
+        "VALUES (:phone,:name,:email,:status,:ts,:ts,:notes,:ts) "
         "ON CONFLICT(phone) DO UPDATE SET "
         "  name=COALESCE(excluded.name, customers.name), "
         "  email=COALESCE(excluded.email, customers.email), "
-        "  category=COALESCE(:cat_upd, customers.category), "
         "  status=COALESCE(excluded.status, customers.status), "
         "  notes=COALESCE(NULLIF(excluded.notes,''), customers.notes), "
         "  last_message_at=excluded.last_message_at, "
         "  updated_at=excluded.updated_at",
-        {"phone": phone, "name": name, "email": email, "cat_ins": cat or "new customer",
-         "cat_upd": cat, "status": status, "ts": ts, "notes": notes or ""},
+        {"phone": phone, "name": name, "email": email, "status": status, "ts": ts, "notes": notes or ""},
     )
     conn.commit()
     export_customers(conn)
 
 
+HUMAN_OWNER_CATS = {"ahsan", "ahmed", "imran", "rafay"}
+
+
 def set_category(conn, phone, category):
+    """SOLE writer of the category column. Ensures row exists, logs old->new,
+    auto-saves previous_owner when moving FROM a human-owner category."""
     cat = norm_category(category)
     if not cat:
         sys.exit(f"Invalid category '{category}'. Must be one of: {CATEGORIES}")
-    upsert_customer(conn, phone, category=cat)
+    # Ensure row exists (INSERT OR IGNORE creates the row without a category value)
+    ts = now_iso()
+    conn.execute(
+        "INSERT OR IGNORE INTO customers (phone, first_contact_at, last_message_at, updated_at) VALUES (?,?,?,?)",
+        (phone, ts, ts, ts))
+    old = conn.execute("SELECT category FROM customers WHERE phone=?", (phone,)).fetchone()
+    old_cat = old["category"] if old else None
+    # If moving FROM a human-owner category TO a followup/junk/complaints/hot-leads tag,
+    # preserve the owner name in previous_owner so we don't lose ownership.
+    prev_owner = None
+    if old_cat in HUMAN_OWNER_CATS and cat in ("followup", "junk", "complaints", "hot leads"):
+        prev_owner = old_cat
+    conn.execute(
+        "UPDATE customers SET category=?, previous_owner=COALESCE(?, previous_owner), last_message_at=?, updated_at=? WHERE phone=?",
+        (cat, prev_owner, ts, ts, phone))
+    conn.commit()
+    export_customers(conn)
+    print(json.dumps({"ok": True, "phone": phone, "category": {"old": old_cat, "new": cat},
+                       "previous_owner": prev_owner}))
+
+
+def set_cadence_status(conn, phone, cadence_status):
+    """Set cadence_status independently of category. Does NOT touch the category column."""
+    cs = norm_cadence_status(cadence_status)
+    # Ensure row exists without touching category
+    ts = now_iso()
+    conn.execute(
+        "INSERT OR IGNORE INTO customers (phone, first_contact_at, last_message_at, updated_at) VALUES (?,?,?,?)",
+        (phone, ts, ts, ts))
+    old = conn.execute("SELECT category, cadence_status FROM customers WHERE phone=?", (phone,)).fetchone()
+    old_cat = old["category"] if old else None
+    old_cs = old["cadence_status"] if old else None
+    conn.execute("UPDATE customers SET cadence_status=?, updated_at=? WHERE phone=?", (cs, ts, phone))
+    conn.commit()
+    export_customers(conn)
+    print(json.dumps({"ok": True, "phone": phone,
+                       "cadence_status": {"old": old_cs, "new": cs},
+                       "category": old_cat}))
 
 
 def touch(conn, phone):
@@ -204,10 +268,12 @@ def do_init(conn):
                 if exists:
                     continue
                 conn.execute(
-                    "INSERT INTO customers (phone,name,email,category,first_contact_at,last_message_at,notes,updated_at) VALUES (?,?,?,?,?,?,?,?)",
-                    (c["phone"], c.get("name"), c.get("email"), norm_category(c.get("category")) or "new customer",
+                    "INSERT INTO customers (phone,name,email,first_contact_at,last_message_at,notes,updated_at) VALUES (?,?,?,?,?,?,?)",
+                    (c["phone"], c.get("name"), c.get("email"),
                      c.get("first_contact_at") or now_iso(), c.get("last_message_at") or now_iso(), c.get("notes", ""), now_iso()),
                 )
+                # Set category through the sole writer
+                set_category(conn, c["phone"], norm_category(c.get("category")) or "new customer")
                 imported_c += 1
         except Exception as e:
             print(f"[warn] could not import customers.json: {e}", file=sys.stderr)
@@ -249,6 +315,7 @@ def main():
     p.add_argument("--name"); p.add_argument("--email"); p.add_argument("--category"); p.add_argument("--notes"); p.add_argument("--status")
 
     p = sub.add_parser("set-category"); p.add_argument("--phone", required=True); p.add_argument("--category", required=True)
+    p = sub.add_parser("set-cadence-status"); p.add_argument("--phone", required=True); p.add_argument("--cadence-status", required=True, dest="cadence_status")
     p = sub.add_parser("touch"); p.add_argument("--phone", required=True)
     p = sub.add_parser("list-customers"); p.add_argument("--category")
 
@@ -281,10 +348,15 @@ def dispatch(conn, args):
     if args.cmd == "init":
         do_init(conn)
     elif args.cmd == "upsert-customer":
-        upsert_customer(conn, args.phone, args.name, args.email, args.category, args.notes, args.status)
-        print(json.dumps({"ok": True}))
+        upsert_customer(conn, args.phone, args.name, args.email, args.notes, args.status)
+        if args.category:
+            set_category(conn, args.phone, args.category)
+        else:
+            print(json.dumps({"ok": True}))
     elif args.cmd == "set-category":
-        set_category(conn, args.phone, args.category); print(json.dumps({"ok": True}))
+        set_category(conn, args.phone, args.category)
+    elif args.cmd == "set-cadence-status":
+        set_cadence_status(conn, args.phone, args.cadence_status)
     elif args.cmd == "touch":
         touch(conn, args.phone); print(json.dumps({"ok": True}))
     elif args.cmd == "add-lead":

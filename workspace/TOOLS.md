@@ -1,40 +1,85 @@
-# TOOLS.md - Local Notes
+# TOOLS.md — WhatsApp List Tagging (DB Proxy)
 
-Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
+## WhatsApp List / Label Tagging
 
-## What Goes Here
+This bot does NOT have direct access to the WhatsApp Business API label management endpoint.
+Instead, chat labels are persisted in the SQLite database via `db.py` as a
+**functional substitute**. The DB writes are atomic and the `customers.json` mirror stays in
+sync — but the labels will NOT appear as WhatsApp Business labels in the WhatsApp app.
 
-Things like:
+## Two-Field Design
 
-- Camera names and locations
-- SSH hosts and aliases
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
+The customers table has two independent fields for chat state:
 
-## Examples
+| Field | Purpose | Who changes it |
+|---|---|---|
+| `category` | Primary WhatsApp List tag — exactly ONE value per chat | Bot (all flows) |
+| `cadence_status` | Follow-up cycle state — separate from category | Bot (Flows 3, 4, 5) |
 
-```markdown
-### Cameras
+**Critical rule:** For human-owned chats (category = ahsan/ahmed/imran/rafay), the bot
+NEVER changes `category` — it only writes `cadence_status`. The owner tag is preserved
+permanently. For all other chats, `category` and `cadence_status` change together.
 
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
+## Valid Categories
 
-### SSH
+| Category | Purpose |
+|---|---|
+| `new customer` | Default for any first-time sender (auto-assigned by `upsert-customer`) |
+| `important` | Owner-designated important contacts |
+| `hot leads` | High-intent chat needing human attention (FIRST FLOW) |
+| `followup` | Non-human-owned chat in weekly follow-up cycle (THIRD / FIFTH FLOW) |
+| `junk` | Non-human-owned chat, no response after 3 weeks; stop engaging |
+| `complaints` | Active customer complaint, handed to human (SIXTH FLOW) |
+| `ahsan` | Human-owned chat — Ahsan has taken over |
+| `ahmed` | Human-owned chat — Ahmed has taken over |
+| `imran` | Human-owned chat — Imran has taken over |
+| `rafay` | Human-owned chat — Rafay has taken over |
 
-- home-server → 192.168.1.100, user: admin
+## Valid Cadence Statuses
 
-### TTS
+| cadence_status | Meaning |
+|---|---|
+| `null` | Not in any follow-up cycle |
+| `followup` | Actively in weekly follow-up cadence |
+| `junk` | Follow-up cycle exhausted; stop engaging |
 
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
+## Commands
+
+```bash
+# Set category (overwrites — one value, never appended). Logs old → new.
+/usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<E.164>" --category "hot leads"
+
+# Set cadence_status (separate from category — for human-owned chats). Logs old → new.
+/usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py set-cadence-status --phone "<E.164>" --cadence-status "followup"
+
+# Clear cadence_status (when chat re-engages)
+/usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py set-cadence-status --phone "<E.164>" --cadence-status "null"
+
+# List chats by category or cadence status
+/usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py list-customers --category "followup"
 ```
 
-## Why Separate?
+## Tagging by Flow
 
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
+| Flow | category change? | cadence_status change? |
+|---|---|---|
+| FIRST (Hot Lead) | → "hot leads" | (unchanged) |
+| SECOND (Order) | (none unless fails) | (none) |
+| THIRD (Non-responsive) | → "followup", then → "junk" | → "followup", then → "junk" |
+| FOURTH (Human cold) | **NEVER** (stays owner name) | → "followup", then → "junk" |
+| FIFTH (Store location) | → "followup", then → "junk" | → "followup", then → "junk" |
+| SIXTH (Complaint) | → "complaints" | (unchanged) |
 
----
+## Validation
 
-Add whatever helps you do your job. This is your cheat sheet.
+Every `set-category` and `set-cadence-status` call prints the old value and new value
+in its JSON output. If a write would result in multiple active values, the DB schema
+prevents it (PRIMARY KEY on phone ensures one row per chat; UPSERT overwrites).
+
+## TODO — Swap for Real WhatsApp Business API Labels
+
+Once WhatsApp Business API label management is wired up:
+1. Replace `db.py set-category` calls with the actual WhatsApp API label endpoint.
+2. Keep `db.py set-cadence-status` as the source of truth for follow-up cycle state
+   (WhatsApp labels don't have an equivalent).
+3. Keep the DB writes as a fallback audit log.

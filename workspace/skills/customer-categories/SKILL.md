@@ -18,14 +18,14 @@ On **every** incoming message, after you know the sender's phone number.
 
 ## What to Do
 
-Run **one** command with the exec/shell tool — it inserts a new customer (filed under
-**"new customer"**) or updates an existing one (refreshes last-seen), safely and atomically:
+Run **two** commands with the exec/shell tool — first upsert the customer record, then set their category through the sole writer:
 
 ```
 python3 /home/it-admin/wa-lead-gen/workspace/db.py upsert-customer --phone "<sender_e164>"
+python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender_e164>" --category "new customer"
 ```
 
-If you have learned the customer's name, include it (it won't overwrite an existing name with blank):
+If you have learned the customer's name, include it in the upsert (it won't overwrite an existing name with blank):
 
 ```
 python3 /home/it-admin/wa-lead-gen/workspace/db.py upsert-customer --phone "<sender_e164>" --name "<name>"

@@ -29,6 +29,29 @@ This bot is locked to ONE WhatsApp customer: +923362615506. No other phone numbe
 - Email: xyz@gmail.com
 - Status: lead saved (Warm, score 50)
 
+---
+
+## Follow-Up State Tracking
+
+This section tracks automated follow-up cadences per chat (Flows 3, 4, 5).
+Each entry records the flow type, current follow-up week, last-sent date, and list tag.
+Update after every follow-up message is sent. Remove entry when chat exits follow-up cycle.
+
+Format:
+```
+### +92XXXXXXXXXX
+- flow: non-responsive | store_location | human_cold
+- followup_week: 1 | 2 | 3 | done
+- last_followup_date: YYYY-MM-DD
+- list_tag: followup | junk  (cadence_status value)
+- category: (unchanged — owner name for Flow 4, followup/junk for Flows 3/5)
+- human_owner: Ahsan | Ahmed | Imran | Rafay  (Flow 4 only)
+```
+
+Note: For Flow 4 (human-owned), `category` stays as the owner name — only `cadence_status` changes. For Flows 3 and 5, `category` and `cadence_status` change together.
+
+---
+
 <!-- The agent will append entries like this:
 ### +92XXXXXXXXXX | Customer Name | 2026-04-18
 - Interested in: King size bed (item-0101)

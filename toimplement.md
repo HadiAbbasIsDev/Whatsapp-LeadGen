@@ -25,3 +25,10 @@ go for retail.
 
 
 chat automations , meta is blocking
+
+
+
+To make it always-on (so it survives reboots)
+
+sudo cp admin/openclaw-admin.service /etc/systemd/system/
+sudo systemctl enable --now openclaw-admin
