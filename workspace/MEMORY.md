@@ -52,6 +52,16 @@ Note: For Flow 4 (human-owned), `category` stays as the owner name — only `cad
 
 ---
 
+### +923362615506
+- flow: human_cold
+- followup_week: 1
+- last_followup_date: 2026-07-05
+- list_tag: followup
+- category: followup
+- human_owner: Ahsan
+
+---
+
 <!-- The agent will append entries like this:
 ### +92XXXXXXXXXX | Customer Name | 2026-04-18
 - Interested in: King size bed (item-0101)

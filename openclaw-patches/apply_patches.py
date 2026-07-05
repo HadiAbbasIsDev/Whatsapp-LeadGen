@@ -41,6 +41,7 @@ SENDTRACK_REPLACE = (
     "\t\treturn result;"
 )
 BLOCK_ANCHOR = 'const detachConnectionUpdate = attachEmitterListener(sock.ev, "connection.update", handleConnectionUpdate);'
+BOT_LABELS = '["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]'
 
 
 def find_login_file():
@@ -92,7 +93,35 @@ def main():
     src = open(target).read()
 
     if SENTINEL in src:
-        print("Already patched (sentinel found). Nothing to do.")
+        refreshed = src
+        refreshed = refreshed.replace(
+            'const __ocCats = ["new customer", "important", "hot leads"];',
+            f"const __ocCats = {BOT_LABELS};",
+        )
+        refreshed = refreshed.replace("\n\t\t\t\tif (__ocApplied.get(jid) === cat) continue;", "")
+        refreshed = refreshed.replace(
+            "\t\t\t\t\t\tawait sock.addChatLabel(jid, labelId);",
+            "\t\t\t\t\t\tif (__ocApplied.get(jid) !== cat) await sock.addChatLabel(jid, labelId);",
+        )
+        if refreshed == src:
+            print("Already patched (sentinel found). Nothing to do.")
+            return
+        ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        backup = f"{target}.refresh-{ts}"
+        shutil.copy2(target, backup)
+        print(f"Already patched; refreshing label exclusivity. Backup: {backup}")
+        open(target, "w").write(refreshed)
+        print("Refreshed. Verifying syntax with node --check...")
+        try:
+            r = subprocess.run([node_bin(), "--check", target], capture_output=True, text=True, timeout=30)
+            if r.returncode == 0:
+                print("OK syntax valid.")
+            else:
+                shutil.copy2(backup, target)
+                sys.exit(f"SYNTAX ERROR after refresh (restored backup):\n{r.stderr}")
+        except Exception as e:
+            print(f"(could not run node --check: {e})")
+        print("Done. Now restart the gateway:  openclaw gateway")
         return
 
     missing = [n for n, a in [("imports", IMPORTS_ANCHOR), ("sendTrackedMessage", SENDTRACK_ANCHOR), ("runtime block", BLOCK_ANCHOR)] if a not in src]

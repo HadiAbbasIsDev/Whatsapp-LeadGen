@@ -67,16 +67,15 @@
 			if (!list.length) return;
 			const labelMap = __ocLoadLabelMap();
 			if (!Object.keys(labelMap).length) return;
-			const __ocCats = ["new customer", "important", "hot leads"];
+			const __ocCats = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"];
 			for (const c of list) {
 				const jid = __ocJidFromPhone(c && c.phone);
 				const cat = c && c.category ? String(c.category).trim().toLowerCase() : "";
 				const labelId = labelMap[cat];
 				if (!jid || !labelId) continue;
-				if (__ocApplied.get(jid) === cat) continue;
 				try {
 					if (typeof sock.addChatLabel === "function") {
-						await sock.addChatLabel(jid, labelId);
+						if (__ocApplied.get(jid) !== cat) await sock.addChatLabel(jid, labelId);
 						// Swap: remove the OTHER category labels so the chat reflects only the current category
 						for (const other of __ocCats) {
 							if (other === cat) continue;

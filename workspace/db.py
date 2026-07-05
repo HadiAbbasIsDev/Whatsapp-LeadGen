@@ -162,34 +162,69 @@ def upsert_customer(conn, phone, name=None, email=None, notes=None, status=None)
     export_customers(conn)
 
 
+LOCK_DIR = os.path.join(DATA, ".locks")
+
+
+def _acquire_lock(phone, timeout=5):
+    """Per-phone mutex using atomic mkdir. Returns True if lock acquired."""
+    os.makedirs(LOCK_DIR, exist_ok=True)
+    lock_path = os.path.join(LOCK_DIR, phone.replace("+", ""))
+    deadline = time.time() + timeout
+    while True:
+        try:
+            os.makedirs(lock_path, exist_ok=False)
+            return True
+        except FileExistsError:
+            if time.time() > deadline:
+                print(json.dumps({"error": "lock_timeout", "phone": phone}), file=sys.stderr)
+                return False
+            time.sleep(0.1)
+
+
+def _release_lock(phone):
+    lock_path = os.path.join(LOCK_DIR, phone.replace("+", ""))
+    try:
+        os.rmdir(lock_path)
+    except OSError:
+        pass
+
+
 HUMAN_OWNER_CATS = {"ahsan", "ahmed", "imran", "rafay"}
 
 
 def set_category(conn, phone, category):
-    """SOLE writer of the category column. Ensures row exists, logs old->new,
-    auto-saves previous_owner when moving FROM a human-owner category."""
+    """SOLE writer of the category column. Per-phone locked, deduped, logged."""
     cat = norm_category(category)
     if not cat:
         sys.exit(f"Invalid category '{category}'. Must be one of: {CATEGORIES}")
-    # Ensure row exists (INSERT OR IGNORE creates the row without a category value)
-    ts = now_iso()
-    conn.execute(
-        "INSERT OR IGNORE INTO customers (phone, first_contact_at, last_message_at, updated_at) VALUES (?,?,?,?)",
-        (phone, ts, ts, ts))
-    old = conn.execute("SELECT category FROM customers WHERE phone=?", (phone,)).fetchone()
-    old_cat = old["category"] if old else None
-    # If moving FROM a human-owner category TO a followup/junk/complaints/hot-leads tag,
-    # preserve the owner name in previous_owner so we don't lose ownership.
-    prev_owner = None
-    if old_cat in HUMAN_OWNER_CATS and cat in ("followup", "junk", "complaints", "hot leads"):
-        prev_owner = old_cat
-    conn.execute(
-        "UPDATE customers SET category=?, previous_owner=COALESCE(?, previous_owner), last_message_at=?, updated_at=? WHERE phone=?",
-        (cat, prev_owner, ts, ts, phone))
-    conn.commit()
-    export_customers(conn)
-    print(json.dumps({"ok": True, "phone": phone, "category": {"old": old_cat, "new": cat},
-                       "previous_owner": prev_owner}))
+    if not _acquire_lock(phone):
+        sys.exit(f"Could not acquire lock for {phone} — another write in progress")
+    try:
+        ts = now_iso()
+        # Ensure row exists
+        conn.execute(
+            "INSERT OR IGNORE INTO customers (phone, first_contact_at, last_message_at, updated_at) VALUES (?,?,?,?)",
+            (phone, ts, ts, ts))
+        old = conn.execute("SELECT category FROM customers WHERE phone=?", (phone,)).fetchone()
+        old_cat = old["category"] if old else None
+        # Dedup: skip if already at target category
+        if old_cat == cat:
+            print(json.dumps({"ok": True, "phone": phone, "category": {"old": old_cat, "new": cat},
+                               "dedup": "skipped — already at target", "previous_owner": None}))
+            return
+        # If moving FROM a human-owner category, save owner to previous_owner
+        prev_owner = None
+        if old_cat in HUMAN_OWNER_CATS and cat in ("followup", "junk", "complaints", "hot leads"):
+            prev_owner = old_cat
+        conn.execute(
+            "UPDATE customers SET category=?, previous_owner=COALESCE(?, previous_owner), last_message_at=?, updated_at=? WHERE phone=?",
+            (cat, prev_owner, ts, ts, phone))
+        conn.commit()
+        export_customers(conn)
+        print(json.dumps({"ok": True, "phone": phone, "category": {"old": old_cat, "new": cat},
+                           "previous_owner": prev_owner}))
+    finally:
+        _release_lock(phone)
 
 
 def set_cadence_status(conn, phone, cadence_status):

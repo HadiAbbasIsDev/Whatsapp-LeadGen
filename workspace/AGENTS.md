@@ -251,8 +251,9 @@ followup/junk to reflect current state. The original owner name is auto-saved to
 **Trigger condition:** Client asks where the store/locations are.
 
 **Actions (all just do it):**
-1. Send addresses of ALL store locations.
-2. Tag chat as **"followup"**:
+1. Ask the client which city: Karachi or Lahore.
+2. Once they reply, send only that city's store info (address, phone, email). See USER.md for the location details.
+3. Tag chat as **"followup"**:
    ```
    /usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<customer_phone>" --category "followup"
    ```
