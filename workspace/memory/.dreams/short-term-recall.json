@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-14T06:51:33.878Z",
+  "entries": {
+    "memory:memory/2026-07-02.md:20:50": {
+      "key": "memory:memory/2026-07-02.md:20:50",
+      "path": "memory/2026-07-02.md",
+      "startLine": 20,
+      "endLine": 50,
+      "source": "memory",
+      "snippet": "- Logging: every set_category prints old→new transition + previous_owner in JSON ### Option A — Tag Switching (not Option B) - When human-owned chat (ahsan/ahmed/imran/rafay) goes cold: category switches to followup/junk - Owner name auto-saved to `previous_owner` column — never lost - One tag per chat at all times — no multi-tag rows ### TOOLS.md — Fully rewritten - Two-field design documented: category + cadence_status - Valid categories table, cadence statuses table - Commands documented: set-category, set-cadence-status, list-customers - Tagging-by-flow matrix - TODO: swap for real WhatsApp Business API labels ### MEMORY.md — Follow-Up State Tracking section added - Template format fo",
+      "recallCount": 1,
+      "dailyCount": 0,
+      "groundedCount": 0,
+      "totalScore": 0.000005834152630102468,
+      "maxScore": 0.000005834152630102468,
+      "firstRecalledAt": "2026-07-14T06:51:33.878Z",
+      "lastRecalledAt": "2026-07-14T06:51:33.878Z",
+      "queryHashes": [
+        "e52b9603eb84"
+      ],
+      "recallDays": [
+        "2026-07-14"
+      ],
+      "conceptTags": [
+        "set-category",
+        "previous-owner",
+        "human-owned",
+        "ahsan/ahmed/imran/rafay",
+        "followup/junk",
+        "auto-saved",
+        "multi-tag",
+        "tools.md"
+      ]
+    }
+  }
+}

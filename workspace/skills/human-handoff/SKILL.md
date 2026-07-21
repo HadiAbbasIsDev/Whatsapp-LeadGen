@@ -1,6 +1,6 @@
 ---
 name: human_handoff
-description: Triggered when a user asks to speak to a real person. Collects their contact details, saves the lead, then runs notify_admins.py to send a WhatsApp alert to the owner immediately.
+description: Triggered when a user asks to speak to a real person. Tags the chat as hot leads, saves the lead if useful, runs notify_admins.py, then stops customer-facing replies.
 ---
 
 <!--
@@ -19,19 +19,20 @@ Activate immediately when the user says anything like:
 
 ## Step-by-Step Process
 
-### Step 1 — Collect email if missing
-If you don't already have the user's **email**, ask:
-> "Of course! Could you please share your email address so our team can reach you directly?"
+### Step 1 — Tag as hot lead
 
-If email already known, skip to Step 2.
+```
+python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<customer E.164 phone from channel>" --category "hot leads"
+```
 
-### Step 2 — Confirm to the user
-> "Thank you. I've alerted our team and someone will contact you on WhatsApp shortly."
+Do not ask the customer for more details first. The handoff request itself is enough.
 
-### Step 3 — Save the lead
-Use the `lead_capture` skill with `intent: "human_handoff"`.
+### Step 2 — Save the lead if details are already known
 
-### Step 4 — Run the admin notification script
+Use the `lead_capture` skill with `intent: "human_handoff"` only for details already
+available in the chat. Do not message the customer to collect missing fields.
+
+### Step 3 — Run the admin notification script
 
 Use the shell/exec tool to run this command from the workspace directory:
 
@@ -48,5 +49,8 @@ This script sends a WhatsApp message to the owner number:
 
 **Run this script every time — do not skip it.**
 
-### Step 5 — Continue naturally
-Keep the conversation going. Don't leave the user waiting silently.
+### Step 4 — Stop customer-facing replies
+
+Do NOT confirm, acknowledge, or continue naturally with the customer. Once the
+handoff alert is sent and the chat is tagged `hot leads`, Aria goes silent on
+that thread until/unless the owner manually changes the category.

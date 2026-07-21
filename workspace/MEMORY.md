@@ -53,12 +53,11 @@ Note: For Flow 4 (human-owned), `category` stays as the owner name — only `cad
 ---
 
 ### +923362615506
-- flow: human_cold
-- followup_week: 1
+- flow: (none — re-engaged 2026-07-17, cadence cleared)
+- followup_week: done
 - last_followup_date: 2026-07-05
-- list_tag: followup
-- category: followup
-- human_owner: Ahsan
+- list_tag: null
+- category: new customer
 
 ---
 

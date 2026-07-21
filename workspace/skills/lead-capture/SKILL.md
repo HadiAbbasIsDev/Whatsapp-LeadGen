@@ -19,6 +19,10 @@ You MUST have at least:
 - **Email address** — ask the user if not already provided
 - **Name** — ask the user if not already provided
 
+Exception: for `intent: "human_handoff"`, do not ask the customer for missing
+fields. Save only the details already known, tag the chat as `hot leads`, notify
+the owner, and go silent.
+
 Optional but valuable:
 - Product(s) of interest (product name + price)
 - Pain point / use case
@@ -95,9 +99,8 @@ Score tiers:
 
 ## After Saving
 
-- Confirm to the user their details have been noted.
-- Give realistic expectation: "Our team will be in touch within 1 business day."
-- Continue the conversation naturally.
+- For normal lead capture, confirm to the user their details have been noted and continue naturally.
+- For `intent: "human_handoff"`, do not confirm, set expectations, or continue the conversation. The handoff flow owns the response policy: notify the owner and stop customer-facing replies.
 
 ## Deduplication
 

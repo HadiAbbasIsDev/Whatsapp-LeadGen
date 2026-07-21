@@ -42,6 +42,42 @@ SENDTRACK_REPLACE = (
 )
 BLOCK_ANCHOR = 'const detachConnectionUpdate = attachEmitterListener(sock.ev, "connection.update", handleConnectionUpdate);'
 BOT_LABELS = '["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]'
+VOICE_FALLBACK_SENTINEL = "__ocDownloadInboundAudioFallback"
+VOICE_FALLBACK_ANCHOR = "\tconst enqueueInboundMessage = async (msg, inbound, enriched) => {"
+VOICE_FALLBACK_BLOCK = r'''	const __ocDownloadInboundAudioFallback = async (msg, enriched) => {
+		if (!enriched || enriched.mediaPath || enriched.mediaType || enriched.body !== "<media:audio>") return enriched;
+		try {
+			const maxBytes = (typeof options.mediaMaxMb === "number" && options.mediaMaxMb > 0 ? options.mediaMaxMb : 50) * 1024 * 1024;
+			let buffer;
+			let lastError;
+			for (const ctx of [
+				{ reuploadRequest: typeof sock.updateMediaMessage === "function" ? sock.updateMediaMessage.bind(sock) : sock.updateMediaMessage, logger: sock.logger },
+				{ logger: sock.logger }
+			]) {
+				try {
+					buffer = await downloadMediaMessage(msg, "buffer", {}, ctx);
+					if (buffer) break;
+				} catch (e) {
+					lastError = e;
+				}
+			}
+			if (!buffer) throw lastError || new Error("downloadMediaMessage returned no buffer");
+			const saved = await saveMediaBuffer(buffer, "audio/ogg; codecs=opus", "inbound", maxBytes, "voice-note.ogg");
+			inboundLogger.info({ mediaPath: saved.path, mediaType: saved.contentType, size: saved.size }, "[voice-download] saved inbound audio");
+			return {
+				...enriched,
+				mediaPath: saved.path,
+				mediaType: saved.contentType || "audio/ogg; codecs=opus",
+				mediaFileName: "voice-note.ogg"
+			};
+		} catch (e) {
+			try { inboundLogger.warn({ error: String(e) }, "[voice-download] fallback failed"); } catch {}
+			return enriched;
+		}
+	};
+'''
+ENRICH_ANCHOR = "\t\t\tconst enriched = await enrichInboundMessage(msg);\n\t\t\tif (!enriched) continue;\n\t\t\tawait enqueueInboundMessage(msg, inbound, enriched);"
+ENRICH_REPLACE = "\t\t\tlet enriched = await enrichInboundMessage(msg);\n\t\t\tif (!enriched) continue;\n\t\t\tenriched = await __ocDownloadInboundAudioFallback(msg, enriched);\n\t\t\tawait enqueueInboundMessage(msg, inbound, enriched);"
 
 
 def find_login_file():
@@ -103,6 +139,12 @@ def main():
             "\t\t\t\t\t\tawait sock.addChatLabel(jid, labelId);",
             "\t\t\t\t\t\tif (__ocApplied.get(jid) !== cat) await sock.addChatLabel(jid, labelId);",
         )
+        if VOICE_FALLBACK_SENTINEL not in refreshed:
+            if VOICE_FALLBACK_ANCHOR not in refreshed:
+                sys.exit("ERROR: could not find anchor for inbound voice fallback in already-patched runtime.")
+            refreshed = refreshed.replace(VOICE_FALLBACK_ANCHOR, VOICE_FALLBACK_BLOCK + VOICE_FALLBACK_ANCHOR, 1)
+        if ENRICH_ANCHOR in refreshed:
+            refreshed = refreshed.replace(ENRICH_ANCHOR, ENRICH_REPLACE, 1)
         if refreshed == src:
             print("Already patched (sentinel found). Nothing to do.")
             return
@@ -136,6 +178,12 @@ def main():
     out = src.replace(IMPORTS_ANCHOR, IMPORTS_ANCHOR + "\n" + IMPORTS.rstrip("\n"), 1)
     out = out.replace(SENDTRACK_ANCHOR, SENDTRACK_REPLACE, 1)
     out = out.replace(BLOCK_ANCHOR, BLOCK_ANCHOR + "\n" + RUNTIME_BLOCK.rstrip("\n"), 1)
+    if VOICE_FALLBACK_ANCHOR not in out:
+        sys.exit("ERROR: could not find anchor for inbound voice fallback.")
+    out = out.replace(VOICE_FALLBACK_ANCHOR, VOICE_FALLBACK_BLOCK + VOICE_FALLBACK_ANCHOR, 1)
+    if ENRICH_ANCHOR not in out:
+        sys.exit("ERROR: could not find enqueue anchor for inbound voice fallback.")
+    out = out.replace(ENRICH_ANCHOR, ENRICH_REPLACE, 1)
     open(target, "w").write(out)
 
     print("Patched. Verifying syntax with node --check...")

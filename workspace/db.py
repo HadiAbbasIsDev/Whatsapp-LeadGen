@@ -9,6 +9,7 @@ in-gateway WhatsApp-label reconciler keeps working unchanged.
 
 CLI (used by the agent's skills):
   python3 db.py init
+  python3 db.py get-customer --phone +923...
   python3 db.py upsert-customer --phone +923... [--name N] [--email E] [--category C] [--notes ...]
   python3 db.py set-category --phone +923... --category "hot leads"
   python3 db.py set-cadence-status --phone +923... --cadence-status "followup"
@@ -289,6 +290,16 @@ def list_customers(conn, category=None):
     print(json.dumps([dict(r) for r in rows], indent=2, ensure_ascii=False))
 
 
+def get_customer(conn, phone):
+    row = conn.execute("SELECT * FROM customers WHERE phone=?", (phone,)).fetchone()
+    if not row:
+        print(json.dumps({"found": False, "phone": phone}))
+        return
+    data = dict(row)
+    data["found"] = True
+    print(json.dumps(data, indent=2, ensure_ascii=False))
+
+
 def do_init(conn):
     init_schema(conn)
     imported_c = imported_l = 0
@@ -346,6 +357,7 @@ def main():
     sub.add_parser("counts")
     sub.add_parser("export-customers")
 
+    p = sub.add_parser("get-customer"); p.add_argument("--phone", required=True)
     p = sub.add_parser("upsert-customer"); p.add_argument("--phone", required=True)
     p.add_argument("--name"); p.add_argument("--email"); p.add_argument("--category"); p.add_argument("--notes"); p.add_argument("--status")
 
@@ -382,6 +394,8 @@ def main():
 def dispatch(conn, args):
     if args.cmd == "init":
         do_init(conn)
+    elif args.cmd == "get-customer":
+        get_customer(conn, args.phone)
     elif args.cmd == "upsert-customer":
         upsert_customer(conn, args.phone, args.name, args.email, args.notes, args.status)
         if args.category:

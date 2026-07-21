@@ -6,10 +6,11 @@
 # re-testing openclaw-patches/.
 FROM node:22-bookworm-slim
 
-# System deps: python3 + flask (dashboard), supervisor (process manager),
+# System deps: python3 + flask (dashboard), requests (OpenRouter transcription),
+# ffmpeg/ffprobe (audio duration + WAV conversion), supervisor (process manager),
 # procps (ps/pgrep used by the dashboard), tini (clean PID 1), ca-certificates.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-flask supervisor procps tini ca-certificates \
+      python3 python3-flask python3-requests ffmpeg supervisor procps tini ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
 # Pinned openclaw — MUST match openclaw-patches/. Never auto-update.

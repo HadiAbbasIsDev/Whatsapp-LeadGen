@@ -49,6 +49,9 @@ permanently. For all other chats, `category` and `cadence_status` change togethe
 # Set category (overwrites — one value, never appended). Logs old → new.
 /usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<E.164>" --category "hot leads"
 
+# Check current category before any customer-facing reply.
+/usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py get-customer --phone "<E.164>"
+
 # Set cadence_status (separate from category — for human-owned chats). Logs old → new.
 /usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py set-cadence-status --phone "<E.164>" --cadence-status "followup"
 
@@ -69,6 +72,13 @@ permanently. For all other chats, `category` and `cadence_status` change togethe
 | FOURTH (Human cold) | **NEVER** (stays owner name) | → "followup", then → "junk" |
 | FIFTH (Store location) | → "followup", then → "junk" | → "followup", then → "junk" |
 | SIXTH (Complaint) | → "complaints" | (unchanged) |
+
+## Reply-Suppression Rules
+
+- If `category` is `complaints` or `hot leads`, the chat is already handed to a human. Do not send any customer-facing reply.
+- If `category` is `ahsan`, `ahmed`, `imran`, or `rafay`, a human owns the chat. Do not reply to normal incoming messages.
+- Human-owned chats may receive exactly one scheduled re-engagement message only after 7 full inactive days, then use `cadence_status` for the weekly follow-up state while preserving the owner category.
+- If a human-owned chat has `cadence_status = followup` because of that scheduled re-engagement and the client responds, route the response into FIRST FLOW or SECOND FLOW.
 
 ## Validation
 
