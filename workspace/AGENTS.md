@@ -257,10 +257,10 @@ followup/junk to reflect current state. The original owner name is auto-saved to
    ```
    /usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<customer_phone>" --category "followup"
    ```
-3. Record initial state in MEMORY.md under "Follow-Up State Tracking":
+4. Record initial state in MEMORY.md under "Follow-Up State Tracking":
    - `flow: store_location`, `followup_week: 1`, `last_followup_date: <today>`
-4. Follow up once every week, up to 3 weeks (same cadence as THIRD FLOW).
-5. Check response:
+5. Follow up once every week, up to 3 weeks (same cadence as THIRD FLOW).
+6. Check response:
    - **If client responds →** route into FIRST FLOW or SECOND FLOW (Follow Point 1 & 2).
    - **If no response after 3 weeks →** tag chat as **"junk"**:
      ```

@@ -18,6 +18,22 @@ The bot is locked to ONE WhatsApp number. The sole owner/customer contact is +92
 - **Escalation email:** sales@yourdomain.com
 - **Response SLA:** Within 1 business day (aim for same day for human_handoff requests)
 
+## Store Locations
+
+### Karachi
+G53, Vincy Mall, Clifton Block 9
+Phone: +92-300-4912703
+Email: renovatepk@gmail.com
+
+Ground Floor, Nursery Market, PECHS
+Phone: +92 300 4912703
+Email: renovatepk@gmail.com
+
+### Lahore
+41k DHA Phase 1, Ghazi Road
+Phone: +92-322-7942994
+Email: renovatepk@gmail.com
+
 ## Bot Identity
 
 - **Bot name:** Aria
