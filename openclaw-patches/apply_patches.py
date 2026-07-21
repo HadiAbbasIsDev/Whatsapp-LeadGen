@@ -43,6 +43,7 @@ SENDTRACK_REPLACE = (
 BLOCK_ANCHOR = 'const detachConnectionUpdate = attachEmitterListener(sock.ev, "connection.update", handleConnectionUpdate);'
 BOT_LABELS = '["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]'
 VOICE_FALLBACK_SENTINEL = "__ocDownloadInboundAudioFallback"
+LABEL_SYNC_SENTINEL = "[label-sync] database updated from WhatsApp"
 VOICE_FALLBACK_ANCHOR = "\tconst enqueueInboundMessage = async (msg, inbound, enriched) => {"
 VOICE_FALLBACK_BLOCK = r'''	const __ocDownloadInboundAudioFallback = async (msg, enriched) => {
 		if (!enriched || enriched.mediaPath || enriched.mediaType || enriched.body !== "<media:audio>") return enriched;
@@ -130,6 +131,20 @@ def main():
 
     if SENTINEL in src:
         refreshed = src
+        if "__ocExecFile" not in refreshed:
+            refreshed = refreshed.replace(IMPORTS_ANCHOR, IMPORTS_ANCHOR + '\nimport { execFile as __ocExecFile } from "node:child_process";', 1)
+        if LABEL_SYNC_SENTINEL not in refreshed:
+            start_marker = "\t// --- BEGIN openclaw label-probe (read-only) ---"
+            end_marker = "\t// --- END openclaw label-probe ---"
+            old_start = refreshed.find(start_marker)
+            old_end = refreshed.find(end_marker, old_start)
+            new_start = RUNTIME_BLOCK.find(start_marker)
+            new_end = RUNTIME_BLOCK.find(end_marker, new_start)
+            if min(old_start, old_end, new_start, new_end) < 0:
+                sys.exit("ERROR: could not refresh two-way WhatsApp label sync block")
+            old_end += len(end_marker)
+            new_end += len(end_marker)
+            refreshed = refreshed[:old_start] + RUNTIME_BLOCK[new_start:new_end] + refreshed[old_end:]
         refreshed = refreshed.replace(
             'const __ocCats = ["new customer", "important", "hot leads"];',
             f"const __ocCats = {BOT_LABELS};",
@@ -138,6 +153,10 @@ def main():
         refreshed = refreshed.replace(
             "\t\t\t\t\t\tawait sock.addChatLabel(jid, labelId);",
             "\t\t\t\t\t\tif (__ocApplied.get(jid) !== cat) await sock.addChatLabel(jid, labelId);",
+        )
+        refreshed = refreshed.replace(
+            'if (lab && lab.name && !lab.deleted) map[String(lab.name).trim().toLowerCase()] = String(lab.id);',
+            'if (lab && lab.name && !lab.deleted) { const name = String(lab.name).trim().toLowerCase(); map[name === "complains" ? "complaints" : name] = String(lab.id); }',
         )
         if VOICE_FALLBACK_SENTINEL not in refreshed:
             if VOICE_FALLBACK_ANCHOR not in refreshed:

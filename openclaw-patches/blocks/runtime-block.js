@@ -12,6 +12,44 @@
 		});
 		attachEmitterListener(sock.ev, "labels.association", (assoc) => {
 			try { __ocAppendFile(__ocLabelDir + "/whatsapp-label-assoc.log", JSON.stringify(assoc) + "\n"); } catch {}
+			try {
+				const eventType = String(assoc?.type || "").toLowerCase();
+				const relation = assoc?.association || {};
+				const chatId = String(relation.chatId || "");
+				const labelId = String(relation.labelId || "");
+				const lid = chatId.endsWith("@lid") ? chatId.slice(0, -4) : "";
+				let phone = "";
+				if (lid) {
+					try { phone = String(JSON.parse(__ocReadFile(__ocLabelDir + "/credentials/whatsapp/default/lid-mapping-" + lid + "_reverse.json", "utf8")) || ""); } catch {}
+				}
+				if (!phone && chatId.endsWith("@s.whatsapp.net")) phone = chatId.split("@")[0];
+				let labelName = "";
+				for (const lab of Object.values(__ocLabels)) {
+					if (lab && String(lab.id) === labelId && !lab.deleted) labelName = String(lab.name || "").trim().toLowerCase();
+				}
+				if (labelName === "complains") labelName = "complaints";
+				const managed = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"];
+				if (phone && managed.includes(labelName)) {
+					const ws = (() => { try { return loadConfig()?.agents?.defaults?.workspace; } catch { return null; } })() || (__ocHomedir() + "/wa-lead-gen/workspace");
+					const dbScript = ws.replace(/\/$/, "") + "/db.py";
+					const customersPath = ws.replace(/\/$/, "") + "/data/customers.json";
+					let current = "";
+					try {
+						const data = JSON.parse(__ocReadFile(customersPath, "utf8"));
+						const row = (data.customers || []).find((c) => String(c.phone || "").replace(/\D/g, "") === phone.replace(/\D/g, ""));
+						current = String(row?.category || "").trim().toLowerCase();
+					} catch {}
+					let next = null;
+					if (eventType === "add") next = labelName;
+					if (eventType === "remove" && current === labelName) next = "new customer";
+					if (next && next !== current) {
+						__ocExecFile("/usr/bin/python3", [dbScript, "set-category", "--phone", "+" + phone.replace(/\D/g, ""), "--category", next], { timeout: 10000 }, (error, stdout, stderr) => {
+							if (error) inboundLogger.warn({ error: String(error), stderr }, "[label-sync] database update failed");
+							else inboundLogger.info({ phone, oldCategory: current, newCategory: next }, "[label-sync] database updated from WhatsApp");
+						});
+					}
+				}
+			} catch (e) { try { inboundLogger.warn({ error: String(e) }, "[label-sync] event failed"); } catch {} }
 		});
 		setTimeout(() => {
 			inboundLogger.info({ hasResync: typeof sock.resyncAppState, hasAddChatLabel: typeof sock.addChatLabel }, "[label-probe] socket caps");
@@ -55,7 +93,10 @@
 				const raw = JSON.parse(__ocReadFile(__ocHomedir() + "/.openclaw/whatsapp-labels.json", "utf8"));
 				for (const k of Object.keys(raw)) {
 					const lab = raw[k];
-					if (lab && lab.name && !lab.deleted) map[String(lab.name).trim().toLowerCase()] = String(lab.id);
+					if (lab && lab.name && !lab.deleted) {
+						const name = String(lab.name).trim().toLowerCase();
+						map[name === "complains" ? "complaints" : name] = String(lab.id);
+					}
 				}
 			} catch {}
 			return map;

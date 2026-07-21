@@ -2,10 +2,10 @@
 
 ## WhatsApp List / Label Tagging
 
-This bot does NOT have direct access to the WhatsApp Business API label management endpoint.
-Instead, chat labels are persisted in the SQLite database via `db.py` as a
-**functional substitute**. The DB writes are atomic and the `customers.json` mirror stays in
-sync — but the labels will NOT appear as WhatsApp Business labels in the WhatsApp app.
+Chat labels are synchronized in both directions between WhatsApp Lists and SQLite.
+Bot flow changes write SQLite first and the runtime applies the corresponding List.
+Manual List additions/removals update SQLite; removing the currently active handoff
+or human-owner label resets the chat to `new customer`, allowing normal replies.
 
 ## Two-Field Design
 

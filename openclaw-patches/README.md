@@ -12,6 +12,8 @@ a new machine.** This folder makes them reproducible.
    - A *label probe* captures each label's ID into `~/.openclaw/whatsapp-labels.json`.
    - A *reconciler* reads `workspace/data/customers.json` and applies the matching
      label to each customer's chat via the chat's **LID** (required by the Lists UI).
+   - Manual List additions/removals are mirrored back into SQLite. Removing the
+     active handoff or human-owner label restores the chat to `new customer`.
 2. **Reliable product images** — openclaw's `message send --media` is **broken for
    WhatsApp** (it silently drops the media).
    - A *media-queue watcher* polls `~/.openclaw/wa-media-queue.jsonl` and sends images
