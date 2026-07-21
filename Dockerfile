@@ -10,7 +10,7 @@ FROM node:22-bookworm-slim
 # ffmpeg/ffprobe (audio duration + WAV conversion), supervisor (process manager),
 # procps (ps/pgrep used by the dashboard), tini (clean PID 1), ca-certificates.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-flask python3-requests ffmpeg supervisor procps tini ca-certificates \
+      python3 python3-flask python3-requests python3-gunicorn ffmpeg supervisor procps tini ca-certificates gosu \
  && rm -rf /var/lib/apt/lists/*
 
 # Pinned openclaw — MUST match openclaw-patches/. Never auto-update.
@@ -31,7 +31,13 @@ RUN openclaw plugins install @openclaw/whatsapp 2>/dev/null || true \
  && python3 openclaw-patches/apply_patches.py \
  && chmod +x docker/entrypoint.sh scripts/*.sh 2>/dev/null || true
 
+RUN mkdir -p /home/it-admin/.openclaw /home/it-admin/wa-lead-gen-backups \
+ && chown -R node:node /home/it-admin
+
 # 8088 = admin dashboard. The gateway's control port (18789) stays internal.
 EXPOSE 8088
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8088/healthz', timeout=3)" || exit 1
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/home/it-admin/wa-lead-gen/docker/entrypoint.sh"]

@@ -6,6 +6,17 @@ set -e
 REPO="/home/it-admin/wa-lead-gen"
 OC="${HOME}/.openclaw"
 mkdir -p "$OC" "$REPO/progress" "$REPO/workspace/data"
+chown -R node:node "$OC" "$REPO/progress" "$REPO/workspace/data" /home/it-admin/wa-lead-gen-backups
+
+: "${ADMIN_PASS:?Set ADMIN_PASS in .env}"
+if [ "${#ADMIN_PASS}" -lt 16 ] || [ "$ADMIN_PASS" = "change-this-to-a-strong-password" ]; then
+  echo "[entrypoint] ADMIN_PASS must be at least 16 characters and not the example value" >&2
+  exit 1
+fi
+if [ -n "${ALLOWED_NUMBER:-}" ] && ! printf '%s' "$ALLOWED_NUMBER" | grep -Eq '^\+[1-9][0-9]{7,14}$'; then
+  echo "[entrypoint] ALLOWED_NUMBER must use E.164 format (for example +923001234567)" >&2
+  exit 1
+fi
 
 # 1. Generate ~/.openclaw/openclaw.json on first run (persisted in the volume).
 if [ ! -f "$OC/openclaw.json" ]; then
@@ -24,6 +35,7 @@ PY
   echo "[entrypoint] generated $OC/openclaw.json (allowlist: ${ALLOWED_NUMBER})"
 else
   echo "[entrypoint] using existing $OC/openclaw.json"
+  chmod 600 "$OC/openclaw.json"
 fi
 
 # 2. Build the product catalog from database/products into the data volume.
@@ -38,4 +50,4 @@ echo "[entrypoint] First run: open the dashboard, click Start, then check the lo
 echo "[entrypoint] for the QR code to link WhatsApp:  docker compose logs -f"
 
 # 4. Hand off to supervisor (PID 1 via tini).
-exec supervisord -c "$REPO/docker/supervisord.conf" -n
+exec gosu node supervisord -c "$REPO/docker/supervisord.conf" -n

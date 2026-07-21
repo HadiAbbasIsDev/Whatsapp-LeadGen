@@ -71,6 +71,23 @@ docker compose restart        # pick up the linked session
   (it drives supervisor).
 - `.env` is gitignored — never commit your keys.
 - To back up: `docker compose exec bot bash scripts/backup.sh` (writes to the `backups` volume).
+- The dashboard binds to `127.0.0.1` only. Do not change it to `0.0.0.0` unless you add TLS and a trusted reverse proxy.
+- Process health is checked automatically; inspect it with `docker compose ps`.
+- Processed voice messages and transcripts are deleted after `VOICE_RETENTION_DAYS` (7 by default). Set this in `.env`; cleanup runs every six hours.
+
+### WhatsApp account safety and compliance
+
+No software can guarantee that a WhatsApp account will never be restricted. This
+app deliberately does not include ban-evasion behavior. It enforces an allowlist,
+one-message-per-turn behavior, opt-out handling, a consent/service-window check,
+and low-frequency follow-ups in the agent policy. Keep the number warmed through
+normal customer conversations, never use scraped/purchased contacts, and monitor
+quality feedback.
+
+For real customer production traffic, use the official WhatsApp Business Platform
+(Cloud API or a supported provider) and approved templates outside the 24-hour
+customer-service window. The bundled linked-device channel is best treated as a
+local pilot and carries a higher operational/account risk than the official API.
 
 ---
 
@@ -142,15 +159,16 @@ Send any message to your linked WhatsApp number — Aria will respond.
 
 ## Memory
 
-Memory is handled entirely by OpenClaw's built-in engine (SQLite, no extra setup):
+Memory uses structured SQLite records plus OpenClaw's session context:
 
 | What's stored | Where |
 |---|---|
-| Long-term user facts | `workspace/MEMORY.md` |
-| Daily session notes | `workspace/memory/YYYY-MM-DD.md` (auto-created) |
+| Long-term user facts | SQLite `memories` table (`db.py remember/recall`) |
+| Business-wide context | `workspace/MEMORY.md` |
 | Semantic search index | SQLite db inside `~/.openclaw/` |
 
-The agent automatically searches memory at the start of each session to personalise responses for returning users.
+Facts have stable keys, provenance, confidence, and optional expiry. The agent
+recalls them by phone at session start; expired records are cleaned automatically.
 
 ---
 

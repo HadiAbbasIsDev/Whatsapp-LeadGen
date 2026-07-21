@@ -44,6 +44,22 @@ PORT = int(os.environ.get("ADMIN_PORT", "8088"))
 app = Flask(__name__)
 
 
+@app.after_request
+def security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
+    return response
+
+
+@app.route("/healthz")
+def healthz():
+    """Container liveness only; intentionally contains no private state."""
+    return jsonify({"ok": True}), 200
+
+
 def get_password():
     pw = os.environ.get("ADMIN_PASS")
     if pw:
@@ -331,6 +347,7 @@ PAGE = r"""<!doctype html>
 </div>
 <script>
 function fmtUptime(s){ if(s==null)return''; let h=Math.floor(s/3600),m=Math.floor(s%3600/60); return h?`${h}h ${m}m`:`${m}m`; }
+function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function pill(cat){ cat=(cat||'').toLowerCase(); if(cat.includes('hot'))return'<span class="pill hot">Hot leads</span>';
   if(cat.includes('important'))return'<span class="pill imp">Important</span>'; return'<span class="pill new">New customer</span>'; }
 async function refresh(){
@@ -353,7 +370,7 @@ async function refresh(){
     document.getElementById('c_hot').textContent = cl('hot');
     document.getElementById('c_imp').textContent = cl('important');
     document.getElementById('total').textContent = (c.total||0)+' total';
-    const rows = (c.customers||[]).map(x=>`<tr><td>${x.name||'—'}</td><td>${x.phone||''}</td><td>${pill(x.category)}</td><td class="foot">${(x.last_message_at||'').replace('T',' ').slice(0,16)}</td></tr>`).join('');
+    const rows = (c.customers||[]).map(x=>`<tr><td>${esc(x.name||'—')}</td><td>${esc(x.phone||'')}</td><td>${pill(x.category)}</td><td class="foot">${esc((x.last_message_at||'').replace('T',' ').slice(0,16))}</td></tr>`).join('');
     document.getElementById('rows').innerHTML = rows || '<tr><td colspan="4" class="foot">No customers yet.</td></tr>';
   }catch(e){}
 }

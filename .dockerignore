@@ -21,6 +21,8 @@ workspace/data/lead_scores.xlsx
 workspace/images/cache
 workspace/images/tmp
 workspace/downloads
+workspace/voice_cache/audio
+workspace/voice_cache/transcripts
 database/tmp
 
 # python / node cruft

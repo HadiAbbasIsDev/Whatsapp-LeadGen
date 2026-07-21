@@ -1,7 +1,8 @@
 # Long-Term Memory
 
-This file stores durable facts about users, past conversations, and business context.
-The agent appends entries here using the format below.
+This file stores business-wide context only. Customer memory is stored in the
+SQLite `memories` table through `db.py remember` / `db.py recall`; do not append
+new customer PII here.
 
 ---
 

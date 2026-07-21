@@ -84,8 +84,32 @@ def init_schema(conn):
             status               TEXT,
             notes                TEXT
         );
+        CREATE TABLE IF NOT EXISTS memories (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            phone      TEXT NOT NULL,
+            kind       TEXT NOT NULL,
+            memory_key TEXT NOT NULL,
+            value      TEXT NOT NULL,
+            source     TEXT DEFAULT 'conversation',
+            confidence REAL DEFAULT 1.0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            expires_at TEXT,
+            UNIQUE(phone, kind, memory_key)
+        );
+        CREATE TABLE IF NOT EXISTS messaging_consent (
+            phone              TEXT PRIMARY KEY,
+            marketing_opt_in   INTEGER NOT NULL DEFAULT 0,
+            opted_in_at        TEXT,
+            opted_out_at       TEXT,
+            last_inbound_at    TEXT,
+            source             TEXT,
+            updated_at         TEXT NOT NULL
+        );
         CREATE INDEX IF NOT EXISTS idx_customers_category ON customers(category);
         CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads(phone);
+        CREATE INDEX IF NOT EXISTS idx_memories_phone ON memories(phone);
+        CREATE INDEX IF NOT EXISTS idx_memories_expiry ON memories(expires_at);
         """
     )
     # Add cadence_status and previous_owner columns to existing tables (safe if already present)
@@ -300,6 +324,71 @@ def get_customer(conn, phone):
     print(json.dumps(data, indent=2, ensure_ascii=False))
 
 
+def remember(conn, phone, kind, key, value, source="conversation", confidence=1.0, expires_at=None):
+    ts = now_iso()
+    conn.execute(
+        "INSERT INTO memories(phone,kind,memory_key,value,source,confidence,created_at,updated_at,expires_at) "
+        "VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(phone,kind,memory_key) DO UPDATE SET "
+        "value=excluded.value,source=excluded.source,confidence=excluded.confidence,"
+        "updated_at=excluded.updated_at,expires_at=excluded.expires_at",
+        (phone, kind, key, value, source, confidence, ts, ts, expires_at),
+    )
+    conn.commit()
+    print(json.dumps({"ok": True, "phone": phone, "kind": kind, "key": key}))
+
+
+def recall(conn, phone):
+    rows = conn.execute(
+        "SELECT kind,memory_key,value,source,confidence,updated_at,expires_at FROM memories "
+        "WHERE phone=? AND (expires_at IS NULL OR datetime(expires_at)>datetime('now')) ORDER BY kind,memory_key",
+        (phone,),
+    ).fetchall()
+    print(json.dumps([dict(r) for r in rows], indent=2, ensure_ascii=False))
+
+
+def record_consent(conn, phone, opted_in, source):
+    ts = now_iso()
+    conn.execute(
+        "INSERT INTO messaging_consent(phone,marketing_opt_in,opted_in_at,opted_out_at,source,updated_at) "
+        "VALUES(?,?,?,?,?,?) ON CONFLICT(phone) DO UPDATE SET marketing_opt_in=excluded.marketing_opt_in,"
+        "opted_in_at=CASE WHEN excluded.marketing_opt_in=1 THEN excluded.opted_in_at ELSE opted_in_at END,"
+        "opted_out_at=CASE WHEN excluded.marketing_opt_in=0 THEN excluded.opted_out_at ELSE NULL END,"
+        "source=excluded.source,updated_at=excluded.updated_at",
+        (phone, int(opted_in), ts if opted_in else None, None if opted_in else ts, source, ts),
+    )
+    conn.commit()
+    print(json.dumps({"ok": True, "phone": phone, "marketing_opt_in": bool(opted_in)}))
+
+
+def record_inbound(conn, phone):
+    ts = now_iso()
+    conn.execute(
+        "INSERT INTO messaging_consent(phone,last_inbound_at,updated_at) VALUES(?,?,?) "
+        "ON CONFLICT(phone) DO UPDATE SET last_inbound_at=excluded.last_inbound_at,updated_at=excluded.updated_at",
+        (phone, ts, ts),
+    )
+    conn.commit()
+    print(json.dumps({"ok": True, "phone": phone, "last_inbound_at": ts}))
+
+
+def can_message(conn, phone):
+    row = conn.execute("SELECT * FROM messaging_consent WHERE phone=?", (phone,)).fetchone()
+    if not row:
+        print(json.dumps({"allowed": False, "reason": "no consent or inbound conversation recorded"}))
+        return
+    data = dict(row)
+    within_window = False
+    if data.get("last_inbound_at"):
+        try:
+            within_window = datetime.fromisoformat(data["last_inbound_at"]) >= datetime.now(PKT) - timedelta(hours=24)
+        except ValueError:
+            pass
+    allowed = within_window or (bool(data["marketing_opt_in"]) and not data.get("opted_out_at"))
+    print(json.dumps({"allowed": allowed, "within_24h": within_window,
+                      "marketing_opt_in": bool(data["marketing_opt_in"]),
+                      "reason": "24h service window or explicit opt-in" if allowed else "no active service window or opt-in"}))
+
+
 def do_init(conn):
     init_schema(conn)
     imported_c = imported_l = 0
@@ -366,6 +455,15 @@ def main():
     p = sub.add_parser("touch"); p.add_argument("--phone", required=True)
     p = sub.add_parser("list-customers"); p.add_argument("--category")
 
+    p = sub.add_parser("remember"); p.add_argument("--phone", required=True); p.add_argument("--kind", required=True)
+    p.add_argument("--key", required=True); p.add_argument("--value", required=True); p.add_argument("--source", default="conversation")
+    p.add_argument("--confidence", type=float, default=1.0); p.add_argument("--expires-at")
+    p = sub.add_parser("recall"); p.add_argument("--phone", required=True)
+    p = sub.add_parser("record-consent"); p.add_argument("--phone", required=True)
+    p.add_argument("--opt-in", choices=("yes", "no"), required=True); p.add_argument("--source", required=True)
+    p = sub.add_parser("record-inbound"); p.add_argument("--phone", required=True)
+    p = sub.add_parser("can-message"); p.add_argument("--phone", required=True)
+
     p = sub.add_parser("add-lead"); p.add_argument("--phone", required=True)
     for opt in ("name", "email", "products", "pain", "intent", "tier", "notes", "status"):
         p.add_argument("--" + opt)
@@ -416,6 +514,16 @@ def dispatch(conn, args):
         list_customers(conn, args.category)
     elif args.cmd == "export-customers":
         export_customers(conn); print(json.dumps({"ok": True}))
+    elif args.cmd == "remember":
+        remember(conn, args.phone, args.kind, args.key, args.value, args.source, args.confidence, args.expires_at)
+    elif args.cmd == "recall":
+        recall(conn, args.phone)
+    elif args.cmd == "record-consent":
+        record_consent(conn, args.phone, args.opt_in == "yes", args.source)
+    elif args.cmd == "record-inbound":
+        record_inbound(conn, args.phone)
+    elif args.cmd == "can-message":
+        can_message(conn, args.phone)
 
 
 if __name__ == "__main__":
