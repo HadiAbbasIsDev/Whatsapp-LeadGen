@@ -177,11 +177,18 @@ def map_message(m):
     return event
 
 
-def post_events(events):
+def post_event(event):
+    """Deliver ONE event. Returns 'delivered', 'uncertain', or 'down'.
+
+    The kapso-whatsapp plugin holds the webhook response open until the full
+    agent turn completes (long: reasoning-model latency), so: a read timeout
+    AFTER the request was accepted means the gateway IS processing it —
+    treating that as failure and retrying is exactly what duplicates agent
+    replies. Only a connection error (gateway not listening) is retryable."""
     secret = env("KAPSO_WEBHOOK_SECRET")
     port = env("KAPSO_GATEWAY_PORT") or "18789"
     path = env("KAPSO_WEBHOOK_PATH") or "/kapso/webhook"
-    body = json.dumps({"data": events}).encode()
+    body = json.dumps(event).encode()
     sig = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
     req = urllib.request.Request(
         f"http://127.0.0.1:{port}{path}", data=body, method="POST",
@@ -191,13 +198,27 @@ def post_events(events):
             "X-Webhook-Event": "whatsapp.message.received",
         })
     try:
-        with urllib.request.urlopen(req, timeout=30) as r:
+        with urllib.request.urlopen(req, timeout=180) as r:
             resp = r.read().decode(errors="replace")
-            log(f"delivered {len(events)} event(s): {resp[:200]}")
-            return True
+            log(f"delivered {event['message']['id'][:40]}…: {resp[:120]}")
+            return "delivered"
+    except urllib.error.HTTPError as e:
+        # Gateway answered (4xx/5xx): it received the event; do not re-deliver
+        log(f"gateway rejected {event['message']['id'][:40]}… HTTP {e.code}: {e.read()[:120]}")
+        return "uncertain"
+    except (TimeoutError, OSError) as e:
+        import socket
+        if isinstance(e, (ConnectionRefusedError, ConnectionResetError)) or "refused" in str(e).lower():
+            log(f"gateway down ({e}); will retry next cycle")
+            return "down"
+        if isinstance(e, (socket.timeout, TimeoutError)) or "timed out" in str(e).lower():
+            log(f"response timeout for {event['message']['id'][:40]}… — gateway accepted it, marking delivered")
+            return "uncertain"
+        log(f"delivery error ({e}); will retry next cycle")
+        return "down"
     except Exception as e:
-        log(f"ERROR delivering to gateway (will retry next cycle): {e}")
-        return False
+        log(f"delivery error ({e}); will retry next cycle")
+        return "down"
 
 
 def fetch_new(state):
@@ -271,14 +292,17 @@ def poll_cycle(state, dry_run=False):
     if discard:
         state["seen"].extend(discard)
         changed = True
-    if candidates:
-        candidates.sort(key=lambda x: x[0])
-        # seen/watermark advance ONLY after the gateway accepted the batch —
-        # a delivery failure leaves state untouched so the batch retries.
-        if post_events([e for _, _, e in candidates]):
-            state["seen"].extend(mid for _, mid, _ in candidates)
-            state["watermark"] = max(state["watermark"], max(ts for ts, _, _ in candidates))
-            changed = True
+    candidates.sort(key=lambda x: x[0])
+    for ts, mid, event in candidates:
+        # One event per POST: seen/watermark advance per message, immediately,
+        # so a crash or slow turn can only ever affect a single message.
+        outcome = post_event(event)
+        if outcome == "down":
+            break  # gateway not listening; keep order, retry next cycle
+        state["seen"].append(mid)
+        state["watermark"] = max(state["watermark"], ts)
+        save_state(state)
+        changed = False  # already persisted
     if changed:
         save_state(state)
 
