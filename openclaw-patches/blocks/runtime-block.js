@@ -10,13 +10,26 @@
 				inboundLogger.info({ labelId: label.id, name: label.name }, "[label-probe] discovered label");
 			} catch (e) { try { inboundLogger.warn({ error: String(e) }, "[label-probe] write failed"); } catch {} }
 		});
+		const __ocProbeStartedAt = Date.now();
 		attachEmitterListener(sock.ev, "labels.association", (assoc) => {
-			try { __ocAppendFile(__ocLabelDir + "/whatsapp-label-assoc.log", JSON.stringify(assoc) + "\n"); } catch {}
+			try { __ocAppendFile(__ocLabelDir + "/whatsapp-label-assoc.log", JSON.stringify({ ts: new Date().toISOString(), ...assoc }) + "\n"); } catch {}
 			try {
 				const eventType = String(assoc?.type || "").toLowerCase();
 				const relation = assoc?.association || {};
 				const chatId = String(relation.chatId || "");
 				const labelId = String(relation.labelId || "");
+				// Track the chat's ACTUAL current labels; the reconciler uses this to strip extras.
+				const __ocTrack = globalThis[Symbol.for("openclaw.wa.chatLabels")] || (globalThis[Symbol.for("openclaw.wa.chatLabels")] = new Map());
+				const __ocSet = __ocTrack.get(chatId) || new Set();
+				if (eventType === "add") __ocSet.add(labelId); else if (eventType === "remove") __ocSet.delete(labelId);
+				__ocTrack.set(chatId, __ocSet);
+				// Echo suppression: events caused by our own reconciler ops must not re-enter the DB mirror.
+				const __ocOps = globalThis[Symbol.for("openclaw.wa.labelOps")] || (globalThis[Symbol.for("openclaw.wa.labelOps")] = new Map());
+				const __ocOpKey = eventType + ":" + chatId + ":" + labelId;
+				if (__ocOps.has(__ocOpKey)) { __ocOps.delete(__ocOpKey); return; }
+				// Replay guard: association replays right after connect are history, not user actions.
+				// The SQLite category is the source of truth on restart.
+				if (Date.now() - __ocProbeStartedAt < 90000) return;
 				const lid = chatId.endsWith("@lid") ? chatId.slice(0, -4) : "";
 				let phone = "";
 				if (lid) {
@@ -69,15 +82,19 @@
 	// --- BEGIN openclaw label-reconciler (customers.json -> WhatsApp labels) ---
 	try {
 		const __ocApplied = new Map();
-		const __ocJidFromPhone = (phone) => {
+		const __ocJidsFromPhone = (phone) => {
+			// Label BOTH the LID jid and the phone jid: WhatsApp keys a chat by one or the
+			// other depending on account/app version, and shows only associations on the
+			// form it uses. The unused association is harmless.
 			const digits = String(phone || "").replace(/\D/g, "");
-			if (!digits) return null;
-			// WhatsApp "Lists" key chats by LID, not the phone JID. Resolve phone -> LID.
+			if (!digits) return [];
+			const jids = [];
 			try {
 				const lid = JSON.parse(__ocReadFile(__ocHomedir() + "/.openclaw/credentials/whatsapp/default/lid-mapping-" + digits + ".json", "utf8"));
-				if (lid) return String(lid) + "@lid";
+				if (lid) jids.push(String(lid) + "@lid");
 			} catch {}
-			return digits + "@s.whatsapp.net";
+			jids.push(digits + "@s.whatsapp.net");
+			return jids;
 		};
 		const __ocResolveCustomersPath = () => {
 			try {
@@ -101,6 +118,7 @@
 			} catch {}
 			return map;
 		};
+		let __ocReassert = 0;
 		const __ocReconcile = async () => {
 			let customers;
 			try { customers = JSON.parse(__ocReadFile(__ocResolveCustomersPath(), "utf8")); } catch { return; }
@@ -108,28 +126,61 @@
 			if (!list.length) return;
 			const labelMap = __ocLoadLabelMap();
 			if (!Object.keys(labelMap).length) return;
+			if (typeof sock.addChatLabel !== "function") return;
 			const __ocCats = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"];
+			// Re-assert the current label every 20th cycle (~5 min) so a lost app-state
+			// patch heals itself; other cycles send nothing unless the category changed.
+			const reassert = __ocReassert++ % 20 === 0;
+			const __ocTrack = globalThis[Symbol.for("openclaw.wa.chatLabels")];
+			const __ocOps = globalThis[Symbol.for("openclaw.wa.labelOps")] || (globalThis[Symbol.for("openclaw.wa.labelOps")] = new Map());
+			const __ocManagedIds = new Set();
+			for (const k of __ocCats) if (labelMap[k]) __ocManagedIds.add(String(labelMap[k]));
 			for (const c of list) {
-				const jid = __ocJidFromPhone(c && c.phone);
+				const digits = String((c && c.phone) || "").replace(/\D/g, "");
+				const jids = __ocJidsFromPhone(c && c.phone);
 				const cat = c && c.category ? String(c.category).trim().toLowerCase() : "";
-				const labelId = labelMap[cat];
-				if (!jid || !labelId) continue;
+				if (!digits || !jids.length || !__ocCats.includes(cat)) continue;
+				const labelId = labelMap[cat] || null; // a category with no matching WhatsApp label just clears the others
+				const changed = __ocApplied.get(digits) !== cat;
 				try {
-					if (typeof sock.addChatLabel === "function") {
-						if (__ocApplied.get(jid) !== cat) await sock.addChatLabel(jid, labelId);
-						// Swap: remove the OTHER category labels so the chat reflects only the current category
-						for (const other of __ocCats) {
-							if (other === cat) continue;
-							const otherId = labelMap[other];
-							if (otherId && typeof sock.removeChatLabel === "function") {
-								try { await sock.removeChatLabel(jid, otherId); } catch {}
+					// Strip managed labels the chat actually carries but shouldn't (double tags,
+					// out-of-band tags like WhatsApp Business auto-"New customer"). Event-tracked,
+					// so this sends nothing when the chat is already clean.
+					if (typeof sock.removeChatLabel === "function") {
+						for (const jid of jids) {
+							const present = __ocTrack && __ocTrack.get(jid);
+							if (!present) continue;
+							for (const id of Array.from(present)) {
+								const sid = String(id);
+								if (__ocManagedIds.has(sid) && sid !== labelId) {
+									try {
+										__ocOps.set("remove:" + jid + ":" + sid, Date.now());
+										await sock.removeChatLabel(jid, sid);
+										present.delete(id);
+										inboundLogger.info({ jid, labelId: sid }, "[label-reconciler] removed extra label");
+									} catch {}
+								}
 							}
 						}
-						__ocApplied.set(jid, cat);
-						inboundLogger.info({ jid, labelId, category: cat }, "[label-reconciler] applied label");
 					}
-				} catch (e) { try { inboundLogger.warn({ jid, labelId, error: String(e) }, "[label-reconciler] apply failed"); } catch {} }
+					if (!changed && !reassert) continue;
+					for (const jid of jids) {
+						if (labelId) { __ocOps.set("add:" + jid + ":" + labelId, Date.now()); await sock.addChatLabel(jid, labelId); }
+						if (changed && typeof sock.removeChatLabel === "function") {
+							// Blind swap on transition as a safety net for labels the tracker never saw
+							for (const other of __ocCats) {
+								const otherId = labelMap[other];
+								if (otherId && otherId !== labelId) {
+									try { __ocOps.set("remove:" + jid + ":" + otherId, Date.now()); await sock.removeChatLabel(jid, otherId); } catch {}
+								}
+							}
+						}
+					}
+					__ocApplied.set(digits, cat);
+					if (changed) inboundLogger.info({ jids, labelId, category: cat }, "[label-reconciler] applied label");
+				} catch (e) { try { inboundLogger.warn({ jids, labelId, error: String(e) }, "[label-reconciler] apply failed"); } catch {} }
 			}
+			for (const [k, t] of __ocOps) if (Date.now() - t > 300000) __ocOps.delete(k); // prune stale echo entries
 		};
 		setTimeout(() => { __ocReconcile(); setInterval(__ocReconcile, 15000); }, 16000);
 		inboundLogger.info({}, "[label-reconciler] installed");

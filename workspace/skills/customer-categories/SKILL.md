@@ -58,6 +58,10 @@ python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender
 
 ## Rules
 
+- Runtime enforcement: the gateway itself now drops inbound messages from chats
+  whose category is NOT `new customer`, `important`, or `followup` — you will never
+  even see a message from a `complaints` / `hot leads` / `junk` / human-owned chat.
+  The rules below stay as defense-in-depth for the turn in which a category changes.
 - Category must be one of the valid categories above. Never invent a new one.
 - Do not change a customer's category automatically on a normal message. Use `upsert-customer`
   only; it never downgrades an existing category. Use `set-category` only on explicit owner instruction or a routing-flow action.

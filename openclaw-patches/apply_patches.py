@@ -43,7 +43,7 @@ SENDTRACK_REPLACE = (
 BLOCK_ANCHOR = 'const detachConnectionUpdate = attachEmitterListener(sock.ev, "connection.update", handleConnectionUpdate);'
 BOT_LABELS = '["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]'
 VOICE_FALLBACK_SENTINEL = "__ocDownloadInboundAudioFallback"
-LABEL_SYNC_SENTINEL = "[label-sync] database updated from WhatsApp"
+LABEL_SYNC_SENTINEL = "__ocProbeStartedAt"  # bump when the label-probe block changes shape
 VOICE_FALLBACK_ANCHOR = "\tconst enqueueInboundMessage = async (msg, inbound, enriched) => {"
 VOICE_FALLBACK_BLOCK = r'''	const __ocDownloadInboundAudioFallback = async (msg, enriched) => {
 		if (!enriched || enriched.mediaPath || enriched.mediaType || enriched.body !== "<media:audio>") return enriched;
@@ -79,6 +79,58 @@ VOICE_FALLBACK_BLOCK = r'''	const __ocDownloadInboundAudioFallback = async (msg,
 '''
 ENRICH_ANCHOR = "\t\t\tconst enriched = await enrichInboundMessage(msg);\n\t\t\tif (!enriched) continue;\n\t\t\tawait enqueueInboundMessage(msg, inbound, enriched);"
 ENRICH_REPLACE = "\t\t\tlet enriched = await enrichInboundMessage(msg);\n\t\t\tif (!enriched) continue;\n\t\t\tenriched = await __ocDownloadInboundAudioFallback(msg, enriched);\n\t\t\tawait enqueueInboundMessage(msg, inbound, enriched);"
+
+# Hard category gate: inbound DMs only reach the agent when the chat's DB category
+# is in GATE_ALLOWED. Blocked chats (complaints / hot leads / junk / human-owner
+# lists) get no read receipt and no agent reply until a human re-categorizes them.
+GATE_SENTINEL = "__ocCategoryGateAllows"
+RECONCILER_SENTINEL = "removed extra label"  # bump when the reconciler block changes shape
+GATE_BLOCK = r'''	const __ocCategoryGateAllows = (msg, inbound) => {
+		try {
+			if (!inbound || inbound.group || msg?.key?.fromMe) return true; // gate customer DMs only
+			const digits = String(inbound.senderE164 || inbound.from || "").replace(/\D/g, "");
+			if (!digits) return true;
+			const ws = (() => { try { return loadConfig()?.agents?.defaults?.workspace; } catch { return null; } })() || (__ocHomedir() + "/wa-lead-gen/workspace");
+			const data = JSON.parse(__ocReadFile(ws.replace(/\/$/, "") + "/data/customers.json", "utf8"));
+			const row = (data.customers || []).find((c) => String(c.phone || "").replace(/\D/g, "") === digits);
+			const cat = String((row && row.category) || "new customer").trim().toLowerCase();
+			const allowed = ["new customer", "important", "followup"];
+			if (allowed.includes(cat)) return true;
+			inboundLogger.info({ from: inbound.from, category: cat }, "[category-gate] blocked inbound; agent stays silent until the chat returns to an allowed category");
+			return false;
+		} catch (e) {
+			try { inboundLogger.warn({ error: String(e) }, "[category-gate] check failed; allowing message"); } catch {}
+			return true; // fail open: a broken gate must not silence the whole bot
+		}
+	};
+'''
+GATE_CALL_ANCHOR = "\t\t\tconst inbound = await normalizeInboundMessage(msg);\n\t\t\tif (!inbound) continue;\n\t\t\tawait maybeMarkInboundAsRead(inbound);"
+GATE_CALL_REPLACE = "\t\t\tconst inbound = await normalizeInboundMessage(msg);\n\t\t\tif (!inbound) continue;\n\t\t\tif (!__ocCategoryGateAllows(msg, inbound)) continue;\n\t\t\tawait maybeMarkInboundAsRead(inbound);"
+
+
+def replace_marked_section(src, block_source, start_marker, end_marker, what):
+    """Swap the BEGIN..END section in src with the same section from block_source."""
+    old_start = src.find(start_marker)
+    old_end = src.find(end_marker, old_start)
+    new_start = block_source.find(start_marker)
+    new_end = block_source.find(end_marker, new_start)
+    if min(old_start, old_end, new_start, new_end) < 0:
+        sys.exit(f"ERROR: could not refresh {what} block (markers not found)")
+    old_end += len(end_marker)
+    new_end += len(end_marker)
+    return src[:old_start] + block_source[new_start:new_end] + src[old_end:]
+
+
+def apply_category_gate(src):
+    """Insert the category-gate function + its call site. Idempotent."""
+    if GATE_SENTINEL in src:
+        return src
+    if VOICE_FALLBACK_ANCHOR not in src:
+        sys.exit("ERROR: could not find anchor for category gate function.")
+    src = src.replace(VOICE_FALLBACK_ANCHOR, GATE_BLOCK + VOICE_FALLBACK_ANCHOR, 1)
+    if GATE_CALL_ANCHOR not in src:
+        sys.exit("ERROR: could not find call-site anchor for category gate.")
+    return src.replace(GATE_CALL_ANCHOR, GATE_CALL_REPLACE, 1)
 
 
 def find_login_file():
@@ -134,17 +186,18 @@ def main():
         if "__ocExecFile" not in refreshed:
             refreshed = refreshed.replace(IMPORTS_ANCHOR, IMPORTS_ANCHOR + '\nimport { execFile as __ocExecFile } from "node:child_process";', 1)
         if LABEL_SYNC_SENTINEL not in refreshed:
-            start_marker = "\t// --- BEGIN openclaw label-probe (read-only) ---"
-            end_marker = "\t// --- END openclaw label-probe ---"
-            old_start = refreshed.find(start_marker)
-            old_end = refreshed.find(end_marker, old_start)
-            new_start = RUNTIME_BLOCK.find(start_marker)
-            new_end = RUNTIME_BLOCK.find(end_marker, new_start)
-            if min(old_start, old_end, new_start, new_end) < 0:
-                sys.exit("ERROR: could not refresh two-way WhatsApp label sync block")
-            old_end += len(end_marker)
-            new_end += len(end_marker)
-            refreshed = refreshed[:old_start] + RUNTIME_BLOCK[new_start:new_end] + refreshed[old_end:]
+            refreshed = replace_marked_section(
+                refreshed, RUNTIME_BLOCK,
+                "\t// --- BEGIN openclaw label-probe (read-only) ---",
+                "\t// --- END openclaw label-probe ---",
+                "two-way WhatsApp label sync")
+        if RECONCILER_SENTINEL not in refreshed:
+            refreshed = replace_marked_section(
+                refreshed, RUNTIME_BLOCK,
+                "\t// --- BEGIN openclaw label-reconciler (customers.json -> WhatsApp labels) ---",
+                "\t// --- END openclaw label-reconciler ---",
+                "idempotent label reconciler")
+        refreshed = apply_category_gate(refreshed)
         refreshed = refreshed.replace(
             'const __ocCats = ["new customer", "important", "hot leads"];',
             f"const __ocCats = {BOT_LABELS};",
@@ -203,6 +256,7 @@ def main():
     if ENRICH_ANCHOR not in out:
         sys.exit("ERROR: could not find enqueue anchor for inbound voice fallback.")
     out = out.replace(ENRICH_ANCHOR, ENRICH_REPLACE, 1)
+    out = apply_category_gate(out)
     open(target, "w").write(out)
 
     print("Patched. Verifying syntax with node --check...")

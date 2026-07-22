@@ -2,7 +2,7 @@
 
 A self-hosted WhatsApp AI sales assistant powered by **OpenClaw (clawdbot)** and an **OpenRouter**-backed LLM.
 
-When anyone messages your WhatsApp number, **Aria** (the bot) will:
+When anyone messages your WhatsApp number, **Alia** (the bot) will:
 - Answer product questions from the local catalog
 - Qualify interested prospects
 - Capture leads (name + email) into a local JSON database
@@ -99,7 +99,7 @@ wa-lead-gen/
 ├── setup.sh                        # One-time setup script
 └── workspace/
     ├── AGENTS.md                   # Core agent instructions (conversation flow)
-    ├── SOUL.md                     # Aria's personality & hard limits
+    ├── SOUL.md                     # Alia's personality & hard limits
     ├── USER.md                     # Your business profile — edit this
     ├── MEMORY.md                   # Long-term memory (auto-managed)
     ├── data/
@@ -153,7 +153,7 @@ Scan the QR code using WhatsApp → Linked Devices → Link a Device.
 openclaw gateway
 ```
 
-Send any message to your linked WhatsApp number — Aria will respond.
+Send any message to your linked WhatsApp number — Alia will respond.
 
 ---
 

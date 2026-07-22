@@ -52,5 +52,5 @@ This script sends a WhatsApp message to the owner number:
 ### Step 4 — Stop customer-facing replies
 
 Do NOT confirm, acknowledge, or continue naturally with the customer. Once the
-handoff alert is sent and the chat is tagged `hot leads`, Aria goes silent on
+handoff alert is sent and the chat is tagged `hot leads`, Alia goes silent on
 that thread until/unless the owner manually changes the category.

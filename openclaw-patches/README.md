@@ -20,6 +20,19 @@ a new machine.** This folder makes them reproducible.
      through the raw Baileys socket (`sock.sendMessage(jid, {image, caption})`).
    - An *auto-image safety net* attaches a product's photo automatically whenever the
      bot's reply mentions it (`item-XXXX` / "Item XXXX"), deduped with the queue.
+3. **Hard inbound category gate** — inbound DMs are dropped BEFORE the agent (and
+   before the read receipt) unless the chat's category in `customers.json` is one of
+   `new customer` / `important` / `followup`. Chats tagged `complaints`, `hot leads`,
+   `junk`, or a human-owner list (`ahsan`/`ahmed`/`imran`/`rafay`) stay silent and
+   unread until a human re-categorizes them (WhatsApp label change or `db.py
+   set-category`). The gate fails OPEN (a broken customers.json never mutes the bot);
+   blocks are logged as `[category-gate] blocked inbound`.
+
+The label reconciler is **idempotent**: it only sends WhatsApp app-state patches when
+a customer's category actually changes, plus a re-assert of the current label every
+~5 minutes so a lost patch heals itself. (An earlier version re-sent 7 label-remove
+patches per customer every 15 s around the clock — enough churn for WhatsApp to
+throttle/ignore the mutations, which is why labels stopped appearing on the phone.)
 
 `workspace/send_product.py` enqueues jobs for the media-queue watcher.
 
