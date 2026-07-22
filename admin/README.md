@@ -1,15 +1,24 @@
-# Bot Admin Dashboard
+# Bot Admin Dashboard (CRM)
 
-A simple web panel for a non-technical owner to supervise and control the WhatsApp
-bot — **start/stop it, see if it's online, and monitor customers by label**. It does
-**not** show conversations.
+A CRM-style web panel for a non-technical owner to supervise and control the
+WhatsApp bot and manage customers by label. It does **not** show conversations.
 
 ## What it shows / does
 
 - **ONLINE / OFFLINE** status + whether WhatsApp is connected, the model, and uptime.
 - **▶ Start bot** / **■ Stop bot (kill switch)** — controls the openclaw gateway.
   The dashboard keeps running even when the bot is off, so you can start it anytime.
-- **Customer counts** by label: New customers, Hot leads, Important — plus a customer list.
+- **All customers, CRM-style**: search (name/number/notes), sortable columns,
+  CSV export, wa.me links, relative "last seen" times.
+- **Filter chips for every label** with live counts: New customer, Important,
+  Hot leads, Follow-up, Junk, Complaints, and the team lists (Ahsan, Ahmed,
+  Imran, Rafay).
+- **Change a customer's label** from a dropdown on each row. This goes through
+  `workspace/db.py set-category` (the sole locked category writer), so the
+  WhatsApp Business labels and the inbound category gate stay in sync. A confirm
+  dialog warns when a move will silence or un-silence the bot on that chat
+  (silenced chats show a ⏸ marker).
+- **Captured leads** table (read-only).
 
 The dashboard manages the gateway as a subprocess (applies the openclaw patches first,
 then launches it), so the owner never touches the terminal.

@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
-renovate.pk Bot — Admin Dashboard
+renovate.pk Bot — Admin Dashboard (CRM)
 
-A small local web panel so a non-technical owner can:
+A local web panel so a non-technical owner can:
   - Start / Stop the openclaw bot (kill switch)
   - See whether it's running and connected to WhatsApp
-  - Monitor customers by label (New customers / Hot leads / Important)
+  - Browse ALL customers CRM-style: search, filter by label, sort, export CSV
+  - Move a customer between labels (goes through workspace/db.py set-category,
+    the sole safe writer — it also drives WhatsApp label sync + the inbound gate)
+  - See captured leads
 
 It does NOT show conversations. It controls the gateway as a subprocess, so the
 dashboard stays up even when the bot is off ("start it from here anytime").
@@ -30,43 +33,10 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GATEWAY_LOG = os.path.join(REPO, "progress", "gateway.log")
 CUSTOMERS_FILE = os.path.join(REPO, "workspace", "data", "customers.json")
 DB_FILE = os.path.join(REPO, "workspace", "data", "leadgen.db")
-CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]  # keep in sync with workspace/db.py
+DB_PY = os.path.join(REPO, "workspace", "db.py")
+# Must match workspace/db.py CATEGORIES (the validator of record).
+CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]
 PATCHER = os.path.join(REPO, "openclaw-patches", "apply_patches.py")
-ENV_FILE = os.path.join(REPO, ".env")
-POLLER = os.path.join(REPO, "scripts", "kapso_poller.py")
-POLLER_LOG = os.path.join(REPO, "progress", "kapso-poller.log")
-
-
-def _env_value(key):
-    try:
-        with open(ENV_FILE) as f:
-            for line in f:
-                if line.startswith(key + "="):
-                    return line.split("=", 1)[1].strip().strip('"')
-    except Exception:
-        pass
-    return ""
-
-
-def wa_transport():
-    return (_env_value("WA_TRANSPORT") or "baileys").lower()
-
-
-def poller_running():
-    try:
-        out = subprocess.run(["pgrep", "-f", "kapso_poller.py"], capture_output=True, text=True, timeout=5)
-        return bool(out.stdout.strip())
-    except Exception:
-        return False
-
-
-def start_poller_if_needed():
-    """Kapso + no public URL means the polling relay IS the inbound path —
-    a dead poller is a silent, total inbound outage."""
-    if wa_transport() != "kapso" or _env_value("KAPSO_PUBLIC_URL") or poller_running():
-        return
-    logf = open(POLLER_LOG, "a")
-    subprocess.Popen(["python3", POLLER], cwd=REPO, stdout=logf, stderr=logf, start_new_session=True)
 NODE_BIN = "/usr/local/node-v22.21.1/bin"
 # When running under supervisor (Docker), drive the gateway via supervisorctl
 # instead of spawning/killing it directly.
@@ -124,19 +94,11 @@ def require_auth(f):
 
 # ---- process control -------------------------------------------------
 def gateway_pids():
-    # 2026.4.9 names the process "openclaw-gateway"; 2026.6.x names it "openclaw"
-    pids = []
-    try:
-        out = subprocess.run(["pgrep", "-x", "openclaw"], capture_output=True, text=True, timeout=5)
-        pids += [int(p) for p in out.stdout.split() if p.strip()]
-    except Exception:
-        pass
     try:
         out = subprocess.run(["pgrep", "-f", "openclaw-gateway"], capture_output=True, text=True, timeout=5)
-        pids += [int(p) for p in out.stdout.split() if p.strip()]
+        return [int(p) for p in out.stdout.split() if p.strip()]
     except Exception:
-        pass
-    return sorted(set(pids))
+        return []
 
 
 def is_running():
@@ -157,11 +119,9 @@ def gateway_status():
     lines = tail(GATEWAY_LOG, 400)
     text = "".join(lines)
 
-    # connected = a channel-up line appears after the most recent restart/exit
-    # (Baileys: "Listening for personal"; Kapso: "registered Kapso webhook route")
+    # connected = a "Listening" line appears after the most recent restart/exit
     connected = False
-    last_listen = max((i for i, l in enumerate(lines)
-                       if "Listening for personal" in l or "registered Kapso webhook route" in l), default=-1)
+    last_listen = max((i for i, l in enumerate(lines) if "Listening for personal" in l), default=-1)
     last_down = max((i for i, l in enumerate(lines) if ("channel exited" in l or "ECONNREFUSED" in l or "starting provider" in l)), default=-2)
     if running and last_listen >= 0 and last_listen >= last_down:
         connected = True
@@ -180,26 +140,19 @@ def gateway_status():
             uptime = None
 
     last_inbound = None
-    inbound = [l for l in lines if "Inbound message" in l or "webhook dispatch" in l]
+    inbound = [l for l in lines if "Inbound message" in l]
     if inbound:
         tm = re.search(r"(\d{4}-\d{2}-\d{2}T[\d:]+)", inbound[-1])
         last_inbound = tm.group(1) if tm else None
 
-    transport = wa_transport()
-    status = {
+    return {
         "running": running,
         "connected": connected,
         "model": model,
         "pid": pids[0] if pids else None,
         "uptime_seconds": uptime,
         "last_inbound": last_inbound,
-        "transport": transport,
     }
-    if transport == "kapso" and not _env_value("KAPSO_PUBLIC_URL"):
-        status["poller_running"] = poller_running()
-        if running and not status["poller_running"]:
-            status["connected"] = False  # inbound is dead without the relay
-    return status
 
 
 def _supervisorctl(action):
@@ -223,14 +176,11 @@ def start_gateway():
     env = os.environ.copy()
     env["PATH"] = NODE_BIN + ":" + env.get("PATH", "")
     env["OPENCLAW_AUTO_UPDATE"] = "0"  # never auto-update (would wipe our patches)
-    # ensure patches are applied (idempotent) before launch:
-    # - apply_patches.py: Baileys runtime patches (no-ops on non-2026.4.9 installs)
-    # - patch_kapso_gate.py: category gate for the kapso plugin (no-ops if absent)
-    for patcher in (PATCHER, os.path.join(REPO, "openclaw-patches", "patch_kapso_gate.py")):
-        try:
-            subprocess.run(["python3", patcher], cwd=REPO, env=env, capture_output=True, text=True, timeout=60)
-        except Exception:
-            pass
+    # ensure patches are applied (idempotent) before launch
+    try:
+        subprocess.run(["python3", PATCHER], cwd=REPO, env=env, capture_output=True, text=True, timeout=60)
+    except Exception:
+        pass
     os.makedirs(os.path.dirname(GATEWAY_LOG), exist_ok=True)
     logf = open(GATEWAY_LOG, "a")
     subprocess.Popen(
@@ -243,15 +193,10 @@ def start_gateway():
         if is_running():
             break
         time.sleep(0.5)
-    try:
-        start_poller_if_needed()
-    except Exception:
-        pass
     return {"ok": is_running(), "message": "Starting…"}
 
 
 def stop_gateway():
-    subprocess.run(["pkill", "-f", "kapso_poller.py"], capture_output=True)
     if SUPERVISOR_NAME:
         _supervisorctl("stop")
         time.sleep(2)
@@ -296,7 +241,8 @@ def load_customers():
         conn = sqlite3.connect(f"file:{DB_FILE}?mode=ro", uri=True, timeout=5)
         conn.row_factory = sqlite3.Row
         rows = conn.execute(
-            "SELECT phone, name, email, category, lead_score, status, first_contact_at, last_message_at "
+            "SELECT phone, name, email, category, cadence_status, lead_score, status, "
+            "first_contact_at, last_message_at, notes "
             "FROM customers ORDER BY last_message_at DESC"
         ).fetchall()
         conn.close()
@@ -307,6 +253,21 @@ def load_customers():
             return _tally(d.get("customers", []))
         except Exception:
             return _tally([])
+
+
+def load_leads():
+    try:
+        conn = sqlite3.connect(f"file:{DB_FILE}?mode=ro", uri=True, timeout=5)
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            "SELECT id, captured_at, phone, name, email, products_of_interest, pain_point, "
+            "intent, lead_score, score_tier, status, notes "
+            "FROM leads ORDER BY captured_at DESC LIMIT 300"
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+    except Exception:
+        return []
 
 
 # ---- routes ----------------------------------------------------------
@@ -322,6 +283,34 @@ def api_customers():
     return jsonify(load_customers())
 
 
+@app.route("/api/leads")
+@require_auth
+def api_leads():
+    return jsonify({"leads": load_leads()})
+
+
+@app.route("/api/set-category", methods=["POST"])
+@require_auth
+def api_set_category():
+    data = request.get_json(silent=True) or {}
+    phone = (data.get("phone") or "").strip()
+    category = (data.get("category") or "").strip().lower()
+    if not re.fullmatch(r"\+\d{6,15}", phone):
+        return jsonify({"ok": False, "message": "Invalid phone"}), 400
+    if category not in CATEGORIES:
+        return jsonify({"ok": False, "message": "Invalid category"}), 400
+    try:
+        r = subprocess.run(
+            ["python3", DB_PY, "set-category", "--phone", phone, "--category", category],
+            capture_output=True, text=True, timeout=30, cwd=REPO,
+        )
+        ok = r.returncode == 0
+        msg = (r.stdout + r.stderr).strip()[-300:] or ("Moved to " + category)
+        return jsonify({"ok": ok, "message": msg}), (200 if ok else 500)
+    except Exception as e:
+        return jsonify({"ok": False, "message": str(e)}), 500
+
+
 @app.route("/api/start", methods=["POST"])
 @require_auth
 def api_start():
@@ -334,25 +323,6 @@ def api_stop():
     return jsonify(stop_gateway())
 
 
-@app.route("/api/customer/category", methods=["POST"])
-@require_auth
-def api_set_category():
-    """Owner re-categorization (e.g. unblocking a complaints-tagged chat).
-    On Kapso there are no WhatsApp labels to clear, and a blocked chat can't
-    instruct the agent — this endpoint is the owner's unblock path."""
-    data = request.get_json(silent=True) or {}
-    phone = (data.get("phone") or "").strip()
-    category = (data.get("category") or "").strip().lower()
-    if not phone or category not in CATEGORIES:
-        return jsonify({"ok": False, "error": f"need phone + category in {CATEGORIES}"}), 400
-    r = subprocess.run(
-        ["python3", os.path.join(REPO, "workspace", "db.py"), "set-category",
-         "--phone", phone, "--category", category],
-        capture_output=True, text=True, timeout=120, cwd=os.path.join(REPO, "workspace"))
-    ok = r.returncode == 0
-    return jsonify({"ok": ok, "output": (r.stdout or r.stderr).strip()[:500]}), (200 if ok else 500)
-
-
 @app.route("/")
 @require_auth
 def index():
@@ -362,101 +332,321 @@ def index():
 PAGE = r"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>renovate.pk Bot Admin</title>
+<title>renovate.pk CRM</title>
 <style>
   :root { --bg:#0f1419; --card:#1a2129; --line:#2a3441; --txt:#e6edf3; --muted:#8b98a5;
-          --green:#2ea043; --red:#da3633; --amber:#d29922; --blue:#388bfd; }
-  * { box-sizing:border-box; } body { margin:0; font-family:system-ui,Segoe UI,Roboto,sans-serif;
-      background:var(--bg); color:var(--txt); }
-  .wrap { max-width:900px; margin:0 auto; padding:24px 16px 60px; }
-  h1 { font-size:20px; margin:0 0 4px; } .sub { color:var(--muted); font-size:13px; margin-bottom:20px; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; margin-bottom:16px; }
-  .statusrow { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-  .dot { width:14px; height:14px; border-radius:50%; display:inline-block; }
-  .badge { font-weight:700; font-size:18px; }
-  .meta { color:var(--muted); font-size:13px; display:flex; gap:18px; flex-wrap:wrap; margin-top:10px; }
-  .btns { margin-top:16px; display:flex; gap:10px; }
-  button { border:0; border-radius:8px; padding:12px 20px; font-size:15px; font-weight:600; cursor:pointer; color:#fff; }
+          --green:#2ea043; --red:#da3633; --amber:#d29922; --blue:#388bfd;
+          --purple:#a371f7; --orange:#f0883e; --teal:#39c5cf; --gray:#6e7681; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--txt); }
+  .wrap { max-width:1180px; margin:0 auto; padding:20px 16px 60px; }
+  h1 { font-size:20px; margin:0; } .sub { color:var(--muted); font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:14px; }
+  .topbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .dot { width:13px; height:13px; border-radius:50%; display:inline-block; flex:none; }
+  .badge { font-weight:700; font-size:16px; }
+  .meta { color:var(--muted); font-size:12.5px; display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; }
+  .grow { flex:1; }
+  button { border:0; border-radius:8px; padding:10px 16px; font-size:14px; font-weight:600; cursor:pointer; color:#fff; background:var(--gray); }
   button:disabled { opacity:.4; cursor:not-allowed; }
   .start { background:var(--green); } .stop { background:var(--red); }
-  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-  .lbl { border-radius:12px; padding:16px; border:1px solid var(--line); }
-  .lbl .n { font-size:34px; font-weight:800; } .lbl .t { font-size:13px; color:var(--muted); }
-  .lbl.new { background:rgba(56,139,253,.12); } .lbl.hot { background:rgba(218,54,51,.12); }
-  .lbl.imp { background:rgba(210,153,34,.12); }
-  table { width:100%; border-collapse:collapse; font-size:14px; }
-  th,td { text-align:left; padding:9px 8px; border-bottom:1px solid var(--line); }
-  th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; }
-  .pill { font-size:12px; padding:2px 9px; border-radius:20px; }
-  .pill.new { background:rgba(56,139,253,.2); color:#79c0ff; }
-  .pill.hot { background:rgba(218,54,51,.2); color:#ff7b72; }
-  .pill.imp { background:rgba(210,153,34,.2); color:#e3b341; }
-  .foot { color:var(--muted); font-size:12px; margin-top:8px; }
+  .ghost { background:transparent; border:1px solid var(--line); color:var(--txt); font-weight:500; }
+
+  /* label chips */
+  .chips { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .chip { display:flex; align-items:center; gap:8px; padding:8px 13px; border-radius:20px; cursor:pointer;
+          border:1px solid var(--line); background:transparent; font-size:13px; color:var(--txt); user-select:none; }
+  .chip .cdot { width:9px; height:9px; border-radius:50%; }
+  .chip .cnt { font-weight:800; }
+  .chip.on { border-color:#fff; background:rgba(255,255,255,.08); }
+  .chipsep { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.5px; margin:0 2px; }
+
+  /* colors per label */
+  .c-new  { --c:var(--blue); }   .c-imp  { --c:var(--amber); }
+  .c-hot  { --c:var(--red); }    .c-fol  { --c:var(--purple); }
+  .c-junk { --c:var(--gray); }   .c-comp { --c:var(--orange); }
+  .c-team { --c:var(--teal); }
+  .cdot { background:var(--c); }
+
+  /* toolbar */
+  .toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  input[type=search] { flex:1; min-width:200px; background:var(--bg); color:var(--txt);
+      border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:14px; }
+  input[type=search]::placeholder { color:var(--muted); }
+
+  /* table */
+  .tablewrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; white-space:nowrap; }
+  th,td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); }
+  th { color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase; cursor:pointer; user-select:none; position:sticky; top:0; background:var(--card); }
+  th .arrow { font-size:10px; }
+  td.notes { max-width:220px; overflow:hidden; text-overflow:ellipsis; color:var(--muted); }
+  a.phone { color:#79c0ff; text-decoration:none; } a.phone:hover { text-decoration:underline; }
+  .nm { font-weight:600; } .em { color:var(--muted); font-size:11.5px; }
+  .foot { color:var(--muted); font-size:12px; }
+  .score { font-weight:700; }
+
+  /* label select styled as pill */
+  select.pill { appearance:none; -webkit-appearance:none; border-radius:20px; padding:4px 26px 4px 12px; font-size:12.5px; font-weight:600;
+      border:1px solid var(--c,var(--line)); color:var(--c,var(--txt)); background:rgba(255,255,255,.03); cursor:pointer;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6'><path d='M0 0l4 6 4-6z' fill='%238b98a5'/></svg>");
+      background-repeat:no-repeat; background-position:right 9px center; }
+  select.pill option { background:var(--card); color:var(--txt); }
+
+  .silence { color:var(--amber); font-size:11px; margin-left:6px; }
+
+  /* toast */
+  #toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#000; color:#fff;
+      border:1px solid var(--line); border-radius:10px; padding:11px 18px; font-size:14px; opacity:0;
+      transition:opacity .25s; pointer-events:none; max-width:90vw; z-index:50; }
+  #toast.show { opacity:.96; }
+  #toast.err { background:#3b1113; border-color:var(--red); }
+
+  h2 { font-size:15px; margin:0 0 10px; }
+  @media (max-width:700px){ .hidemob { display:none; } }
 </style></head><body><div class="wrap">
-  <h1>renovate.pk — Bot Admin</h1>
-  <div class="sub">Supervise and control the WhatsApp assistant. (Conversations are private and not shown here.)</div>
 
   <div class="card">
-    <div class="statusrow">
+    <div class="topbar">
       <span class="dot" id="dot" style="background:var(--muted)"></span>
-      <span class="badge" id="badge">Checking…</span>
-      <span class="meta" id="wa"></span>
+      <div>
+        <h1>renovate.pk — CRM &amp; Bot Admin</h1>
+        <div class="sub"><span class="badge" id="badge">Checking…</span> <span id="wa"></span></div>
+      </div>
+      <div class="grow"></div>
+      <button class="start" id="startBtn" onclick="ctl('start')">▶ Start bot</button>
+      <button class="stop" id="stopBtn" onclick="ctl('stop')">■ Stop bot</button>
     </div>
     <div class="meta" id="meta"></div>
-    <div class="btns">
-      <button class="start" id="startBtn" onclick="ctl('start')">▶ Start bot</button>
-      <button class="stop" id="stopBtn" onclick="ctl('stop')">■ Stop bot (kill switch)</button>
-    </div>
-  </div>
-
-  <div class="cards">
-    <div class="lbl new"><div class="n" id="c_new">–</div><div class="t">New customers</div></div>
-    <div class="lbl hot"><div class="n" id="c_hot">–</div><div class="t">Hot leads</div></div>
-    <div class="lbl imp"><div class="n" id="c_imp">–</div><div class="t">Important</div></div>
   </div>
 
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <strong>Customers</strong><span class="foot" id="total"></span>
-    </div>
-    <table><thead><tr><th>Name</th><th>Phone</th><th>Label</th><th>Last seen</th></tr></thead>
-    <tbody id="rows"><tr><td colspan="4" class="foot">Loading…</td></tr></tbody></table>
+    <div class="chips" id="chips"></div>
   </div>
-  <div class="foot">Auto-refreshes every 5s.</div>
+
+  <div class="card">
+    <div class="toolbar">
+      <h2 style="margin:0">Customers</h2>
+      <span class="foot" id="total"></span>
+      <div class="grow"></div>
+      <input type="search" id="q" placeholder="Search name, number, notes…" oninput="render()">
+      <button class="ghost" onclick="exportCSV()">⬇ CSV</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th data-k="name">Customer <span class="arrow"></span></th>
+          <th data-k="phone">Number <span class="arrow"></span></th>
+          <th data-k="category">Label <span class="arrow"></span></th>
+          <th data-k="lead_score">Score <span class="arrow"></span></th>
+          <th data-k="status" class="hidemob">Status <span class="arrow"></span></th>
+          <th data-k="first_contact_at" class="hidemob">First contact <span class="arrow"></span></th>
+          <th data-k="last_message_at">Last seen <span class="arrow"></span></th>
+          <th data-k="notes" class="hidemob">Notes <span class="arrow"></span></th>
+        </tr></thead>
+        <tbody id="rows"><tr><td colspan="8" class="foot">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="foot" style="margin-top:8px">Change a customer's label with the dropdown — it updates WhatsApp labels too.
+      Labels <b>Hot lead / Complaint / Junk / team member</b> silence the bot on that chat until you move it back.</div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar"><h2 style="margin:0">Captured leads</h2><span class="foot" id="leadtotal"></span></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Date</th><th>Name</th><th>Number</th><th>Interested in</th><th class="hidemob">Intent</th><th>Score</th><th class="hidemob">Status</th></tr></thead>
+        <tbody id="leadrows"><tr><td colspan="7" class="foot">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="foot">Auto-refreshes every 5s (paused while you're choosing a label). Conversations are private and not shown here.</div>
 </div>
+<div id="toast"></div>
 <script>
-function fmtUptime(s){ if(s==null)return''; let h=Math.floor(s/3600),m=Math.floor(s%3600/60); return h?`${h}h ${m}m`:`${m}m`; }
+const CAT = {
+  'new customer': {label:'New customer', cls:'c-new'},
+  'important':    {label:'Important',    cls:'c-imp'},
+  'hot leads':    {label:'Hot lead',     cls:'c-hot'},
+  'followup':     {label:'Follow-up',    cls:'c-fol'},
+  'junk':         {label:'Junk',         cls:'c-junk'},
+  'complaints':   {label:'Complaint',    cls:'c-comp'},
+  'ahsan':        {label:'Ahsan',        cls:'c-team', team:true},
+  'ahmed':        {label:'Ahmed',        cls:'c-team', team:true},
+  'imran':        {label:'Imran',        cls:'c-team', team:true},
+  'rafay':        {label:'Rafay',        cls:'c-team', team:true},
+};
+const SILENT = new Set(['hot leads','complaints','junk','ahsan','ahmed','imran','rafay']);
+let DATA = {customers:[], counts:{}, categories:Object.keys(CAT), total:0};
+let LEADS = [];
+let filter = 'all';
+let sortK = 'last_message_at', sortDir = -1;
+let editing = false;   // true while a label dropdown is open — pauses re-render
+
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function pill(cat){ cat=(cat||'').toLowerCase(); if(cat.includes('hot'))return'<span class="pill hot">Hot leads</span>';
-  if(cat.includes('important'))return'<span class="pill imp">Important</span>'; return'<span class="pill new">New customer</span>'; }
+function fmtUptime(s){ if(s==null)return''; let h=Math.floor(s/3600),m=Math.floor(s%3600/60); return h?`${h}h ${m}m`:`${m}m`; }
+function catMeta(c){ return CAT[(c||'').toLowerCase()] || {label:c||'—', cls:''}; }
+function rel(ts){
+  if(!ts) return '—';
+  const d = new Date(ts); if(isNaN(d)) return esc(ts);
+  const s = (Date.now()-d.getTime())/1000;
+  if(s<60) return 'just now';
+  if(s<3600) return Math.floor(s/60)+'m ago';
+  if(s<86400) return Math.floor(s/3600)+'h ago';
+  if(s<86400*30) return Math.floor(s/86400)+'d ago';
+  return d.toISOString().slice(0,10);
+}
+function fullDate(ts){ if(!ts) return ''; const d=new Date(ts); return isNaN(d)?String(ts):d.toLocaleString(); }
+function toast(msg, err){
+  const t=document.getElementById('toast'); t.textContent=msg;
+  t.className='show'+(err?' err':''); clearTimeout(t._h);
+  t._h=setTimeout(()=>t.className='',3000);
+}
+
+function chips(){
+  const c = DATA.counts||{};
+  let h = `<span class="chip ${filter==='all'?'on':''}" onclick="setFilter('all')"><span class="cnt">${DATA.total||0}</span> All numbers</span>`;
+  const main = DATA.categories.filter(k=>!CAT[k]?.team), team = DATA.categories.filter(k=>CAT[k]?.team);
+  for(const k of main){
+    const m = catMeta(k);
+    h += `<span class="chip ${m.cls} ${filter===k?'on':''}" onclick="setFilter('${esc(k)}')"><span class="cdot"></span><span class="cnt">${c[k]??0}</span> ${esc(m.label)}s</span>`;
+  }
+  h += `<span class="chipsep">team</span>`;
+  for(const k of team){
+    const m = catMeta(k);
+    h += `<span class="chip ${m.cls} ${filter===k?'on':''}" onclick="setFilter('${esc(k)}')"><span class="cdot"></span><span class="cnt">${c[k]??0}</span> ${esc(m.label)}</span>`;
+  }
+  document.getElementById('chips').innerHTML = h;
+}
+function setFilter(f){ filter=f; render(); }
+
+function visibleRows(){
+  const q = (document.getElementById('q').value||'').toLowerCase().trim();
+  let rows = (DATA.customers||[]).slice();
+  if(filter!=='all') rows = rows.filter(x=>(x.category||'').toLowerCase()===filter);
+  if(q) rows = rows.filter(x=>[x.name,x.phone,x.email,x.notes,x.category,x.status].some(v=>String(v||'').toLowerCase().includes(q)));
+  rows.sort((a,b)=>{
+    let av=a[sortK], bv=b[sortK];
+    if(sortK==='lead_score'){ av=av==null?-1:+av; bv=bv==null?-1:+bv; }
+    else { av=String(av??'').toLowerCase(); bv=String(bv??'').toLowerCase(); }
+    return (av<bv?-1:av>bv?1:0)*sortDir;
+  });
+  return rows;
+}
+
+function render(){
+  chips();
+  const rows = visibleRows();
+  document.getElementById('total').textContent = rows.length + ' of ' + (DATA.total||0);
+  document.querySelectorAll('th[data-k]').forEach(th=>{
+    th.querySelector('.arrow').textContent = th.dataset.k===sortK ? (sortDir<0?'▼':'▲') : '';
+  });
+  const opts = DATA.categories.map(k=>`<option value="${esc(k)}">${esc(catMeta(k).label)}</option>`).join('');
+  const html = rows.map(x=>{
+    const m = catMeta(x.category);
+    const digits = String(x.phone||'').replace(/\D/g,'');
+    const silent = SILENT.has((x.category||'').toLowerCase());
+    return `<tr>
+      <td><span class="nm">${esc(x.name||'—')}</span>${x.email?`<div class="em">${esc(x.email)}</div>`:''}</td>
+      <td><a class="phone" href="https://wa.me/${digits}" target="_blank" rel="noopener">${esc(x.phone||'')}</a></td>
+      <td><select class="pill ${m.cls}" data-phone="${esc(x.phone)}" onfocus="editing=true" onblur="editing=false" onchange="changeCat(this)">
+            ${opts}
+          </select>${silent?'<span class="silence" title="Bot is silent on this chat">⏸</span>':''}</td>
+      <td class="score">${x.lead_score??'—'}</td>
+      <td class="hidemob">${esc(x.status||x.cadence_status||'—')}</td>
+      <td class="hidemob foot" title="${esc(fullDate(x.first_contact_at))}">${esc((x.first_contact_at||'').slice(0,10)||'—')}</td>
+      <td title="${esc(fullDate(x.last_message_at))}">${rel(x.last_message_at)}</td>
+      <td class="notes hidemob" title="${esc(x.notes||'')}">${esc(x.notes||'')}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('rows').innerHTML = html || '<tr><td colspan="8" class="foot">No customers match.</td></tr>';
+  // set current value on each select (can't do it inline safely)
+  document.querySelectorAll('select.pill').forEach(sel=>{
+    const row = rows.find(r=>r.phone===sel.dataset.phone);
+    if(row) sel.value = (row.category||'').toLowerCase();
+  });
+}
+
+async function changeCat(sel){
+  const phone = sel.dataset.phone, cat = sel.value;
+  const cur = (DATA.customers.find(c=>c.phone===phone)||{}).category;
+  const m = catMeta(cat);
+  let msg = `Move ${phone} to "${m.label}"?`;
+  if(SILENT.has(cat)) msg += `\n\nThe bot will STOP replying on this chat until you move it back to New customer / Important / Follow-up.`;
+  else if(SILENT.has((cur||'').toLowerCase())) msg += `\n\nThe bot will START replying on this chat again.`;
+  if(!confirm(msg)){ sel.value=(cur||'').toLowerCase(); editing=false; return; }
+  sel.disabled = true;
+  try{
+    const r = await fetch('/api/set-category',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,category:cat})});
+    const j = await r.json();
+    if(j.ok){ toast(`${phone} → ${m.label}`); const row=DATA.customers.find(c=>c.phone===phone); if(row) row.category=cat; }
+    else { toast('Failed: '+(j.message||'unknown error'), true); sel.value=(cur||'').toLowerCase(); }
+  }catch(e){ toast('Network error — label not changed', true); sel.value=(cur||'').toLowerCase(); }
+  sel.disabled = false; editing = false;
+  refresh();
+}
+
+function renderLeads(){
+  document.getElementById('leadtotal').textContent = LEADS.length ? LEADS.length+' total' : '';
+  const html = LEADS.map(l=>`<tr>
+      <td class="foot" title="${esc(fullDate(l.captured_at))}">${esc((l.captured_at||'').slice(0,10))}</td>
+      <td class="nm">${esc(l.name||'—')}</td>
+      <td><a class="phone" href="https://wa.me/${String(l.phone||'').replace(/\D/g,'')}" target="_blank" rel="noopener">${esc(l.phone||'')}</a></td>
+      <td class="notes">${esc(l.products_of_interest||'—')}</td>
+      <td class="hidemob">${esc(l.intent||'—')}</td>
+      <td class="score">${l.lead_score??'—'}${l.score_tier?` <span class="foot">(${esc(l.score_tier)})</span>`:''}</td>
+      <td class="hidemob">${esc(l.status||'—')}</td>
+    </tr>`).join('');
+  document.getElementById('leadrows').innerHTML = html || '<tr><td colspan="7" class="foot">No leads captured yet.</td></tr>';
+}
+
+function exportCSV(){
+  const rows = visibleRows();
+  const cols = ['name','phone','email','category','lead_score','status','first_contact_at','last_message_at','notes'];
+  const csv = [cols.join(',')].concat(rows.map(r=>cols.map(c=>{
+    let v = String(r[c]??'').replace(/"/g,'""');
+    return /[",\n]/.test(v) ? `"${v}"` : v;
+  }).join(','))).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = 'customers.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+document.querySelectorAll('th[data-k]').forEach(th=>th.onclick=()=>{
+  const k = th.dataset.k;
+  if(sortK===k) sortDir*=-1; else { sortK=k; sortDir = (k==='last_message_at'||k==='first_contact_at'||k==='lead_score')?-1:1; }
+  render();
+});
+
 async function refresh(){
   try{
     const s = await (await fetch('/api/status')).json();
     const dot=document.getElementById('dot'), badge=document.getElementById('badge');
     if(s.running){ dot.style.background='var(--green)'; badge.textContent='ONLINE'; }
     else { dot.style.background='var(--red)'; badge.textContent='OFFLINE'; }
-    document.getElementById('wa').innerHTML = s.running ? (s.connected?'• WhatsApp connected':'• connecting…') : '';
+    document.getElementById('wa').textContent = s.running ? (s.connected?'• WhatsApp connected':'• connecting…') : '';
     document.getElementById('meta').innerHTML =
-      [ s.model?('Model: '+s.model):'', s.uptime_seconds!=null?('Uptime: '+fmtUptime(s.uptime_seconds)):'',
-        s.last_inbound?('Last message: '+s.last_inbound.replace('T',' ')):'' ].filter(Boolean).join(' &nbsp;|&nbsp; ');
+      [ s.model?('Model: '+esc(s.model)):'', s.uptime_seconds!=null?('Uptime: '+fmtUptime(s.uptime_seconds)):'',
+        s.last_inbound?('Last message: '+esc(s.last_inbound.replace('T',' '))):'' ].filter(Boolean).join(' &nbsp;|&nbsp; ');
     document.getElementById('startBtn').disabled = s.running;
     document.getElementById('stopBtn').disabled = !s.running;
   }catch(e){}
   try{
     const c = await (await fetch('/api/customers')).json();
-    const cl = (n)=>{ for(const k in (c.counts||{})) if(k.toLowerCase().includes(n)) return c.counts[k]; return 0; };
-    document.getElementById('c_new').textContent = cl('new');
-    document.getElementById('c_hot').textContent = cl('hot');
-    document.getElementById('c_imp').textContent = cl('important');
-    document.getElementById('total').textContent = (c.total||0)+' total';
-    const rows = (c.customers||[]).map(x=>`<tr><td>${esc(x.name||'—')}</td><td>${esc(x.phone||'')}</td><td>${pill(x.category)}</td><td class="foot">${esc((x.last_message_at||'').replace('T',' ').slice(0,16))}</td></tr>`).join('');
-    document.getElementById('rows').innerHTML = rows || '<tr><td colspan="4" class="foot">No customers yet.</td></tr>';
+    DATA = c;
+    if(!editing) render();
+  }catch(e){}
+  try{
+    const l = await (await fetch('/api/leads')).json();
+    LEADS = l.leads||[];
+    if(!editing) renderLeads();
   }catch(e){}
 }
 async function ctl(action){
   const b=document.getElementById(action+'Btn'); b.disabled=true; b.textContent='…';
   try{ await fetch('/api/'+action,{method:'POST'}); }catch(e){}
-  setTimeout(()=>{ refresh(); b.textContent = action==='start'?'▶ Start bot':'■ Stop bot (kill switch)'; }, 1500);
+  setTimeout(()=>{ refresh(); b.textContent = action==='start'?'▶ Start bot':'■ Stop bot'; }, 1500);
 }
 refresh(); setInterval(refresh, 5000);
 </script></body></html>"""
