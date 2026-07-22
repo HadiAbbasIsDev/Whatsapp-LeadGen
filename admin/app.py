@@ -30,8 +30,43 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GATEWAY_LOG = os.path.join(REPO, "progress", "gateway.log")
 CUSTOMERS_FILE = os.path.join(REPO, "workspace", "data", "customers.json")
 DB_FILE = os.path.join(REPO, "workspace", "data", "leadgen.db")
-CATEGORIES = ["new customer", "important", "hot leads"]
+CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]  # keep in sync with workspace/db.py
 PATCHER = os.path.join(REPO, "openclaw-patches", "apply_patches.py")
+ENV_FILE = os.path.join(REPO, ".env")
+POLLER = os.path.join(REPO, "scripts", "kapso_poller.py")
+POLLER_LOG = os.path.join(REPO, "progress", "kapso-poller.log")
+
+
+def _env_value(key):
+    try:
+        with open(ENV_FILE) as f:
+            for line in f:
+                if line.startswith(key + "="):
+                    return line.split("=", 1)[1].strip().strip('"')
+    except Exception:
+        pass
+    return ""
+
+
+def wa_transport():
+    return (_env_value("WA_TRANSPORT") or "baileys").lower()
+
+
+def poller_running():
+    try:
+        out = subprocess.run(["pgrep", "-f", "kapso_poller.py"], capture_output=True, text=True, timeout=5)
+        return bool(out.stdout.strip())
+    except Exception:
+        return False
+
+
+def start_poller_if_needed():
+    """Kapso + no public URL means the polling relay IS the inbound path —
+    a dead poller is a silent, total inbound outage."""
+    if wa_transport() != "kapso" or _env_value("KAPSO_PUBLIC_URL") or poller_running():
+        return
+    logf = open(POLLER_LOG, "a")
+    subprocess.Popen(["python3", POLLER], cwd=REPO, stdout=logf, stderr=logf, start_new_session=True)
 NODE_BIN = "/usr/local/node-v22.21.1/bin"
 # When running under supervisor (Docker), drive the gateway via supervisorctl
 # instead of spawning/killing it directly.
@@ -114,9 +149,11 @@ def gateway_status():
     lines = tail(GATEWAY_LOG, 400)
     text = "".join(lines)
 
-    # connected = a "Listening" line appears after the most recent restart/exit
+    # connected = a channel-up line appears after the most recent restart/exit
+    # (Baileys: "Listening for personal"; Kapso: "registered Kapso webhook route")
     connected = False
-    last_listen = max((i for i, l in enumerate(lines) if "Listening for personal" in l), default=-1)
+    last_listen = max((i for i, l in enumerate(lines)
+                       if "Listening for personal" in l or "registered Kapso webhook route" in l), default=-1)
     last_down = max((i for i, l in enumerate(lines) if ("channel exited" in l or "ECONNREFUSED" in l or "starting provider" in l)), default=-2)
     if running and last_listen >= 0 and last_listen >= last_down:
         connected = True
@@ -135,19 +172,26 @@ def gateway_status():
             uptime = None
 
     last_inbound = None
-    inbound = [l for l in lines if "Inbound message" in l]
+    inbound = [l for l in lines if "Inbound message" in l or "webhook dispatch" in l]
     if inbound:
         tm = re.search(r"(\d{4}-\d{2}-\d{2}T[\d:]+)", inbound[-1])
         last_inbound = tm.group(1) if tm else None
 
-    return {
+    transport = wa_transport()
+    status = {
         "running": running,
         "connected": connected,
         "model": model,
         "pid": pids[0] if pids else None,
         "uptime_seconds": uptime,
         "last_inbound": last_inbound,
+        "transport": transport,
     }
+    if transport == "kapso" and not _env_value("KAPSO_PUBLIC_URL"):
+        status["poller_running"] = poller_running()
+        if running and not status["poller_running"]:
+            status["connected"] = False  # inbound is dead without the relay
+    return status
 
 
 def _supervisorctl(action):
@@ -171,11 +215,14 @@ def start_gateway():
     env = os.environ.copy()
     env["PATH"] = NODE_BIN + ":" + env.get("PATH", "")
     env["OPENCLAW_AUTO_UPDATE"] = "0"  # never auto-update (would wipe our patches)
-    # ensure patches are applied (idempotent) before launch
-    try:
-        subprocess.run(["python3", PATCHER], cwd=REPO, env=env, capture_output=True, text=True, timeout=60)
-    except Exception:
-        pass
+    # ensure patches are applied (idempotent) before launch:
+    # - apply_patches.py: Baileys runtime patches (no-ops on non-2026.4.9 installs)
+    # - patch_kapso_gate.py: category gate for the kapso plugin (no-ops if absent)
+    for patcher in (PATCHER, os.path.join(REPO, "openclaw-patches", "patch_kapso_gate.py")):
+        try:
+            subprocess.run(["python3", patcher], cwd=REPO, env=env, capture_output=True, text=True, timeout=60)
+        except Exception:
+            pass
     os.makedirs(os.path.dirname(GATEWAY_LOG), exist_ok=True)
     logf = open(GATEWAY_LOG, "a")
     subprocess.Popen(
@@ -188,10 +235,15 @@ def start_gateway():
         if is_running():
             break
         time.sleep(0.5)
+    try:
+        start_poller_if_needed()
+    except Exception:
+        pass
     return {"ok": is_running(), "message": "Starting…"}
 
 
 def stop_gateway():
+    subprocess.run(["pkill", "-f", "kapso_poller.py"], capture_output=True)
     if SUPERVISOR_NAME:
         _supervisorctl("stop")
         time.sleep(2)
@@ -272,6 +324,25 @@ def api_start():
 @require_auth
 def api_stop():
     return jsonify(stop_gateway())
+
+
+@app.route("/api/customer/category", methods=["POST"])
+@require_auth
+def api_set_category():
+    """Owner re-categorization (e.g. unblocking a complaints-tagged chat).
+    On Kapso there are no WhatsApp labels to clear, and a blocked chat can't
+    instruct the agent — this endpoint is the owner's unblock path."""
+    data = request.get_json(silent=True) or {}
+    phone = (data.get("phone") or "").strip()
+    category = (data.get("category") or "").strip().lower()
+    if not phone or category not in CATEGORIES:
+        return jsonify({"ok": False, "error": f"need phone + category in {CATEGORIES}"}), 400
+    r = subprocess.run(
+        ["python3", os.path.join(REPO, "workspace", "db.py"), "set-category",
+         "--phone", phone, "--category", category],
+        capture_output=True, text=True, timeout=120, cwd=os.path.join(REPO, "workspace"))
+    ok = r.returncode == 0
+    return jsonify({"ok": ok, "output": (r.stdout or r.stderr).strip()[:500]}), (200 if ok else 500)
 
 
 @app.route("/")

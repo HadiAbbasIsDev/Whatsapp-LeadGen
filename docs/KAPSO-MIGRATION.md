@@ -1,9 +1,23 @@
-# Kapso migration runbook (for the future VPS deployment)
+# Kapso migration runbook (June notes — superseded by docs/KAPSO-CUTOVER.md)
+
+> **2026-07-22 update (branch `Kapso`):** the migration is now implemented and
+> scripted — see **docs/KAPSO-CUTOVER.md** for the current runbook. Corrections
+> to this document learned since June:
+> - `@kapso/openclaw-whatsapp` is **no longer downloadable** (gone from
+>   npm/ClawHub). The installed copy at `~/.openclaw/extensions/kapso-whatsapp`
+>   (v0.1.4) is the canonical artifact — do not delete it; it survives openclaw
+>   upgrades.
+> - A public URL is **no longer a hard prerequisite**: Kapso officially
+>   supports listing messages via the platform API, and
+>   `scripts/kapso_poller.py` relays them to the plugin's loopback webhook.
+> - Version pin: prefer `2026.6.33` (`extended-stable`) over 2026.6.8.
+> - `KAPSO_WEBHOOK_SECRET` was never in `.env` as claimed below; it has now
+>   been copied there from the config snapshot.
 
 We **tested the full Kapso migration** and it works — but only on a host with stable
 internet + a permanent public URL. We rolled back to the Baileys setup for now because
 this laptop's WiFi can't reach `api.kapso.ai` reliably and the free tunnel kept dying.
-Do this migration **once you have a VPS**.
+Do this migration **once you have a VPS** (or use the polling relay above).
 
 ## Why Kapso (vs the current Baileys/personal connection)
 - **Official WhatsApp Cloud API** (Meta Business Partner) — compliant, no ban risk.

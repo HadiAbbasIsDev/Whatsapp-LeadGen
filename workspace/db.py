@@ -129,6 +129,15 @@ def norm_category(cat):
     return c if c in CATEGORIES else None
 
 
+def norm_phone(phone):
+    """Canonical phone form: '+<digits>'. Without this, '+923...' and '923...'
+    become distinct rows and a block/unblock can silently target the wrong one
+    (Kapso delivers digits-only sender ids; Baileys uses E.164)."""
+    import re as _re
+    d = _re.sub(r"\D", "", str(phone or ""))
+    return "+" + d if d else phone
+
+
 CADENCE_STATUSES = [None, "followup", "junk"]
 
 
@@ -216,6 +225,37 @@ def _release_lock(phone):
 
 HUMAN_OWNER_CATS = {"ahsan", "ahmed", "imran", "rafay"}
 
+CATEGORY_AUDIT_LOG = os.path.join(DATA, "category_audit.log")
+
+
+def _audit_category(phone, old_cat, new_cat, note=None):
+    """Append-only audit trail for category writes. Agent exec calls are invisible
+    in the gateway log, so this file is the one place all writes are attributable."""
+    try:
+        entry = {"ts": now_iso(), "phone": phone, "old": old_cat, "new": new_cat, "pid": os.getpid()}
+        if note:
+            entry["note"] = note
+        with open(CATEGORY_AUDIT_LOG, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:
+        pass
+
+
+def _push_category_to_kapso(phone, cat):
+    """On the Kapso transport there are no WhatsApp labels; the category is
+    mirrored into Kapso contact metadata instead (shows in the Kapso inbox).
+    Best-effort: a Kapso outage must never fail the DB write."""
+    try:
+        sys.path.insert(0, HERE)
+        from kapso import kapso_enabled, set_contact_metadata
+        if not kapso_enabled():
+            return
+        ok, info = set_contact_metadata(phone, {"category": cat})
+        if not ok:
+            print(f"[warn] kapso metadata push failed: {info}", file=sys.stderr)
+    except Exception as e:
+        print(f"[warn] kapso metadata push failed: {e}", file=sys.stderr)
+
 
 def set_category(conn, phone, category):
     """SOLE writer of the category column. Per-phone locked, deduped, logged."""
@@ -224,16 +264,23 @@ def set_category(conn, phone, category):
         sys.exit(f"Invalid category '{category}'. Must be one of: {CATEGORIES}")
     if not _acquire_lock(phone):
         sys.exit(f"Could not acquire lock for {phone} — another write in progress")
-    try:
+    push_after = None  # Kapso push happens AFTER the lock is released — a slow
+    try:               # api.kapso.ai must never block concurrent category writes
         ts = now_iso()
         # Ensure row exists
-        conn.execute(
+        cur = conn.execute(
             "INSERT OR IGNORE INTO customers (phone, first_contact_at, last_message_at, updated_at) VALUES (?,?,?,?)",
             (phone, ts, ts, ts))
+        row_created = cur.rowcount > 0
         old = conn.execute("SELECT category FROM customers WHERE phone=?", (phone,)).fetchone()
         old_cat = old["category"] if old else None
         # Dedup: skip if already at target category
         if old_cat == cat:
+            if row_created:  # the INSERT above must not be rolled back on close
+                conn.commit()
+                export_customers(conn)
+                _audit_category(phone, None, cat, note="row created (dedup path)")
+            push_after = cat  # re-assert metadata even when DB unchanged
             print(json.dumps({"ok": True, "phone": phone, "category": {"old": old_cat, "new": cat},
                                "dedup": "skipped — already at target", "previous_owner": None}))
             return
@@ -246,10 +293,14 @@ def set_category(conn, phone, category):
             (cat, prev_owner, ts, ts, phone))
         conn.commit()
         export_customers(conn)
+        _audit_category(phone, old_cat, cat)
+        push_after = cat
         print(json.dumps({"ok": True, "phone": phone, "category": {"old": old_cat, "new": cat},
                            "previous_owner": prev_owner}))
     finally:
         _release_lock(phone)
+        if push_after:
+            _push_category_to_kapso(phone, push_after)
 
 
 def set_cadence_status(conn, phone, cadence_status):
@@ -470,6 +521,8 @@ def main():
     p.add_argument("--score", type=int)
 
     args = ap.parse_args()
+    if getattr(args, "phone", None):
+        args.phone = norm_phone(args.phone)
     # Retry on transient SQLite lock contention so writes are never dropped.
     last_err = None
     for attempt in range(8):

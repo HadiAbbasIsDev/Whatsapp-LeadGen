@@ -20,6 +20,19 @@ ALERTS_FILE = "data/admin_alerts.json"
 
 
 def send_whatsapp(number: str, message: str, retries: int = 3) -> bool:
+    # On the Kapso transport, send directly through the Cloud API (kapso.py has
+    # its own retry/backoff); on Baileys, shell out to the openclaw CLI as before.
+    try:
+        from kapso import kapso_enabled, send_text
+        if kapso_enabled():
+            ok, info = send_text(number, message)
+            if ok:
+                print(f"  [OK] Sent to {number}")
+            else:
+                print(f"  [FAIL] {number}: {info}", file=sys.stderr)
+            return ok
+    except Exception as e:
+        print(f"  [warn] kapso send unavailable ({e}); falling back to CLI", file=sys.stderr)
     for attempt in range(1, retries + 1):
         result = subprocess.run(
             ["openclaw", "message", "send",

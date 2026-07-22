@@ -2,14 +2,16 @@
 """
 Send one or more products as a SINGLE WhatsApp message each (photo + details).
 
-openclaw's `message send --media` CLI is broken for WhatsApp (it drops the
-media), so this script does NOT use it. Instead it:
-  1. Looks the product up in data/products.json.
-  2. Fetches its image into a per-user temp folder (database/tmp/<phone>/), cached.
-  3. Builds the caption (name, price, dimensions, availability, link).
-  4. Enqueues a job for the in-process Baileys sender (patched into the gateway),
-     which sends image + caption as ONE real media message.
-  5. Waits briefly for delivery confirmation.
+Transport is selected by WA_TRANSPORT in the repo .env:
+
+  baileys (default) — openclaw's `message send --media` CLI is broken for
+  WhatsApp on this pin, so jobs are enqueued for the in-process Baileys sender
+  (patched into the gateway) and this script waits for delivery confirmation.
+
+  kapso — images are sent directly through the Kapso Cloud API as link-based
+  media (the catalog's renovate.pk URLs are already public), synchronously.
+  Same [OK]/[FAIL] per-product output contract; a per-(phone,product) 5-minute
+  dedupe is kept here because the in-gateway dedupe map does not exist on Kapso.
 
 Usage:
   python3 send_product.py --to +923XXXXXXXXX --ids 6203,6201,6205
@@ -90,6 +92,66 @@ def caption_for(p):
     return "\n".join(lines)
 
 
+DEDUPE_FILE = os.path.join(WORKSPACE, "data", ".kapso_sent_dedupe.json")
+DEDUPE_WINDOW = 300  # seconds, mirrors the old in-gateway 5-minute dedupe
+
+
+def _dedupe_load(lock_fh):
+    import fcntl
+    fcntl.flock(lock_fh, fcntl.LOCK_EX)
+    now = time.time()
+    try:
+        state = json.load(open(DEDUPE_FILE))
+    except Exception:
+        state = {}
+    return {k: v for k, v in state.items() if now - v < DEDUPE_WINDOW}
+
+
+def _dedupe_save(state):
+    try:
+        tmp = DEDUPE_FILE + f".tmp.{os.getpid()}"
+        with open(tmp, "w") as f:
+            json.dump(state, f)
+        os.replace(tmp, DEDUPE_FILE)
+    except Exception:
+        pass
+
+
+def kapso_send_products(to, products):
+    """Send each product via the Kapso Cloud API. Returns count of confirmed sends.
+    The dedupe key is recorded only AFTER a confirmed send — a failed send must
+    stay retryable, and '[OK] <id> sent' must never be printed for an
+    undelivered message (AGENTS.md anti-hallucination contract)."""
+    from kapso import send_image, send_text
+    os.makedirs(os.path.dirname(DEDUPE_FILE), exist_ok=True)
+    lock_fh = open(DEDUPE_FILE + ".lock", "w")  # serializes concurrent senders
+    state = _dedupe_load(lock_fh)
+    sent = 0
+    for pid, p in products:
+        key = f"{safe_phone(to)}#{pid}"
+        if key in state:
+            print(f"[OK] {pid} sent")  # dedupe hit: it was genuinely delivered within the window
+            sent += 1
+            continue
+        caption = caption_for(p)
+        image = (p.get("image") or "").strip()
+        text_only = not image.lower().startswith(("http://", "https://"))
+        if text_only:
+            # No public image URL — send details as text so the customer still gets the info
+            ok, info = send_text(to, caption)
+        else:
+            ok, info = send_image(to, image, caption)
+        if ok:
+            sent += 1
+            state[key] = time.time()  # claim only after confirmed delivery
+            _dedupe_save(state)
+            print(f"[OK] {pid} sent" + (" (text-only, no public image)" if text_only else ""))
+        else:
+            print(f"[FAIL] {pid} send error: {info}", file=sys.stderr)
+    lock_fh.close()
+    return sent
+
+
 def enqueue(job):
     os.makedirs(os.path.dirname(QUEUE_FILE), exist_ok=True)
     with open(QUEUE_FILE, "a") as f:
@@ -131,6 +193,24 @@ def main():
 
     user_dir = os.path.join(TMP_ROOT, safe_phone(args.to))
     ids = [i.strip() for i in args.ids.split(",") if i.strip()]
+
+    try:
+        from kapso import kapso_enabled
+        use_kapso = kapso_enabled()
+    except Exception:
+        use_kapso = False
+
+    if use_kapso:
+        products = [(pid, catalog[pid]) for pid in ids if pid in catalog]
+        for pid in ids:
+            if pid not in catalog:
+                print(f"[skip] unknown product id: {pid}", file=sys.stderr)
+        if not products:
+            print("[FAIL] no valid products to send", file=sys.stderr)
+            sys.exit(1)
+        sent = kapso_send_products(args.to, products)
+        print(f"[done] {sent}/{len(products)} confirmed sent to {args.to}")
+        sys.exit(0 if sent else 1)
 
     jobs = {}  # job_id -> product id
     for pid in ids:
