@@ -124,11 +124,19 @@ def require_auth(f):
 
 # ---- process control -------------------------------------------------
 def gateway_pids():
+    # 2026.4.9 names the process "openclaw-gateway"; 2026.6.x names it "openclaw"
+    pids = []
+    try:
+        out = subprocess.run(["pgrep", "-x", "openclaw"], capture_output=True, text=True, timeout=5)
+        pids += [int(p) for p in out.stdout.split() if p.strip()]
+    except Exception:
+        pass
     try:
         out = subprocess.run(["pgrep", "-f", "openclaw-gateway"], capture_output=True, text=True, timeout=5)
-        return [int(p) for p in out.stdout.split() if p.strip()]
+        pids += [int(p) for p in out.stdout.split() if p.strip()]
     except Exception:
-        return []
+        pass
+    return sorted(set(pids))
 
 
 def is_running():
