@@ -280,7 +280,7 @@ Each action within a flow is classified as **"just do it"** (act without owner c
    ```
 2. Record `flow`, `followup_week`, and `last_followup_date` as `kind=cadence`
    structured memories via `db.py remember`.
-3. Send a follow-up message once every week, for up to 3 weeks max.
+3. Follow-up message once every week, for up to 3 weeks max. **The weekly sends are executed automatically by `scripts/followup_runner.py` using the approved `renovate_interest_followup` template — you never send scheduled follow-ups yourself.** Your job is handling the reply (Yes/No buttons or any response).
 4. After each permitted follow-up, update the structured cadence memories.
 5. Check after each follow-up:
    - **If client responds →** route back into FIRST FLOW or SECOND FLOW (Follow Point 1 & 2).
@@ -302,7 +302,7 @@ not lost.
 
 **Actions (all just do it):**
 1. Check if the conversation has been dead (no activity) for 7 full days.
-2. If yes → send ONE follow-up message to re-engage the client.
+2. If yes → ONE re-engagement message goes out. **It is sent automatically by `scripts/followup_runner.py` as the approved `renovate_interest_followup` template — you never send it yourself.** You handle the client's reply.
 3. Mark cadence status as **"followup"** while preserving the human owner category:
    ```
    /usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py set-cadence-status --phone "<customer_phone>" --cadence-status "followup"
@@ -333,7 +333,7 @@ not lost.
    ```
 4. Record `flow=store_location`, `followup_week`, and `last_followup_date` as
    `kind=cadence` structured memories.
-5. Follow up once every week, up to 3 weeks (same cadence as THIRD FLOW).
+5. Follow up once every week, up to 3 weeks (same cadence as THIRD FLOW — sent automatically by `followup_runner.py` as the `renovate_interest_followup` template).
 6. Check response:
    - **If client responds →** route into FIRST FLOW or SECOND FLOW (Follow Point 1 & 2).
    - **If no response after 3 weeks →** tag chat as **"junk"**:
