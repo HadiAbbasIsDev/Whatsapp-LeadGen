@@ -18,6 +18,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const { execFile } = require('child_process')
 const pino = require('pino')
 const QR = require('qrcode')
 const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason, ALL_WA_PATCH_NAMES } = require('@whiskeysockets/baileys')
@@ -74,6 +75,37 @@ function saveState() {
     }
     try { fs.writeFileSync(STATE_FILE, JSON.stringify(s)) } catch {}
   }, 500)
+}
+
+// ---- write-back: owner changes a label in the APP -> update the bot DB ----
+// Suppressed briefly after every connect: boot resyncs replay ALL historical
+// label associations as "add" events, which must not rewrite categories.
+const WRITEBACK_QUIET_MS = 90_000
+let connectedAt = 0
+
+function categoryForLabel(labelId) {
+  const n = norm(labels.get(labelId) || '')
+  if (!n) return null
+  for (const [cat, cands] of Object.entries(LABEL_FOR)) if (cands.includes(n)) return cat
+  return null
+}
+
+function writeBack(jid, labelId) {
+  if (!connected || Date.now() - connectedAt < WRITEBACK_QUIET_MS) return
+  if (!jid.endsWith('@s.whatsapp.net')) return
+  const cat = categoryForLabel(labelId)
+  if (!cat) return                                   // not one of our lists
+  let data
+  try { data = JSON.parse(fs.readFileSync(CUSTOMERS, 'utf8')) } catch { return }
+  const digits = jid.split('@')[0]
+  const cust = (data.customers || []).find(c => String(c.phone || '').replace(/\D/g, '') === digits)
+  if (!cust) return                                  // unknown number — never create rows
+  if (norm(cust.category) === cat) return            // echo of our own sync — no-op
+  log(`app label change: ${digits} -> "${cat}" — updating bot database`)
+  execFile('python3', [path.join(REPO, 'workspace', 'db.py'), 'set-category', '--phone', cust.phone, '--category', cat],
+    { timeout: 60000 }, (err, _out, serr) => {
+    if (err) log('[warn] write-back failed:', String(serr || err.message || '').slice(0, 200))
+  })
 }
 
 function labelIdFor(category) {
@@ -161,6 +193,7 @@ async function start() {
     }
     if (u.connection === 'open') {
       connected = true
+      connectedAt = Date.now()
       try { fs.unlinkSync(QR_PNG) } catch {}
       log('connected as linked device — label sync active')
       // Baileys only replays labels on the FIRST full sync; if we boot with an
@@ -199,6 +232,7 @@ async function start() {
     else set.delete(a.labelId)
     chatLabels.set(a.chatId, set)
     saveState()
+    if (type === 'add') writeBack(a.chatId, a.labelId)
   })
 }
 
