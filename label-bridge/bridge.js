@@ -108,6 +108,29 @@ function writeBack(jid, labelId) {
   })
 }
 
+function writeBackRemoval(jid, labelId) {
+  // Owner stripped a label without filing the chat elsewhere. If it was the
+  // label matching the bot's current category, re-open the chat: adopt any
+  // remaining managed label, else fall back to "new customer".
+  if (!connected || Date.now() - connectedAt < WRITEBACK_QUIET_MS) return
+  if (!jid.endsWith('@s.whatsapp.net')) return
+  const cat = categoryForLabel(labelId)
+  if (!cat) return
+  let data
+  try { data = JSON.parse(fs.readFileSync(CUSTOMERS, 'utf8')) } catch { return }
+  const digits = jid.split('@')[0]
+  const cust = (data.customers || []).find(c => String(c.phone || '').replace(/\D/g, '') === digits)
+  if (!cust || norm(cust.category) !== cat) return   // our own cleanup removals land here
+  const remaining = [...(chatLabels.get(jid) || new Set())].map(categoryForLabel).filter(Boolean)
+  const next = remaining[0] || 'new customer'
+  if (norm(next) === cat) return
+  log(`app label removed: ${digits} "${cat}" -> "${next}" — updating bot database`)
+  execFile('python3', [path.join(REPO, 'workspace', 'db.py'), 'set-category', '--phone', cust.phone, '--category', next],
+    { timeout: 60000 }, (err, _out, serr) => {
+    if (err) log('[warn] removal write-back failed:', String(serr || err.message || '').slice(0, 200))
+  })
+}
+
 function labelIdFor(category) {
   const cands = LABEL_FOR[norm(category)]
   if (!cands) return null                    // category we don't manage
@@ -233,6 +256,7 @@ async function start() {
     chatLabels.set(a.chatId, set)
     saveState()
     if (type === 'add') writeBack(a.chatId, a.labelId)
+    else writeBackRemoval(a.chatId, a.labelId)
   })
 }
 
