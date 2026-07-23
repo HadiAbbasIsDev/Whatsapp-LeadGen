@@ -35,7 +35,7 @@ CUSTOMERS_FILE = os.path.join(REPO, "workspace", "data", "customers.json")
 DB_FILE = os.path.join(REPO, "workspace", "data", "leadgen.db")
 DB_PY = os.path.join(REPO, "workspace", "db.py")
 # Must match workspace/db.py CATEGORIES (the validator of record).
-CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]
+CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "vendor", "ahsan", "ahmed", "imran", "rafay"]
 PATCHER = os.path.join(REPO, "openclaw-patches", "apply_patches.py")
 KAPSO_GATE_PATCHER = os.path.join(REPO, "openclaw-patches", "patch_kapso_gate.py")
 ENV_FILE = os.path.join(REPO, ".env")
@@ -427,7 +427,7 @@ PAGE = r"""<!doctype html>
   .c-new  { --c:var(--blue); }   .c-imp  { --c:var(--amber); }
   .c-hot  { --c:var(--red); }    .c-fol  { --c:var(--purple); }
   .c-junk { --c:var(--gray); }   .c-comp { --c:var(--orange); }
-  .c-team { --c:var(--teal); }
+  .c-team { --c:var(--teal); }   .c-vend { --c:#9a6700; }
   .cdot { background:var(--c); }
 
   /* toolbar */
@@ -534,12 +534,13 @@ const CAT = {
   'followup':     {label:'Follow-up',    cls:'c-fol'},
   'junk':         {label:'Junk',         cls:'c-junk'},
   'complaints':   {label:'Complaint',    cls:'c-comp'},
+  'vendor':       {label:'Vendor',       cls:'c-vend'},
   'ahsan':        {label:'Ahsan',        cls:'c-team', team:true},
   'ahmed':        {label:'Ahmed',        cls:'c-team', team:true},
   'imran':        {label:'Imran',        cls:'c-team', team:true},
   'rafay':        {label:'Rafay',        cls:'c-team', team:true},
 };
-const SILENT = new Set(['hot leads','complaints','junk','ahsan','ahmed','imran','rafay']);
+const SILENT = new Set(['hot leads','complaints','junk','vendor','ahsan','ahmed','imran','rafay']);
 let DATA = {customers:[], counts:{}, categories:Object.keys(CAT), total:0};
 let LEADS = [];
 let filter = 'all';

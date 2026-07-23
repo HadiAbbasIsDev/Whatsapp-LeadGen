@@ -35,7 +35,7 @@ DB_PATH = os.path.join(DATA, "leadgen.db")
 CUSTOMERS_JSON = os.path.join(DATA, "customers.json")
 LEADS_JSON = os.path.join(DATA, "leads.json")
 
-CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]
+CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "vendor", "ahsan", "ahmed", "imran", "rafay"]
 PKT = timezone(timedelta(hours=5))  # Pakistan time, matches existing timestamps
 
 

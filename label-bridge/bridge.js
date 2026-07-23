@@ -40,6 +40,7 @@ const LABEL_FOR = {
   'followup': ['followup', 'follow up'],
   'junk': ['junk'],
   'complaints': ['complaints', 'complains'],
+  'vendor': ['vendor', 'vendors'],
   'ahsan': ['ahsan'],
   'ahmed': ['ahmed'],
   'imran': ['imran'],

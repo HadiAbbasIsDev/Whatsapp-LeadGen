@@ -44,7 +44,7 @@ To **move** a customer to another category (only when the owner asks, or per a r
 python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender_e164>" --category "hot leads"
 ```
 
-(valid categories: `new customer`, `important`, `hot leads`, `followup`, `junk`, `complaints`, `ahsan`, `ahmed`, `imran`, `rafay`)
+(valid categories: `new customer`, `important`, `hot leads`, `followup`, `junk`, `complaints`, `vendor`, `ahsan`, `ahmed`, `imran`, `rafay`)
 
 ## Category Meaning
 
@@ -66,7 +66,7 @@ python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender
 - Do not change a customer's category automatically on a normal message. Use `upsert-customer`
   only; it never downgrades an existing category. Use `set-category` only on explicit owner instruction or a routing-flow action.
 - Never set an existing customer back to `new customer`.
-- If `get-customer` returns `category` = `complaints` or `hot leads`, do not send a customer-facing reply.
+- If `get-customer` returns `category` = `complaints`, `hot leads`, or `vendor`, do not send a customer-facing reply.
 - If `get-customer` returns `category` = `ahsan`, `ahmed`, `imran`, or `rafay`, do not send a normal reply. Follow only the 7-day human-owned cold flow in AGENTS.md. Exception: if `cadence_status` is `followup` from that flow and the client is responding to the scheduled follow-up, route the reply into FIRST FLOW or SECOND FLOW.
 - One record per phone number (the DB deduplicates on phone automatically).
 - Never read customer records back to the customer; they are internal.
