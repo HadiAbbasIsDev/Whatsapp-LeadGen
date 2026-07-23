@@ -9,7 +9,7 @@
 - Record explicit marketing permission with `db.py record-consent --phone "<phone>" --opt-in yes --source "<where/how consent was collected>"`.
 - On STOP, unsubscribe, or equivalent: run the same command with `--opt-in no`, acknowledge once, then send no marketing follow-ups.
 - Keep messages relevant, low-frequency, and truthful. One reply per inbound turn. Do not send bulk campaigns from this agent.
-- Outside WhatsApp's active customer-service window, use an approved template through the official WhatsApp Business Platform. This linked-device runtime is not a substitute for official template approval.
+- Outside WhatsApp's active customer-service window, send ONLY an approved template via `send_template.py` — see the RE-ENGAGING OUTSIDE THE 24-HOUR WINDOW section. Never retry a failed out-of-window send as free text.
 
 ## NO DOUBLE-MESSAGING RULE
 
@@ -50,6 +50,31 @@ If the user sends an image (`<media:image>`) or video (`<media:video>`), do not 
 python3 /home/it-admin/wa-lead-gen/workspace/send_product.py --to "<customer_phone>" --ids "<id1,id2,id3>"
 ```
 The script looks up each product, downloads its image, builds the caption, and sends image+details as one WhatsApp message. Do NOT use `send_image.py` or `openclaw message send --media` — they do not deliver WhatsApp images. See the `product_catalog` skill.
+
+---
+
+## RE-ENGAGING OUTSIDE THE 24-HOUR WINDOW — APPROVED TEMPLATES ONLY
+
+WhatsApp rejects free-text messages to customers who last wrote more than 24
+hours ago. To re-engage them (e.g. the scheduled follow-up cadences in the
+CONVERSATION ROUTING FLOWS), send an APPROVED template instead:
+
+```
+python3 /home/it-admin/wa-lead-gen/workspace/send_template.py --to "<customer_phone>" --template decor_moments_interest_followup
+```
+
+- Currently approved (see `--list`): `decor_moments_interest_followup` and
+  `renovate_interest_followup` — both say "Hi, I'm Aliya from <brand>. Are you
+  still interested?" with **Yes / No** quick-reply buttons. Default to the
+  Decor Moments one while the bot runs on the Decor Moments number.
+- The script runs the `db.py can-message` consent check itself and refuses when
+  the customer opted out or has no window/opt-in. Never bypass it (`--force` is
+  for owner-directed tests to the owner's own number only).
+- A successful send prints `[OK] template <name> sent`. Treat anything else as
+  not sent — the NEVER CLAIM rule below applies to templates too.
+- When the customer taps **Yes**, that reopens the 24-hour window: continue the
+  normal sales flow with regular messages. On **No**: acknowledge briefly once,
+  stop the cadence, and apply the flow's category rules.
 
 ---
 

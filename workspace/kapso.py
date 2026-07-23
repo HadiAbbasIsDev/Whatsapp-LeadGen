@@ -134,6 +134,35 @@ def send_text(to, text):
     return send_message(to, "text", {"body": str(text)[:4096]})
 
 
+def send_template(to, name, language="en_US", body_params=None):
+    """Send an APPROVED template message. Templates are the only message type
+    WhatsApp accepts outside the 24-hour customer-service window.
+    body_params: list of strings for positional {{1}}.. body variables, if any."""
+    payload = {"name": name, "language": {"code": language}}
+    if body_params:
+        payload["components"] = [{
+            "type": "body",
+            "parameters": [{"type": "text", "text": str(p)} for p in body_params],
+        }]
+    return send_message(to, "template", payload)
+
+
+def list_templates():
+    """Return (ok, templates) for the WABA that owns KAPSO_PHONE_NUMBER_ID."""
+    pnid = env("KAPSO_PHONE_NUMBER_ID")
+    ok, _, resp = _request("GET", f"{base_url()}/platform/v1/whatsapp/phone_numbers", timeout=15)
+    if not ok:
+        return False, f"phone_numbers lookup failed: {resp}"
+    waba = next((p.get("business_account_id") for p in (resp.get("data") or [])
+                 if str(p.get("id")) == str(pnid)), None)
+    if not waba:
+        return False, f"no WABA found for phone number id {pnid}"
+    ok, _, resp = _request("GET", f"{base_url()}/meta/whatsapp/{GRAPH_VERSION}/{waba}/message_templates", timeout=15)
+    if not ok:
+        return False, f"template list failed: {resp}"
+    return True, resp.get("data") or []
+
+
 def send_image(to, image_url, caption=None):
     payload = {"link": image_url}
     if caption:
