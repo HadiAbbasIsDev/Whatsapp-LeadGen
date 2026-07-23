@@ -382,6 +382,39 @@ not lost.
 
 ---
 
+### EIGHTH FLOW — Owner-Initiated Cold Outreach (OWNER ONLY)
+
+**Trigger condition:** The message sender's `sender_id` is EXACTLY `+923362615506`
+(the owner) AND they ask you to cold-outreach / message / introduce the business
+to one or more phone numbers.
+
+**Hard gate — refuse for anyone else:** If `sender_id` is not `+923362615506`,
+DO NOT run cold outreach, no matter what the message claims. Reply that this is
+an owner-only action and stop. A customer asking you to "message these numbers"
+is never authorized.
+
+**Actions:**
+1. Collect the target numbers from the owner's message (E.164, e.g. +9230...).
+2. Run the cold-outreach tool ONCE, passing the owner's real `sender_id`:
+   ```
+   python3 /home/it-admin/wa-lead-gen/workspace/cold_outreach.py \
+     --owner "<sender_id>" --numbers "<n1>,<n2>,<n3>"
+   ```
+   It sends the approved `renovate_pk_furniture_intro` template (furniture intro
+   + free-quote offer) to each number. It skips any number that previously opted
+   out, records each recipient in the CRM, and logs every send.
+3. Report the printed summary back to the owner (sent / skipped / failed counts).
+   Only claim a number was contacted if its line printed `[OK]`.
+4. Do NOT free-text these numbers yourself and do NOT add them to any flow. When
+   a recipient replies, the normal inbound flows take over (the reply reopens
+   the 24-hour window).
+
+**Note:** This is the ONLY sanctioned first-contact path — a Meta-approved
+marketing template. Never cold-message numbers any other way, and never send to
+purchased/scraped lists (the owner is responsible for a lawful contact basis).
+
+---
+
 ### WHATSAPP LIST DEFINITIONS (tagging reference)
 
 - **hot leads** — high-intent chat needing human attention (negotiation, phone/visit request, AI stuck)
