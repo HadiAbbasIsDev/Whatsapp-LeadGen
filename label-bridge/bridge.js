@@ -20,7 +20,8 @@ const fs = require('fs')
 const path = require('path')
 const pino = require('pino')
 const QR = require('qrcode')
-const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } = require('@whiskeysockets/baileys')
+const { default: makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason, ALL_WA_PATCH_NAMES } = require('@whiskeysockets/baileys')
+const PATCH_NAMES = ALL_WA_PATCH_NAMES || ['critical_block', 'critical_unblock_low', 'regular_high', 'regular_low', 'regular']
 
 const REPO = path.dirname(__dirname)
 const CUSTOMERS = path.join(REPO, 'workspace', 'data', 'customers.json')
@@ -44,7 +45,7 @@ const LABEL_FOR = {
   'rafay': ['rafay'],
 }
 
-const norm = s => String(s || '').toLowerCase().replace(/[\s_-]+/g, ' ').trim()
+const norm = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 const log = (...a) => console.log(new Date().toISOString(), ...a)
 
@@ -55,10 +56,33 @@ let sock = null
 let connected = false
 let reconciling = false
 
+// App state only replays label data on a FULL sync (first link), so persist
+// what we've learned — restarts would otherwise see zero labels and go blind.
+const STATE_FILE = path.join(__dirname, 'state.json')
+try {
+  const s = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
+  for (const [id, name] of Object.entries(s.labels || {})) labels.set(id, name)
+  for (const [jid, ids] of Object.entries(s.chats || {})) chatLabels.set(jid, new Set(ids))
+} catch {}
+let saveTimer = null
+function saveState() {
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    const s = {
+      labels: Object.fromEntries(labels),
+      chats: Object.fromEntries([...chatLabels].map(([j, set]) => [j, [...set]])),
+    }
+    try { fs.writeFileSync(STATE_FILE, JSON.stringify(s)) } catch {}
+  }, 500)
+}
+
 function labelIdFor(category) {
   const cands = LABEL_FOR[norm(category)]
   if (!cands) return null                    // category we don't manage
-  for (const [id, name] of labels) if (cands.includes(norm(name))) return id
+  // candidate order = priority (exact name beats loose variants)
+  for (const cand of cands) {
+    for (const [id, name] of labels) if (norm(name) === cand) return id
+  }
   return undefined                           // managed, but label absent in app
 }
 
@@ -95,6 +119,7 @@ async function reconcile() {
         log(`label + "${labels.get(want)}" -> ${digits}`)
         await sock.addChatLabel(jid, want)
         have.add(want); chatLabels.set(jid, have)
+        saveState()
         await sleep(MUTATION_GAP_MS)
       }
       for (const id of [...have]) {
@@ -102,6 +127,7 @@ async function reconcile() {
           log(`label - "${labels.get(id)}" -> ${digits}`)
           await sock.removeChatLabel(jid, id)
           have.delete(id)
+          saveState()
           await sleep(MUTATION_GAP_MS)
         }
       }
@@ -137,6 +163,12 @@ async function start() {
       connected = true
       try { fs.unlinkSync(QR_PNG) } catch {}
       log('connected as linked device — label sync active')
+      // Baileys only replays labels on the FIRST full sync; if we boot with an
+      // empty label map (fresh restart, no state.json), request a full resync.
+      if (labels.size === 0) {
+        log('no labels known — requesting full app-state resync')
+        try { await sock.resyncAppState(PATCH_NAMES, true) } catch (e) { log('[warn] resync failed:', e?.message || e) }
+      }
     }
     if (u.connection === 'close') {
       connected = false
@@ -154,6 +186,8 @@ async function start() {
     if (l.deleted) labels.delete(l.id)
     else labels.set(l.id, l.name)
     log(`label seen: "${l.name || ''}" (id ${l.id}${l.deleted ? ', deleted' : ''})`)
+    warnedMissing.clear()   // a new label may resolve an earlier "missing" warning
+    saveState()
   })
 
   sock.ev.on('labels.association', ({ association, type }) => {
@@ -164,6 +198,7 @@ async function start() {
     if (type === 'add') set.add(a.labelId)
     else set.delete(a.labelId)
     chatLabels.set(a.chatId, set)
+    saveState()
   })
 }
 

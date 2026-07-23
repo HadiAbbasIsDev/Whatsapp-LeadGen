@@ -30,3 +30,4 @@ wa-lead-gen-backups/
 label-bridge/node_modules/
 label-bridge/auth/
 progress/label-bridge-qr.png
+label-bridge/state.json
