@@ -50,6 +50,17 @@ if [ "$TRANSPORT" = "kapso" ] && [ -z "$PUBLIC_URL" ]; then
   fi
 fi
 
+if [ -f "$REPO/label-bridge/auth/creds.json" ]; then
+  echo "== Label bridge (WhatsApp app labels)"
+  if pgrep -f "label-bridge/bridge[.]js" >/dev/null; then
+    echo "   already running"
+  else
+    setsid node label-bridge/bridge.js >> progress/label-bridge.log 2>&1 < /dev/null &
+    sleep 2
+    pgrep -f "label-bridge/bridge[.]js" >/dev/null && echo "   started" || echo "   FAILED — check progress/label-bridge.log"
+  fi
+fi
+
 if [ "${1:-}" = "--with-dashboard" ]; then
   echo "== Admin dashboard"
   if pgrep -f "admin/app[.]py" >/dev/null; then

@@ -27,3 +27,6 @@ workspace/data/.kapso_sent_dedupe.json.lock
 openclaw-patches/__pycache__/
 scripts/__pycache__/
 wa-lead-gen-backups/
+label-bridge/node_modules/
+label-bridge/auth/
+progress/label-bridge-qr.png
