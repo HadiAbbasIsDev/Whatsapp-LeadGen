@@ -37,6 +37,10 @@ DB_PY = os.path.join(REPO, "workspace", "db.py")
 # Must match workspace/db.py CATEGORIES (the validator of record).
 CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "ahsan", "ahmed", "imran", "rafay"]
 PATCHER = os.path.join(REPO, "openclaw-patches", "apply_patches.py")
+KAPSO_GATE_PATCHER = os.path.join(REPO, "openclaw-patches", "patch_kapso_gate.py")
+ENV_FILE = os.path.join(REPO, ".env")
+POLLER = os.path.join(REPO, "scripts", "kapso_poller.py")
+POLLER_LOG = os.path.join(REPO, "progress", "kapso-poller.log")
 NODE_BIN = "/usr/local/node-v22.21.1/bin"
 # When running under supervisor (Docker), drive the gateway via supervisorctl
 # instead of spawning/killing it directly.
@@ -92,13 +96,54 @@ def require_auth(f):
     return wrapper
 
 
+# ---- transport / poller ----------------------------------------------
+def _env_value(key):
+    try:
+        with open(ENV_FILE) as f:
+            for line in f:
+                if line.startswith(key + "="):
+                    return line.split("=", 1)[1].strip().strip('"')
+    except Exception:
+        pass
+    return ""
+
+
+def wa_transport():
+    return (_env_value("WA_TRANSPORT") or "baileys").lower()
+
+
+def poller_running():
+    try:
+        out = subprocess.run(["pgrep", "-f", "kapso_poller.py"], capture_output=True, text=True, timeout=5)
+        return bool(out.stdout.strip())
+    except Exception:
+        return False
+
+
+def start_poller_if_needed():
+    """Kapso + no public URL means the polling relay IS the inbound path —
+    a dead poller is a silent, total inbound outage."""
+    if wa_transport() != "kapso" or _env_value("KAPSO_PUBLIC_URL") or poller_running():
+        return
+    logf = open(POLLER_LOG, "a")
+    subprocess.Popen(["python3", POLLER], cwd=REPO, stdout=logf, stderr=logf, start_new_session=True)
+
+
 # ---- process control -------------------------------------------------
 def gateway_pids():
+    # 2026.4.9 names the process "openclaw-gateway"; 2026.6.x names it "openclaw"
+    pids = []
+    try:
+        out = subprocess.run(["pgrep", "-x", "openclaw"], capture_output=True, text=True, timeout=5)
+        pids += [int(p) for p in out.stdout.split() if p.strip()]
+    except Exception:
+        pass
     try:
         out = subprocess.run(["pgrep", "-f", "openclaw-gateway"], capture_output=True, text=True, timeout=5)
-        return [int(p) for p in out.stdout.split() if p.strip()]
+        pids += [int(p) for p in out.stdout.split() if p.strip()]
     except Exception:
-        return []
+        pass
+    return sorted(set(pids))
 
 
 def is_running():
@@ -119,9 +164,11 @@ def gateway_status():
     lines = tail(GATEWAY_LOG, 400)
     text = "".join(lines)
 
-    # connected = a "Listening" line appears after the most recent restart/exit
+    # connected = a channel-up line appears after the most recent restart/exit
+    # (Baileys: "Listening for personal"; Kapso: "registered Kapso webhook route")
     connected = False
-    last_listen = max((i for i, l in enumerate(lines) if "Listening for personal" in l), default=-1)
+    last_listen = max((i for i, l in enumerate(lines)
+                       if "Listening for personal" in l or "registered Kapso webhook route" in l), default=-1)
     last_down = max((i for i, l in enumerate(lines) if ("channel exited" in l or "ECONNREFUSED" in l or "starting provider" in l)), default=-2)
     if running and last_listen >= 0 and last_listen >= last_down:
         connected = True
@@ -140,19 +187,26 @@ def gateway_status():
             uptime = None
 
     last_inbound = None
-    inbound = [l for l in lines if "Inbound message" in l]
+    inbound = [l for l in lines if "Inbound message" in l or "webhook dispatch" in l]
     if inbound:
         tm = re.search(r"(\d{4}-\d{2}-\d{2}T[\d:]+)", inbound[-1])
         last_inbound = tm.group(1) if tm else None
 
-    return {
+    transport = wa_transport()
+    status = {
         "running": running,
         "connected": connected,
         "model": model,
         "pid": pids[0] if pids else None,
         "uptime_seconds": uptime,
         "last_inbound": last_inbound,
+        "transport": transport,
     }
+    if transport == "kapso" and not _env_value("KAPSO_PUBLIC_URL"):
+        status["poller_running"] = poller_running()
+        if running and not status["poller_running"]:
+            status["connected"] = False  # inbound is dead without the relay
+    return status
 
 
 def _supervisorctl(action):
@@ -176,11 +230,14 @@ def start_gateway():
     env = os.environ.copy()
     env["PATH"] = NODE_BIN + ":" + env.get("PATH", "")
     env["OPENCLAW_AUTO_UPDATE"] = "0"  # never auto-update (would wipe our patches)
-    # ensure patches are applied (idempotent) before launch
-    try:
-        subprocess.run(["python3", PATCHER], cwd=REPO, env=env, capture_output=True, text=True, timeout=60)
-    except Exception:
-        pass
+    # ensure patches are applied (idempotent) before launch:
+    # - apply_patches.py: Baileys runtime patches (no-ops on non-2026.4.9 installs)
+    # - patch_kapso_gate.py: category gate for the kapso plugin (no-ops if absent)
+    for patcher in (PATCHER, KAPSO_GATE_PATCHER):
+        try:
+            subprocess.run(["python3", patcher], cwd=REPO, env=env, capture_output=True, text=True, timeout=60)
+        except Exception:
+            pass
     os.makedirs(os.path.dirname(GATEWAY_LOG), exist_ok=True)
     logf = open(GATEWAY_LOG, "a")
     subprocess.Popen(
@@ -193,10 +250,15 @@ def start_gateway():
         if is_running():
             break
         time.sleep(0.5)
+    try:
+        start_poller_if_needed()
+    except Exception:
+        pass
     return {"ok": is_running(), "message": "Starting…"}
 
 
 def stop_gateway():
+    subprocess.run(["pkill", "-f", "kapso_poller.py"], capture_output=True)
     if SUPERVISOR_NAME:
         _supervisorctl("stop")
         time.sleep(2)
@@ -627,7 +689,9 @@ async function refresh(){
     else { dot.style.background='var(--red)'; badge.textContent='OFFLINE'; }
     document.getElementById('wa').textContent = s.running ? (s.connected?'• WhatsApp connected':'• connecting…') : '';
     document.getElementById('meta').innerHTML =
-      [ s.model?('Model: '+esc(s.model)):'', s.uptime_seconds!=null?('Uptime: '+fmtUptime(s.uptime_seconds)):'',
+      [ s.transport?('WhatsApp: '+esc(s.transport)):'',
+        s.poller_running!==undefined?('Poller: '+(s.poller_running?'running':'<span style="color:var(--red);font-weight:700">DOWN — bot cannot receive messages</span>')):'',
+        s.model?('Model: '+esc(s.model)):'', s.uptime_seconds!=null?('Uptime: '+fmtUptime(s.uptime_seconds)):'',
         s.last_inbound?('Last message: '+esc(s.last_inbound.replace('T',' '))):'' ].filter(Boolean).join(' &nbsp;|&nbsp; ');
     document.getElementById('startBtn').disabled = s.running;
     document.getElementById('stopBtn').disabled = !s.running;
