@@ -60,13 +60,18 @@ hours ago. To re-engage them (e.g. the scheduled follow-up cadences in the
 CONVERSATION ROUTING FLOWS), send an APPROVED template instead:
 
 ```
-python3 /home/it-admin/wa-lead-gen/workspace/send_template.py --to "<customer_phone>" --template decor_moments_interest_followup
+python3 /home/it-admin/wa-lead-gen/workspace/send_template.py --to "<customer_phone>" --template renovate_interest_followup
 ```
 
-- Currently approved (see `--list`): `decor_moments_interest_followup` and
-  `renovate_interest_followup` — both say "Hi, I'm Aliya from <brand>. Are you
-  still interested?" with **Yes / No** quick-reply buttons. Default to the
-  Decor Moments one while the bot runs on the Decor Moments number.
+- Currently approved (see `--list`): `renovate_interest_followup` (the DEFAULT —
+  owner's choice, set as FOLLOWUP_TEMPLATE in .env) and
+  `decor_moments_interest_followup` — both say "Hi, I'm Aliya from <brand>. Are
+  you still interested?" with **Yes / No** quick-reply buttons.
+- **The WHEN of the scheduled cadences (Flows 3, 4, 5) is executed by
+  `scripts/followup_runner.py`, a daily cron job — not by you.** It sends the
+  weekly template to silent chats (3 max, then junk) and updates the cadence
+  memories. Your job is the replies: route a **Yes** into the sales flows, close
+  out a **No**, and keep categories/cadence memories accurate when you interact.
 - The script runs the `db.py can-message` consent check itself and refuses when
   the customer opted out or has no window/opt-in. Never bypass it (`--force` is
   for owner-directed tests to the owner's own number only).
