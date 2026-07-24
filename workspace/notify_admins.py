@@ -4,7 +4,8 @@ Sends a WhatsApp alert to all admin numbers when a customer requests a human han
 Called by the human_handoff skill.
 
 Usage:
-  python3 notify_admins.py --name "Wahaj" --phone "+921234567890" --email "a@b.com" --products "King size bed"
+  python3 notify_admins.py --type complaint --name "Wahaj" --phone "+92..." --products "damaged bed"
+  --type is one of: media | complaint | hot_lead | order | other  (drives the top banner)
 """
 
 import argparse
@@ -17,6 +18,21 @@ from datetime import datetime
 ADMINS = ["+923362615506"]
 
 ALERTS_FILE = "data/admin_alerts.json"
+
+# Each handoff kind gets a bold, unmistakable banner at the TOP of the alert so
+# the owner knows at a glance what happened. (emoji, TITLE, one-line explanation)
+HANDOFF_TYPES = {
+    "media": ("📷", "CUSTOMER SENT A PHOTO / VIDEO",
+              "The bot can't view media. Please open the chat and look at what they sent."),
+    "complaint": ("😠", "CUSTOMER COMPLAINT",
+                  "A customer raised a complaint. Please review the chat and resolve it."),
+    "hot_lead": ("🔥", "WANTS TO TALK TO A PERSON",
+                 "A customer wants a real person — pricing/negotiation, a call or visit, or the bot got stuck."),
+    "order": ("🛒", "ORDER NEEDS HELP",
+              "A customer is trying to place an order and needs a person. Please assist."),
+    "other": ("🚨", "HUMAN HANDOFF",
+              "A customer needs a real person. Please check the chat."),
+}
 
 
 def send_whatsapp(number: str, message: str, retries: int = 3) -> bool:
@@ -64,6 +80,7 @@ def log_alert(args, results):
         "alert_id": f"ALERT-{int(datetime.now().timestamp() * 1000)}",
         "created_at": datetime.utcnow().isoformat() + "Z",
         "type": "human_handoff",
+        "handoff_type": args.type,
         "customer_phone": args.phone,
         "customer_name": args.name,
         "customer_email": args.email,
@@ -80,20 +97,27 @@ def main():
     parser.add_argument("--name",     default="Not provided")
     parser.add_argument("--phone",    default="Not provided")
     parser.add_argument("--email",    default="Not provided")
-    parser.add_argument("--products", default="Not specified")
+    parser.add_argument("--products", default="")
+    parser.add_argument("--type", default="other", choices=list(HANDOFF_TYPES),
+                        help="what kind of handoff this is — drives the banner at the top")
     args = parser.parse_args()
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M PKT")
+    emoji, title, explain = HANDOFF_TYPES.get(args.type, HANDOFF_TYPES["other"])
+
+    # Extra context line, only if the flow passed something meaningful.
+    details = (args.products or "").strip()
+    details_line = f"📝 *Details:* {details}\n" if details and details.lower() != "not specified" else ""
 
     message = (
-        f"🚨 *HUMAN HANDOFF REQUEST*\n\n"
-        f"A customer wants to speak with a real person.\n\n"
+        f"{emoji} *{title}*\n"
+        f"{explain}\n\n"
         f"👤 *Name:* {args.name}\n"
         f"📱 *Phone:* {args.phone}\n"
         f"📧 *Email:* {args.email}\n"
-        f"🛋️ *Interested in:* {args.products}\n"
+        f"{details_line}"
         f"🕐 *Time:* {now}\n\n"
-        f"Please follow up as soon as possible.\n"
+        f"Please open the chat and follow up.\n"
         f"— Alia (renovate.pk Bot)"
     )
 

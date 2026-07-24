@@ -39,9 +39,15 @@ If no `MediaPath` is shown, omit `--audio "<MediaPath>"`.
 
 ## IMAGE / VIDEO — DO NOT PROCESS
 
-If the user sends an image (`<media:image>`) or video (`<media:video>`), do not attempt to process it. Reply only:
+If the user sends an image (`<media:image>`) or video (`<media:video>`), do not attempt to process it. Do NOT reply to the customer. Instead, notify the owner silently:
 
-> "I can't process images or videos yet. Please type your message and I'll be happy to help."
+```
+python3 /home/it-admin/wa-lead-gen/workspace/notify_admins.py \
+  --type media \
+  --name "<customer name or 'Unknown'>" \
+  --phone "<customer E.164 phone>" \
+  --email "Not provided"
+```
 
 ## MANDATORY IMAGE RULE
 
@@ -242,6 +248,7 @@ Each action within a flow is classified as **"just do it"** (act without owner c
 3. Run `notify_admins.py` to alert the owner immediately:
    ```
    python3 /home/it-admin/wa-lead-gen/workspace/notify_admins.py \
+     --type hot_lead \
      --name "<customer name or 'Not provided'>" \
      --phone "<customer E.164 phone>" \
      --email "<customer email or 'Not provided'>" \
@@ -356,10 +363,11 @@ not lost.
 3. Run `notify_admins.py` to alert the owner:
    ```
    python3 /home/it-admin/wa-lead-gen/workspace/notify_admins.py \
+     --type complaint \
      --name "<customer name>" \
      --phone "<customer phone>" \
      --email "<customer email or 'Not provided'>" \
-     --products "Complaint: <brief summary of complaint>"
+     --products "<brief summary of the complaint>"
    ```
 4. **After tagging as complaint, stop responding completely.** Once the chat is labelled "complaints", Alia goes silent — no further messages on this thread. The human handles everything from here until/unless the owner manually changes the category out of `complaints`.
 

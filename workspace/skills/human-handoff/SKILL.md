@@ -38,6 +38,7 @@ Use the shell/exec tool to run this command from the workspace directory:
 
 ```
 python3 ./notify_admins.py \
+  --type hot_lead \
   --name   "<customer name or 'Not provided'>" \
   --phone  "<customer E.164 phone from channel>" \
   --email  "<customer email or 'Not provided'>" \
