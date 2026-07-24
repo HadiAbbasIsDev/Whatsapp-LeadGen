@@ -313,6 +313,13 @@ async function start() {
     saveState()
   })
 
+  const applyAssoc = (key, labelId, type) => {         // track labels under ONE key (phone jid)
+    const set = chatLabels.get(key) || new Set()
+    if (type === 'add') set.add(labelId); else set.delete(labelId)
+    chatLabels.set(key, set)
+    saveState()
+  }
+
   sock.ev.on('labels.association', ({ association, type }) => {
     const a = association || {}
     if (!a.chatId || !a.labelId) return
@@ -321,27 +328,24 @@ async function start() {
     const quiet = Date.now() - connectedAt < WRITEBACK_QUIET_MS   // startup resync burst
     log(`[app-event] ${type} chat=${String(a.chatId).split('@')[0]} label="${labels.get(a.labelId) || a.labelId}"` +
         `${echo ? ' (echo of our push)' : ' — GENUINE user edit'}${quiet ? ' [startup — ignored]' : ''}`)
-    // keep our view of the app's labels current either way
-    const set = chatLabels.get(a.chatId) || new Set()
-    if (type === 'add') set.add(a.labelId); else set.delete(a.labelId)
-    chatLabels.set(a.chatId, set)
-    saveState()
+    // Resolve the (often @lid) chat id to the customer's phone jid so ALL tracking
+    // and write-back use the same key that reconcile uses.
+    const resolved = resolvePhoneJid(a.chatId)
+    applyAssoc(resolved || a.chatId, a.labelId, type)
     if (echo || quiet) return                       // our own echo, or the boot resync — do not write back
-    // Resolve the (often @lid) chat id to the customer's phone jid.
-    let phoneJid = resolvePhoneJid(a.chatId)
-    if (!phoneJid) {
-      log(`[app-event] genuine edit on ${String(a.chatId).split('@')[0]} but no phone mapping yet — resolving…`)
-      refreshLidMap().then(() => {
-        const pj = resolvePhoneJid(a.chatId)
-        if (!pj) { log(`[app-event] still unmapped: ${a.chatId} — skipped`); return }
-        userEditedAt.set(pj, Date.now())
-        if (type === 'add') writeBack(pj, a.labelId); else writeBackRemoval(pj, a.labelId)
-      })
-      return
+    const act = (pj) => {
+      userEditedAt.set(pj, Date.now())              // hold reconcile off this chat so it can't revert us
+      if (type === 'add') writeBack(pj, a.labelId); else writeBackRemoval(pj, a.labelId)
     }
-    userEditedAt.set(phoneJid, Date.now())          // hold reconcile off this chat so it can't revert us
-    if (type === 'add') writeBack(phoneJid, a.labelId)
-    else writeBackRemoval(phoneJid, a.labelId)
+    if (resolved) { act(resolved); return }
+    // Unmapped @lid — learn the mapping, then move the tracked label onto the phone jid and act.
+    log(`[app-event] genuine edit on ${String(a.chatId).split('@')[0]} but no phone mapping yet — resolving…`)
+    refreshLidMap().then(() => {
+      const pj = resolvePhoneJid(a.chatId)
+      if (!pj) { log(`[app-event] still unmapped: ${a.chatId} — skipped`); return }
+      applyAssoc(pj, a.labelId, type)               // re-track under the resolved phone jid
+      act(pj)
+    })
   })
 
   sock.ev.on('contacts.upsert', (cs) => { (cs || []).forEach(noteContact) })
