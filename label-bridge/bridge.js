@@ -54,6 +54,10 @@ const log = (...a) => console.log(new Date().toISOString(), ...a)
 const labels = new Map()      // labelId -> name (discovered from app state)
 const chatLabels = new Map()  // jid -> Set(labelId) (discovered + our writes)
 const warnedMissing = new Set()
+// Coexistence: the app identifies chats by a hidden LID (e.g. 1514…@lid), while
+// we push labels to the phone jid. The user's in-app edits arrive as @lid, so we
+// keep a LID-digits -> phone-digits map to route those edits to the right customer.
+const lidToPhone = new Map()
 let sock = null
 let connected = false
 let reconciling = false
@@ -65,6 +69,7 @@ try {
   const s = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
   for (const [id, name] of Object.entries(s.labels || {})) labels.set(id, name)
   for (const [jid, ids] of Object.entries(s.chats || {})) chatLabels.set(jid, new Set(ids))
+  for (const [lid, phone] of Object.entries(s.lidToPhone || {})) lidToPhone.set(lid, phone)
 } catch {}
 let saveTimer = null
 function saveState() {
@@ -73,9 +78,50 @@ function saveState() {
     const s = {
       labels: Object.fromEntries(labels),
       chats: Object.fromEntries([...chatLabels].map(([j, set]) => [j, [...set]])),
+      lidToPhone: Object.fromEntries(lidToPhone),
     }
     try { fs.writeFileSync(STATE_FILE, JSON.stringify(s)) } catch {}
   }, 500)
+}
+
+function noteContact(c) {
+  // A contact carries both its phone jid (id) and its @lid — record the mapping.
+  if (!c) return
+  const idNum = String(c.id || '').match(/^(\d+)@s\.whatsapp\.net$/)?.[1]
+  const lidNum = String(c.lid || '').match(/^(\d+)@lid$/)?.[1]
+    || (String(c.id || '').match(/^(\d+)@lid$/)?.[1])
+  if (idNum && lidNum) { lidToPhone.set(lidNum, idNum); saveState() }
+}
+
+async function refreshLidMap() {
+  // Resolve each managed customer's phone -> LID via onWhatsApp, so genuine
+  // in-app label edits (which arrive as @lid) can be routed back to the phone.
+  let data
+  try { data = JSON.parse(fs.readFileSync(CUSTOMERS, 'utf8')) } catch { return }
+  for (const c of data.customers || []) {
+    const phone = String(c.phone || '').replace(/\D/g, '')
+    if (!phone) continue
+    try {
+      const res = await sock.onWhatsApp(phone)
+      const r = Array.isArray(res) ? res[0] : res
+      const lidNum = String(r?.lid || '').match(/(\d+)@lid/)?.[1]
+      if (lidNum && lidToPhone.get(lidNum) !== phone) {
+        lidToPhone.set(lidNum, phone)
+        log(`[lid-map] ${lidNum}@lid -> ${phone}`)
+        saveState()
+      }
+    } catch (e) { /* best-effort */ }
+  }
+}
+
+function resolvePhoneJid(chatId) {
+  const s = String(chatId || '')
+  if (s.endsWith('@s.whatsapp.net')) return s
+  if (s.endsWith('@lid')) {
+    const phone = lidToPhone.get(s.split('@')[0])
+    if (phone) return `${phone}@s.whatsapp.net`
+  }
+  return null   // can't map (yet)
 }
 
 // ---- write-back: owner changes a label in the APP -> update the bot DB ----
@@ -239,6 +285,7 @@ async function start() {
       connectedAt = Date.now()
       try { fs.unlinkSync(QR_PNG) } catch {}
       log('connected as linked device — label sync active')
+      refreshLidMap().catch(() => {})   // learn each customer's @lid so in-app edits route back
       // Baileys only replays labels on the FIRST full sync; if we boot with an
       // empty label map (fresh restart, no state.json), request a full resync.
       if (labels.size === 0) {
@@ -280,10 +327,26 @@ async function start() {
     chatLabels.set(a.chatId, set)
     saveState()
     if (echo || quiet) return                       // our own echo, or the boot resync — do not write back
-    userEditedAt.set(a.chatId, Date.now())          // hold reconcile off this chat so it can't revert us
-    if (type === 'add') writeBack(a.chatId, a.labelId)
-    else writeBackRemoval(a.chatId, a.labelId)
+    // Resolve the (often @lid) chat id to the customer's phone jid.
+    let phoneJid = resolvePhoneJid(a.chatId)
+    if (!phoneJid) {
+      log(`[app-event] genuine edit on ${String(a.chatId).split('@')[0]} but no phone mapping yet — resolving…`)
+      refreshLidMap().then(() => {
+        const pj = resolvePhoneJid(a.chatId)
+        if (!pj) { log(`[app-event] still unmapped: ${a.chatId} — skipped`); return }
+        userEditedAt.set(pj, Date.now())
+        if (type === 'add') writeBack(pj, a.labelId); else writeBackRemoval(pj, a.labelId)
+      })
+      return
+    }
+    userEditedAt.set(phoneJid, Date.now())          // hold reconcile off this chat so it can't revert us
+    if (type === 'add') writeBack(phoneJid, a.labelId)
+    else writeBackRemoval(phoneJid, a.labelId)
   })
+
+  sock.ev.on('contacts.upsert', (cs) => { (cs || []).forEach(noteContact) })
+  sock.ev.on('contacts.update', (cs) => { (cs || []).forEach(noteContact) })
+  sock.ev.on('messaging-history.set', (h) => { (h?.contacts || []).forEach(noteContact) })
 }
 
 setInterval(reconcile, POLL_MS)
