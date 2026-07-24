@@ -225,8 +225,8 @@ Each action within a flow is classified as **"just do it"** (act without owner c
 | Tag a chat into any WhatsApp List | Just do it | Low risk — organizational label only |
 | Escalate a Hot Lead (notify owner) | Just do it | Low risk — escalation is always the right call for hot leads |
 | Hand off a complaint to human | Just do it | Low risk — complaints must go to humans immediately |
-| Submit order on renovate.pk with collected details | **Ask first** | High risk — real money, real order. Confirm with owner before placing |
-| Confirm order details back to client | Just do it | Low risk — just echoing collected info before submission |
+| Hand a confirmed order to the owner (notify_admins --type order) | Just do it | The bot never places website orders; it always hands them to the owner |
+| Confirm order details back to client | Just do it | Low risk — just echoing collected info before handoff |
 
 ---
 
@@ -265,17 +265,35 @@ Each action within a flow is classified as **"just do it"** (act without owner c
 
 **Trigger condition:** Client clearly wants to place an order right now.
 
-**Actions:**
-1. **Collect exactly 3 pieces of info from the client, in order** — just do it:
+**You do NOT place orders on the renovate.pk website — you cannot, and you must
+NEVER tell the customer the order is "placed" or "confirmed."** Your job is to
+collect the order details and hand them to the team, who place the order.
+
+**Actions (all just do it):**
+1. **Collect exactly 3 pieces of info from the client, in order:**
    - Full Name
    - Delivery Address
    - Phone Number
-2. **Confirm details back to client** — just do it:
-   - Echo the full order summary (product, name, address, phone) and ask "Does this look correct?"
-3. Place the order on **renovate.pk** using the collected details — **ask first:**
-   - Before clicking submit, message owner (+923362615506) with the full order details and ask for approval.
-4. Once approved, confirm back to client with order summary and confirmation.
-5. No list-tagging required unless order fails — if it fails, fall back to FIRST FLOW.
+2. **Confirm details back to client:** echo the full order summary (product(s),
+   quantity, name, address, phone) and ask "Does this look correct?"
+3. Once the client confirms, **alert the owner to place the order:**
+   ```
+   python3 /home/it-admin/wa-lead-gen/workspace/notify_admins.py \
+     --type order \
+     --name "<customer name>" \
+     --phone "<customer E.164 phone>" \
+     --email "<customer email or 'Not provided'>" \
+     --products "<product(s) + qty; deliver to: <address>>"
+   ```
+4. **Tag the chat as "hot leads"** so the owner takes it over to finalise:
+   ```
+   python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<customer_phone>" --category "hot leads"
+   ```
+5. **Send ONE final message to the client, then go silent:**
+   > "Thank you. I've shared your order details with our team — they'll confirm and finalise your order with you shortly."
+
+   Then stop responding. The human places the order on renovate.pk and confirms
+   directly with the client. Do NOT claim the order is done.
 
 ---
 

@@ -13,7 +13,7 @@ Checked the flowchart against the real rules in `workspace/AGENTS.md` + scripts.
 | # | Flow (diagram) | Implemented? | Notes |
 |---|---|---|---|
 | 1 | Hot Lead → tag Hot Leads → human takes over | ✅ Matches | Triggers all present (negotiation, pricing, customization, ask-for-human, can't-answer, call, visit). Now also sends a "team will get back to you" line before going silent. |
-| 2 | Direct order → collect name/addr/phone → **place on renovate.pk** → confirm | ⚠️ **GAP** | The bot **cannot place orders on the website** (it has no web/browser ability, by design). Flow 2 tells it to "place the order on renovate.pk" and never alerts a human to actually do it. **Must fix** — see Part B item 2. |
+| 2 | Direct order → collect name/addr/phone → place order → confirm | ✅ Fixed 2026-07-24 | The bot can't place website orders, so it now collects the details, confirms them, sends the owner a 🛒 ORDER alert, tags Hot Leads, and tells the customer the team will finalise — it never claims the order is placed. Owner places it on renovate.pk. |
 | 3 | Not responding → Followup → weekly ×3 → Junk | ✅ Matches | Timing runs via `scripts/followup_runner.py` (7-day, weekly, 3 max, then Junk). |
 | 4 | Human lists (Ahsan/Ahmed/Imran/Rafay) dead 7d → follow-up → reply? | ⚠️ Partial | Follow-up send works. BUT the silence gate blocks **inbound** from human-owned chats, so when that client **replies**, the bot doesn't see it. Their reply reaches the human, not the bot — acceptable, but know it. See Part C item 1. |
 | 5 | Store location → send address → Followup → weekly ×3 → Junk | ✅ Matches | Addresses exist in `USER.md` (Karachi + Lahore). Bot asks which city first (fine). **Verify the addresses/phones are current** — Part D item 6. |
@@ -34,13 +34,11 @@ allowlist limits who reaches the bot; real once the public can message it.
 - Fix: restrict `exec` to the project's own scripts, OR move secrets out of its
   reach. Also rotate any key ever shared in plaintext.
 
-### 2. [blocker] Fix Flow 2 — the bot can't place website orders
-Today Flow 2 tells the bot to "place the order on renovate.pk", which it cannot
-do, and it never hands the order to a person. Risk: the bot tells a customer
-"order placed" when nothing happened. **Decision needed** (see the question I
-asked): almost certainly the bot should **collect the details, alert the owner
-(handoff type "order") to place it, and tell the customer the team will confirm**
-— not claim it placed the order itself.
+### 2. [DONE 2026-07-24] Flow 2 — order handoff
+Fixed: the bot now collects name/address/phone, confirms them, alerts the owner
+with a 🛒 ORDER handoff (`notify_admins.py --type order`), tags the chat Hot
+Leads, and tells the customer the team will finalise. It is explicitly forbidden
+from claiming the order is placed. The owner places it on renovate.pk.
 
 ---
 
