@@ -38,6 +38,7 @@ DB_PY = os.path.join(REPO, "workspace", "db.py")
 CATEGORIES = ["new customer", "important", "hot leads", "followup", "junk", "complaints", "vendor", "ahsan", "ahmed", "imran", "rafay"]
 PATCHER = os.path.join(REPO, "openclaw-patches", "apply_patches.py")
 KAPSO_GATE_PATCHER = os.path.join(REPO, "openclaw-patches", "patch_kapso_gate.py")
+KAPSO_SECRETS_PATCHER = os.path.join(REPO, "openclaw-patches", "patch_kapso_secrets.py")
 ENV_FILE = os.path.join(REPO, ".env")
 POLLER = os.path.join(REPO, "scripts", "kapso_poller.py")
 POLLER_LOG = os.path.join(REPO, "progress", "kapso-poller.log")
@@ -240,7 +241,8 @@ def start_gateway():
     # ensure patches are applied (idempotent) before launch:
     # - apply_patches.py: Baileys runtime patches (no-ops on non-2026.4.9 installs)
     # - patch_kapso_gate.py: category gate for the kapso plugin (no-ops if absent)
-    for patcher in (PATCHER, KAPSO_GATE_PATCHER):
+    # - patch_kapso_secrets.py: outbound secrets scrubber
+    for patcher in (PATCHER, KAPSO_GATE_PATCHER, KAPSO_SECRETS_PATCHER):
         try:
             subprocess.run(["python3", patcher], cwd=REPO, env=env, capture_output=True, text=True, timeout=60)
         except Exception:

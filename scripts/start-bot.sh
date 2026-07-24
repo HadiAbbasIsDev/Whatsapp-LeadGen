@@ -20,6 +20,7 @@ if [ "$TRANSPORT" != "kapso" ]; then
   python3 openclaw-patches/apply_patches.py 2>&1 | tail -1 || true    # Baileys runtime patches
 fi
 python3 openclaw-patches/patch_kapso_gate.py 2>&1 | tail -1 || true   # Kapso gate (no-op if plugin absent)
+python3 openclaw-patches/patch_kapso_secrets.py 2>&1 | tail -1 || true # Outbound secrets scrubber
 
 # The gateway process name differs across openclaw versions ("openclaw-gateway"
 # on 2026.4.9, plain "openclaw" on 2026.6.x) — the loopback port is the

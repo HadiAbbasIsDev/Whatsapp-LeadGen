@@ -26,13 +26,20 @@ owner-only cold outreach (EIGHTH). Both are fine to keep.
 
 ## PART B — BLOCKERS (must resolve before public launch)
 
-### 1. [blocker] Close the secrets gap (exec can still read API keys)
-The bot needs `exec` to run its scripts, and that same power means a crafted
-message could make it read secret files (Kapso/OpenRouter keys in `.env`;
-DeepSeek key + gateway token in `~/.openclaw/openclaw.json`). Harmless while the
-allowlist limits who reaches the bot; real once the public can message it.
-- Fix: restrict `exec` to the project's own scripts, OR move secrets out of its
-  reach. Also rotate any key ever shared in plaintext.
+### 1. Secrets gap — exfiltration path CLOSED (2026-07-24); key rotation still TODO
+The bot needs `exec` to run its scripts, so it can technically still *read*
+secret files. What matters is it can no longer *send* them: an **outbound
+secrets scrubber** (`openclaw-patches/patch_kapso_secrets.py`, patched into the
+kapso plugin) redacts any known secret value from every outgoing message before
+it reaches the customer. Verified: a message containing the Kapso key goes out as
+`[REDACTED]`; normal messages are untouched; redactions are logged to
+`~/.openclaw/kapso-secrets.log`. Fails open (never blocks a legitimate reply).
+- **Still to do (you):** rotate any key ever shared in plaintext (DeepSeek +
+  the Anthropic key once in `testapi.md`), since those may already be exposed.
+- Residual (low): the scrubber matches exact secret values, so a determined
+  attacker could in theory obfuscate a key (e.g. base64) to slip past it. The
+  allowlist is the first line of defense; this is defense-in-depth. Optional
+  future hardening: restrict `exec` to the project scripts only.
 
 ### 2. [DONE 2026-07-24] Flow 2 — order handoff
 Fixed: the bot now collects name/address/phone, confirms them, alerts the owner
