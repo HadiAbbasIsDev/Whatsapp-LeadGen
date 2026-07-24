@@ -216,25 +216,24 @@ def transcribe_with_openrouter(wav_path):
     if title:
         headers["X-OpenRouter-Title"] = title
 
-    try:
-        response = requests.post(
-            url=OPENROUTER_TRANSCRIPTION_URL,
-            headers=headers,
-            data=json.dumps(
-                {
-                    "model": MODEL,
-                    "input_audio": {
-                        "data": base64_audio,
-                        "format": "wav",
-                    },
-                }
-            ),
-            timeout=90,
-        )
-    except requests.RequestException as e:
-        print_error(str(e), code="openrouter_request_failed")
-
-    if response.status_code >= 400:
+    # Retry transient failures (network, 429, 5xx) up to 3 times with backoff —
+    # transcription occasionally fails on the first try; don't give up on one miss.
+    payload = json.dumps({"model": MODEL, "input_audio": {"data": base64_audio, "format": "wav"}})
+    response = None
+    for attempt in range(1, 4):
+        try:
+            response = requests.post(OPENROUTER_TRANSCRIPTION_URL, headers=headers, data=payload, timeout=90)
+        except requests.RequestException as e:
+            if attempt < 3:
+                time.sleep(2 * attempt)
+                continue
+            print_error(str(e), code="openrouter_request_failed")
+        if response.status_code < 400:
+            break
+        # 429 / 5xx are transient — retry; other 4xx are permanent — stop
+        if (response.status_code == 429 or response.status_code >= 500) and attempt < 3:
+            time.sleep(2 * attempt)
+            continue
         print_error(
             "OpenRouter transcription failed",
             code="openrouter_error",

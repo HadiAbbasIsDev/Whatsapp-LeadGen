@@ -77,6 +77,24 @@ function __scScrub(text) {
             try { __scAppend(__scHome() + "/.openclaw/kapso-secrets.log",
                 JSON.stringify({ ts: new Date().toISOString(), action: "redacted-outbound-secret" }) + "\n"); } catch {}
         }
+        // Strip lines that leak internal tool/command mechanics to the customer
+        // (script names, tool-run/fail notices). Customers never legitimately see
+        // these, so removing whole matching lines has no false positives.
+        try {
+            const LEAK = /🛠|\brun\s+python3\b|\(workspace\)\s+failed|exec preflight|transcribe_voice\.py|notify_admins\.py|send_product\.py|send_template\.py|cold_outreach\.py|\bdb\.py\b|\bset-category\b/i;
+            if (out.indexOf("\n") !== -1 || LEAK.test(out)) {
+                const lines = out.split("\n").filter((l) => !LEAK.test(l));
+                const stripped = lines.join("\n").trim();
+                if (stripped !== out.trim()) {
+                    // If the whole message was internal leakage, collapse to a
+                    // zero-width space (non-empty so the send API is happy, but
+                    // invisible to the customer) rather than sending the leak.
+                    out = stripped || "​";
+                    try { __scAppend(__scHome() + "/.openclaw/kapso-secrets.log",
+                        JSON.stringify({ ts: new Date().toISOString(), action: "stripped-internal-leak" }) + "\n"); } catch {}
+                }
+            }
+        } catch {}
         return out;
     } catch { return text; }
 }

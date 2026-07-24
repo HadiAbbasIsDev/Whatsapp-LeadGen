@@ -24,18 +24,28 @@ notification/log, not as extra WhatsApp messages.
 
 ## VOICE MESSAGES — TRANSCRIBE & PROCESS
 
-When a user sends a voice message, the inbound text will contain `<media:audio>`.
+**FIRST: if the incoming message already contains the customer's words (Kapso
+transcribes most voice notes for you, so the message text is their actual
+question in their language), just treat it as a normal text message and answer
+it. DO NOT run any transcription script in that case — the transcript is already
+there.**
 
-1. Run transcription immediately. If the inbound metadata includes `MediaPath`, pass it with `--audio`; otherwise the script will scan the newest recent inbound audio file. The script caches the raw voice message locally, rejects anything longer than 2 minutes, transcribes valid audio through OpenRouter, and prints the transcript to console logs for testing:
+Only when the message is a voice note with NO readable transcript (you see
+`<media:audio>` and no words) do you transcribe it yourself:
 ```
 python3 /home/it-admin/wa-lead-gen/workspace/transcribe_voice.py --phone "<customer_phone>" --audio "<MediaPath>"
 ```
-If no `MediaPath` is shown, omit `--audio "<MediaPath>"`.
-2. If the script returns `"status": "ok"`, use the `text` field as the user's message — process it as if they typed it.
-3. If the script returns `"status": "error"` with `"code": "audio_too_long"`, reply:
-   > "Please send a voice message under 2 minutes, or type your message."
-4. If the script returns any other `"status": "error"`, reply:
-   > "I wasn't able to transcribe your voice message. Could you type it out?"
+(Omit `--audio "<MediaPath>"` if no MediaPath is shown; the script retries
+transient failures on its own.)
+- If it returns `"status": "ok"`, use the `text` field as the customer's message.
+- If it returns `"code": "audio_too_long"`, reply once: "Please send a voice message under 2 minutes, or type your message."
+- If it returns any other error, reply once: "Sorry, I couldn't hear that clearly — could you type it out?"
+
+**NEVER leak the mechanics to the customer.** Do NOT send the transcription
+command, its JSON output, any error text, "failed"/"run" tool messages, or your
+own thinking/plan ("Let me check…", "The customer is asking…"). The customer
+only ever sees your final, clean reply — nothing about transcripts, scripts, or
+tools. Keep internal reasoning internal.
 
 ## IMAGE / VIDEO — DO NOT PROCESS
 
