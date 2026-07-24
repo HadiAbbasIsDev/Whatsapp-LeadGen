@@ -1,4 +1,4 @@
-# Start Guide — renovate.pk WhatsApp Bot ("Alia")
+# Start Guide — renovate.pk WhatsApp Bot ("Aliya")
 
 A plain-English guide to starting, checking, and fixing the bot. No deep
 technical knowledge needed.

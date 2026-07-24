@@ -57,5 +57,5 @@ Send ONE final courtesy message to the customer as your last reply:
 > "Thank you. One of our team members will personally get back to you shortly."
 
 Then go silent — do NOT continue naturally, confirm, or send anything else. Once
-the handoff alert is sent and the chat is tagged `hot leads`, Alia stays silent
+the handoff alert is sent and the chat is tagged `hot leads`, Aliya stays silent
 on that thread until/unless the owner manually changes the category.

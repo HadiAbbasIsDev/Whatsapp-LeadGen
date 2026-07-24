@@ -57,8 +57,8 @@ from claiming the order is placed. The owner places it on renovate.pk.
 2. **"Junk" chats stay silent.** ✅ DECIDED: a Junk customer who messages again
    is ignored until you un-junk them on the dashboard. (Already the behavior; no
    change.)
-3. **Template name says "Aliya", bot is "Alia."** Cosmetic, still open. Only Meta
-   can change approved template text (needs re-approval) — leave it or re-submit.
+3. **Bot name vs template name.** ✅ RESOLVED 2026-07-24: bot renamed to **Aliya**
+   everywhere to match the approved templates.
 
 ---
 

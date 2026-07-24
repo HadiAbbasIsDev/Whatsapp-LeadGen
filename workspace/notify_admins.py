@@ -140,7 +140,7 @@ def main():
         f"{details_line}"
         f"🕐 *Time:* {now}\n\n"
         f"Please open the chat and follow up.\n"
-        f"— Alia (renovate.pk Bot)"
+        f"— Aliya (renovate.pk Bot)"
     )
 
     print(f"Notifying {len(ADMINS)} admins...")
