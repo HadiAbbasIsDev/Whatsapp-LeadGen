@@ -45,6 +45,8 @@ BRIDGE_JS = os.path.join(REPO, "label-bridge", "bridge.js")
 BRIDGE_CREDS = os.path.join(REPO, "label-bridge", "auth", "creds.json")
 BRIDGE_QR = os.path.join(REPO, "progress", "label-bridge-qr.png")
 BRIDGE_LOG = os.path.join(REPO, "progress", "label-bridge.log")
+OPENCLAW_CONF = os.path.expanduser("~/.openclaw/openclaw.json")
+NOTIFY_PY = os.path.join(REPO, "workspace", "notify_admins.py")
 NODE_BIN = "/usr/local/node-v22.21.1/bin"
 # When running under supervisor (Docker), drive the gateway via supervisorctl
 # instead of spawning/killing it directly.
@@ -342,6 +344,58 @@ def start_bridge():
     return {"ok": bridge_running(), "message": "starting"}
 
 
+# ---- access control (who can message the bot) ------------------------
+def read_access():
+    """Current inbound policy from the live gateway config.
+    mode 'open' = bot replies to everyone; 'allowlist' = only listed numbers."""
+    try:
+        ch = json.load(open(OPENCLAW_CONF)).get("channels", {}).get("kapso-whatsapp", {})
+        mode = (ch.get("dmSecurity") or "allowlist").lower()
+        nums, seen = [], set()
+        for n in ch.get("allowFrom", []):
+            d = re.sub(r"\D", "", str(n))
+            if d and d not in seen:
+                seen.add(d)
+                nums.append("+" + d)
+        return {"mode": mode, "numbers": nums}
+    except Exception as e:
+        return {"mode": "unknown", "numbers": [], "error": str(e)}
+
+
+def read_admins():
+    """The numbers that receive handoff alerts (ADMINS in notify_admins.py)."""
+    try:
+        m = re.search(r"ADMINS\s*=\s*\[([^\]]*)\]", open(NOTIFY_PY).read())
+        return re.findall(r"[\"'](\+?\d[\d]+)[\"']", m.group(1)) if m else []
+    except Exception:
+        return []
+
+
+def write_access(mode, numbers):
+    """Write the inbound policy to the live gateway config (atomic). Stores each
+    number in both +E.164 and digits-only form (Kapso delivers digits-only)."""
+    cfg = json.load(open(OPENCLAW_CONF))
+    ch = cfg.setdefault("channels", {}).setdefault("kapso-whatsapp", {})
+    ch["dmSecurity"] = "open" if mode == "open" else "allowlist"
+    af, seen = [], set()
+    for n in numbers:
+        d = re.sub(r"\D", "", str(n))
+        if not d or d in seen:
+            continue
+        seen.add(d)
+        af += ["+" + d, d]
+    ch["allowFrom"] = af  # kept even in 'open' mode, so toggling back restores the list
+    tmp = OPENCLAW_CONF + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(cfg, f, indent=2)
+    os.replace(tmp, OPENCLAW_CONF)
+
+
+def restart_gateway():
+    stop_gateway()
+    return start_gateway()
+
+
 # ---- customer data ---------------------------------------------------
 def _tally(custs):
     counts = {c: 0 for c in CATEGORIES}
@@ -414,6 +468,40 @@ def api_qr():
 def api_link_whatsapp():
     """Start the label bridge so it emits a QR to scan (first pairing / re-link)."""
     return jsonify(start_bridge())
+
+
+@app.route("/api/access")
+@require_auth
+def api_access():
+    a = read_access()
+    a["admins"] = read_admins()
+    return jsonify(a)
+
+
+@app.route("/api/access", methods=["POST"])
+@require_auth
+def api_set_access():
+    data = request.get_json(silent=True) or {}
+    mode = (data.get("mode") or "").strip().lower()
+    if mode not in ("open", "allowlist"):
+        return jsonify({"ok": False, "message": "mode must be 'open' or 'allowlist'"}), 400
+    clean, seen = [], set()
+    for n in (data.get("numbers") or []):
+        d = re.sub(r"\D", "", str(n))
+        if not re.fullmatch(r"\d{6,15}", d):
+            return jsonify({"ok": False, "message": f"invalid number: {n}"}), 400
+        if d not in seen:
+            seen.add(d)
+            clean.append("+" + d)
+    if mode == "allowlist" and not clean:
+        return jsonify({"ok": False, "message": "Limited mode needs at least one number"}), 400
+    try:
+        write_access(mode, clean)
+    except Exception as e:
+        return jsonify({"ok": False, "message": "config write failed: " + str(e)}), 500
+    r = restart_gateway()  # reload the new policy (also re-applies the category gate)
+    return jsonify({"ok": bool(r.get("ok")), "mode": mode, "count": len(clean),
+                    "message": "Saved and bot restarted." if r.get("ok") else "Saved, but bot restart is still coming up — check status."})
 
 
 @app.route("/api/customers")
@@ -498,6 +586,16 @@ PAGE = r"""<!doctype html>
   .conn .cstate { color:var(--muted); font-size:13px; }
   .ok2 { background:var(--green); } .warn2 { background:var(--amber); } .bad2 { background:var(--red); }
 
+  /* access control */
+  .accopt { display:block; padding:6px 0; font-size:14px; cursor:pointer; }
+  .accopt input { margin-right:8px; }
+  .numlist { display:flex; flex-wrap:wrap; gap:8px; }
+  .numpill { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.05);
+             border:1px solid var(--line); border-radius:20px; padding:6px 12px; font-size:13px; }
+  .numpill button { background:transparent; color:var(--muted); border:0; padding:0 2px; cursor:pointer; font-size:16px; line-height:1; }
+  input[type=text] { background:var(--bg); color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:9px 11px; font-size:14px; }
+  input[type=text]::placeholder { color:var(--muted); }
+
   /* label chips */
   .chips { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .chip { display:flex; align-items:center; gap:8px; padding:8px 13px; border-radius:20px; cursor:pointer;
@@ -581,6 +679,26 @@ PAGE = r"""<!doctype html>
   </div>
 
   <div class="card">
+    <h2 style="margin:0 0 10px">Who can message the bot</h2>
+    <label class="accopt"><input type="radio" name="accmode" value="open" onchange="onModeChange()"> <b>Allow everyone</b> — the bot replies to <b>every</b> number that messages it</label>
+    <label class="accopt"><input type="radio" name="accmode" value="allowlist" onchange="onModeChange()"> <b>Limited access</b> — only the numbers below can talk to the bot</label>
+    <div id="allowBox" style="margin:10px 0 4px">
+      <div id="allowNums" class="numlist"></div>
+      <div style="display:flex; gap:8px; margin-top:10px">
+        <input type="text" id="newNum" placeholder="+9230XXXXXXXX" onkeydown="if(event.key==='Enter')addNum()">
+        <button class="ghost" onclick="addNum()">+ Add number</button>
+      </div>
+    </div>
+    <div class="foot" style="margin-top:8px">Changes take effect after you press Apply — which <b>restarts the bot</b> (a few seconds of downtime).</div>
+    <div style="margin-top:10px">
+      <button class="start" id="applyAccBtn" onclick="applyAccess()">Apply &amp; restart bot</button>
+    </div>
+    <div class="foot" style="margin-top:12px; border-top:1px solid var(--line); padding-top:10px">
+      <b>Admin numbers</b> (receive handoff alerts): <span id="adminNums">—</span>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="chips" id="chips"></div>
   </div>
 
@@ -598,13 +716,11 @@ PAGE = r"""<!doctype html>
           <th data-k="name">Customer <span class="arrow"></span></th>
           <th data-k="phone">Number <span class="arrow"></span></th>
           <th data-k="category">Label <span class="arrow"></span></th>
-          <th data-k="lead_score">Score <span class="arrow"></span></th>
-          <th data-k="status" class="hidemob">Status <span class="arrow"></span></th>
           <th data-k="first_contact_at" class="hidemob">First contact <span class="arrow"></span></th>
           <th data-k="last_message_at">Last seen <span class="arrow"></span></th>
           <th data-k="notes" class="hidemob">Notes <span class="arrow"></span></th>
         </tr></thead>
-        <tbody id="rows"><tr><td colspan="8" class="foot">Loading…</td></tr></tbody>
+        <tbody id="rows"><tr><td colspan="6" class="foot">Loading…</td></tr></tbody>
       </table>
     </div>
     <div class="foot" style="margin-top:8px">Change a customer's label with the dropdown — it updates WhatsApp labels too.
@@ -717,14 +833,12 @@ function render(){
       <td><select class="pill ${m.cls}" data-phone="${esc(x.phone)}" onchange="changeCat(this)">
             ${opts}
           </select>${silent?'<span class="silence" title="Bot is silent on this chat">⏸</span>':''}</td>
-      <td class="score">${x.lead_score??'—'}</td>
-      <td class="hidemob">${esc(x.status||x.cadence_status||'—')}</td>
       <td class="hidemob foot" title="${esc(fullDate(x.first_contact_at))}">${esc((x.first_contact_at||'').slice(0,10)||'—')}</td>
       <td title="${esc(fullDate(x.last_message_at))}">${rel(x.last_message_at)}</td>
       <td class="notes hidemob" title="${esc(x.notes||'')}">${esc(x.notes||'')}</td>
     </tr>`;
   }).join('');
-  document.getElementById('rows').innerHTML = html || '<tr><td colspan="8" class="foot">No customers match.</td></tr>';
+  document.getElementById('rows').innerHTML = html || '<tr><td colspan="6" class="foot">No customers match.</td></tr>';
   // set current value on each select (can't do it inline safely)
   document.querySelectorAll('select.pill').forEach(sel=>{
     const row = rows.find(r=>r.phone===sel.dataset.phone);
@@ -768,7 +882,7 @@ function renderLeads(){
 
 function exportCSV(){
   const rows = visibleRows();
-  const cols = ['name','phone','email','category','lead_score','status','first_contact_at','last_message_at','notes'];
+  const cols = ['name','phone','email','category','first_contact_at','last_message_at','notes'];
   const csv = [cols.join(',')].concat(rows.map(r=>cols.map(c=>{
     let v = String(r[c]??'').replace(/"/g,'""');
     return /[",\n]/.test(v) ? `"${v}"` : v;
@@ -855,12 +969,56 @@ async function linkWhatsApp(){
   try{ await fetch('/api/link-whatsapp',{method:'POST'}); }catch(e){}
   setTimeout(refresh, 2000);
 }
+
+// ---- access control (who can message the bot) ----
+let ACCESS = {mode:'allowlist', numbers:[], admins:[]};
+async function loadAccess(){
+  try{
+    const a = await (await fetch('/api/access')).json();
+    ACCESS = {mode:(a.mode==='open'?'open':'allowlist'), numbers:a.numbers||[], admins:a.admins||[]};
+    renderAccess();
+  }catch(e){}
+}
+function renderAccess(){
+  document.querySelectorAll('input[name=accmode]').forEach(r=>{ r.checked=(r.value===ACCESS.mode); });
+  document.getElementById('adminNums').textContent = (ACCESS.admins||[]).join(', ') || '—';
+  const box=document.getElementById('allowBox');
+  const on = ACCESS.mode==='allowlist';
+  box.style.opacity = on?'1':'.4'; box.style.pointerEvents = on?'auto':'none';
+  document.getElementById('allowNums').innerHTML = (ACCESS.numbers||[]).map(n=>
+    `<span class="numpill">${esc(n)}<button title="Remove" onclick="removeNum('${esc(n)}')">×</button></span>`).join('')
+    || '<span class="foot">No numbers yet — add at least one.</span>';
+}
+function onModeChange(){ ACCESS.mode=document.querySelector('input[name=accmode]:checked').value; renderAccess(); }
+function addNum(){
+  const el=document.getElementById('newNum'); const d=(el.value||'').replace(/\D/g,'');
+  if(d.length<8){ toast('Enter a full number with country code, e.g. +92300…', true); return; }
+  const e='+'+d;
+  if(!ACCESS.numbers.includes(e)) ACCESS.numbers.push(e);
+  el.value=''; renderAccess();
+}
+function removeNum(n){ ACCESS.numbers=ACCESS.numbers.filter(x=>x!==n); renderAccess(); }
+async function applyAccess(){
+  const mode=document.querySelector('input[name=accmode]:checked').value;
+  if(mode==='allowlist' && ACCESS.numbers.length===0){ toast('Add at least one number, or choose Allow everyone', true); return; }
+  const msg = mode==='open'
+    ? 'Allow EVERYONE to message the bot?\nIt will reply to any number that writes in.\n\nThis restarts the bot (a few seconds down).'
+    : `Limit the bot to these ${ACCESS.numbers.length} number(s)? Everyone else is ignored.\n\nThis restarts the bot (a few seconds down).`;
+  if(!confirm(msg)) return;
+  const b=document.getElementById('applyAccBtn'); b.disabled=true; b.textContent='Applying… restarting bot';
+  try{
+    const r=await fetch('/api/access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,numbers:ACCESS.numbers})});
+    const j=await r.json(); toast(j.message||(j.ok?'Applied':'Failed'), !j.ok);
+  }catch(e){ toast('Network error while applying', true); }
+  b.disabled=false; b.textContent='Apply & restart bot';
+  setTimeout(()=>{ loadAccess(); refresh(); }, 3000);
+}
 async function ctl(action){
   const b=document.getElementById(action+'Btn'); b.disabled=true; b.textContent='…';
   try{ await fetch('/api/'+action,{method:'POST'}); }catch(e){}
   setTimeout(()=>{ refresh(); b.textContent = action==='start'?'▶ Start bot':'■ Stop bot'; }, 1500);
 }
-refresh(); setInterval(refresh, 5000);
+refresh(); loadAccess(); setInterval(refresh, 5000);
 </script></body></html>"""
 
 
