@@ -41,6 +41,10 @@ KAPSO_GATE_PATCHER = os.path.join(REPO, "openclaw-patches", "patch_kapso_gate.py
 ENV_FILE = os.path.join(REPO, ".env")
 POLLER = os.path.join(REPO, "scripts", "kapso_poller.py")
 POLLER_LOG = os.path.join(REPO, "progress", "kapso-poller.log")
+BRIDGE_JS = os.path.join(REPO, "label-bridge", "bridge.js")
+BRIDGE_CREDS = os.path.join(REPO, "label-bridge", "auth", "creds.json")
+BRIDGE_QR = os.path.join(REPO, "progress", "label-bridge-qr.png")
+BRIDGE_LOG = os.path.join(REPO, "progress", "label-bridge.log")
 NODE_BIN = "/usr/local/node-v22.21.1/bin"
 # When running under supervisor (Docker), drive the gateway via supervisorctl
 # instead of spawning/killing it directly.
@@ -254,6 +258,12 @@ def start_gateway():
         start_poller_if_needed()
     except Exception:
         pass
+    # resume label sync too, but only if already paired (never surprise-generate a QR)
+    try:
+        if os.path.exists(BRIDGE_CREDS) and not bridge_running():
+            start_bridge()
+    except Exception:
+        pass
     return {"ok": is_running(), "message": "Starting…"}
 
 
@@ -285,6 +295,51 @@ def _alive(pid):
         return True
     except Exception:
         return False
+
+
+# ---- label bridge (WhatsApp linked device for labels) ----------------
+def bridge_running():
+    try:
+        out = subprocess.run(["pgrep", "-f", "label-bridge/bridge.js"], capture_output=True, text=True, timeout=5)
+        return bool(out.stdout.strip())
+    except Exception:
+        return False
+
+
+def bridge_status():
+    """running = process up; qr_available = a QR is waiting to be scanned;
+    linked = we have saved credentials and no QR is pending (i.e. already paired)."""
+    running = bridge_running()
+    qr = os.path.exists(BRIDGE_QR)
+    linked = os.path.exists(BRIDGE_CREDS) and not qr
+    connected = False
+    if running and linked:
+        # the bridge logs this line once paired; treat a recent one as connected
+        for l in reversed(tail(BRIDGE_LOG, 60)):
+            if "connected as linked device" in l:
+                connected = True
+                break
+    return {"running": running, "linked": linked, "qr_available": qr, "connected": connected}
+
+
+def start_bridge():
+    """Start the label bridge (needed for first pairing so it emits a QR, and to
+    resume label sync). Idempotent."""
+    if bridge_running():
+        return {"ok": True, "message": "already running"}
+    if not os.path.exists(BRIDGE_JS):
+        return {"ok": False, "message": "label bridge not installed"}
+    env = os.environ.copy()
+    env["PATH"] = NODE_BIN + ":" + env.get("PATH", "")
+    os.makedirs(os.path.dirname(BRIDGE_LOG), exist_ok=True)
+    logf = open(BRIDGE_LOG, "a")
+    subprocess.Popen(["node", BRIDGE_JS], cwd=REPO, env=env, stdout=logf, stderr=logf, start_new_session=True)
+    # wait briefly for a QR to appear (first pairing) or for it to come up
+    for _ in range(24):
+        if os.path.exists(BRIDGE_QR) or bridge_running():
+            break
+        time.sleep(0.5)
+    return {"ok": bridge_running(), "message": "starting"}
 
 
 # ---- customer data ---------------------------------------------------
@@ -336,7 +391,29 @@ def load_leads():
 @app.route("/api/status")
 @require_auth
 def api_status():
-    return jsonify(gateway_status())
+    s = gateway_status()
+    s["bridge"] = bridge_status()
+    return jsonify(s)
+
+
+@app.route("/api/qr")
+@require_auth
+def api_qr():
+    """Serve the current WhatsApp-linking QR image if one is waiting."""
+    if os.path.exists(BRIDGE_QR):
+        try:
+            with open(BRIDGE_QR, "rb") as f:
+                return Response(f.read(), mimetype="image/png")
+        except Exception:
+            pass
+    return Response("no qr", 404)
+
+
+@app.route("/api/link-whatsapp", methods=["POST"])
+@require_auth
+def api_link_whatsapp():
+    """Start the label bridge so it emits a QR to scan (first pairing / re-link)."""
+    return jsonify(start_bridge())
 
 
 @app.route("/api/customers")
@@ -414,6 +491,13 @@ PAGE = r"""<!doctype html>
   .start { background:var(--green); } .stop { background:var(--red); }
   .ghost { background:transparent; border:1px solid var(--line); color:var(--txt); font-weight:500; }
 
+  /* connections */
+  .conn { display:flex; align-items:center; gap:10px; padding:7px 0; font-size:14px; color:var(--txt); }
+  .conn .cdot2 { width:11px; height:11px; border-radius:50%; flex:none; }
+  .conn .cname { min-width:190px; }
+  .conn .cstate { color:var(--muted); font-size:13px; }
+  .ok2 { background:var(--green); } .warn2 { background:var(--amber); } .bad2 { background:var(--red); }
+
   /* label chips */
   .chips { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .chip { display:flex; align-items:center; gap:8px; padding:8px 13px; border-radius:20px; cursor:pointer;
@@ -483,6 +567,20 @@ PAGE = r"""<!doctype html>
   </div>
 
   <div class="card">
+    <h2 style="margin:0 0 10px">Connections</h2>
+    <div id="connList" class="foot">Checking…</div>
+    <div id="qrPanel" style="display:none; margin-top:14px; text-align:center">
+      <div class="foot" style="margin-bottom:8px">
+        <b>Scan to link WhatsApp for labels.</b><br>
+        On your phone: WhatsApp Business → ⋮ or Settings → <b>Linked devices</b> → <b>Link a device</b> → scan this.
+      </div>
+      <img id="qrImg" alt="WhatsApp QR" width="240" height="240"
+           style="background:#fff; border-radius:10px; padding:8px">
+    </div>
+    <button class="ghost" id="linkBtn" style="display:none; margin-top:10px" onclick="linkWhatsApp()">🔗 Link WhatsApp (show QR)</button>
+  </div>
+
+  <div class="card">
     <div class="chips" id="chips"></div>
   </div>
 
@@ -545,7 +643,10 @@ let DATA = {customers:[], counts:{}, categories:Object.keys(CAT), total:0};
 let LEADS = [];
 let filter = 'all';
 let sortK = 'last_message_at', sortDir = -1;
-let editing = false;   // true while a label dropdown is open — pauses re-render
+// Pause table re-render ONLY while a label dropdown is actually focused, computed
+// live from the DOM so it can never get "stuck" and freeze updates (old bug:
+// a boolean that stayed true kept the dashboard showing stale rows).
+function dropdownOpen(){ const a=document.activeElement; return !!(a && a.tagName==='SELECT' && a.classList.contains('pill')); }
 
 function esc(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function fmtUptime(s){ if(s==null)return''; let h=Math.floor(s/3600),m=Math.floor(s%3600/60); return h?`${h}h ${m}m`:`${m}m`; }
@@ -613,7 +714,7 @@ function render(){
     return `<tr>
       <td><span class="nm">${esc(x.name||'—')}</span>${x.email?`<div class="em">${esc(x.email)}</div>`:''}</td>
       <td><a class="phone" href="https://wa.me/${digits}" target="_blank" rel="noopener">${esc(x.phone||'')}</a></td>
-      <td><select class="pill ${m.cls}" data-phone="${esc(x.phone)}" onfocus="editing=true" onblur="editing=false" onchange="changeCat(this)">
+      <td><select class="pill ${m.cls}" data-phone="${esc(x.phone)}" onchange="changeCat(this)">
             ${opts}
           </select>${silent?'<span class="silence" title="Bot is silent on this chat">⏸</span>':''}</td>
       <td class="score">${x.lead_score??'—'}</td>
@@ -638,7 +739,7 @@ async function changeCat(sel){
   let msg = `Move ${phone} to "${m.label}"?`;
   if(SILENT.has(cat)) msg += `\n\nThe bot will STOP replying on this chat until you move it back to New customer / Important / Follow-up.`;
   else if(SILENT.has((cur||'').toLowerCase())) msg += `\n\nThe bot will START replying on this chat again.`;
-  if(!confirm(msg)){ sel.value=(cur||'').toLowerCase(); editing=false; return; }
+  if(!confirm(msg)){ sel.value=(cur||'').toLowerCase(); sel.blur(); return; }
   sel.disabled = true;
   try{
     const r = await fetch('/api/set-category',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone,category:cat})});
@@ -646,8 +747,9 @@ async function changeCat(sel){
     if(j.ok){ toast(`${phone} → ${m.label}`); const row=DATA.customers.find(c=>c.phone===phone); if(row) row.category=cat; }
     else { toast('Failed: '+(j.message||'unknown error'), true); sel.value=(cur||'').toLowerCase(); }
   }catch(e){ toast('Network error — label not changed', true); sel.value=(cur||'').toLowerCase(); }
-  sel.disabled = false; editing = false;
-  refresh();
+  sel.disabled = false;
+  sel.blur();          // release focus so the refresh below can re-render immediately
+  refresh();           // pull fresh server truth and repaint (fixes stale-row bug)
 }
 
 function renderLeads(){
@@ -696,17 +798,62 @@ async function refresh(){
         s.last_inbound?('Last message: '+esc(s.last_inbound.replace('T',' '))):'' ].filter(Boolean).join(' &nbsp;|&nbsp; ');
     document.getElementById('startBtn').disabled = s.running;
     document.getElementById('stopBtn').disabled = !s.running;
+    renderConnections(s);
   }catch(e){}
   try{
     const c = await (await fetch('/api/customers')).json();
     DATA = c;
-    if(!editing) render();
+    if(!dropdownOpen()) render();
   }catch(e){}
   try{
     const l = await (await fetch('/api/leads')).json();
     LEADS = l.leads||[];
-    if(!editing) renderLeads();
+    if(!dropdownOpen()) renderLeads();
   }catch(e){}
+}
+
+function connRow(name, level, state){
+  const cls = level==='ok'?'ok2':level==='warn'?'warn2':'bad2';
+  return `<div class="conn"><span class="cdot2 ${cls}"></span><span class="cname">${esc(name)}</span><span class="cstate">${esc(state)}</span></div>`;
+}
+function renderConnections(s){
+  const b = s.bridge || {};
+  let rows = '';
+  // 1) the bot itself (openclaw)
+  if(s.running && s.connected) rows += connRow('Bot (openclaw)', 'ok', 'online & connected');
+  else if(s.running)          rows += connRow('Bot (openclaw)', 'warn', 'starting / connecting…');
+  else                        rows += connRow('Bot (openclaw)', 'bad', 'offline — press ▶ Start bot');
+  // 2) WhatsApp inbound (Kapso poller), when applicable
+  if(s.transport==='kapso' && s.poller_running!==undefined){
+    rows += s.poller_running ? connRow('WhatsApp messages (inbound)', 'ok', 'receiving')
+                             : connRow('WhatsApp messages (inbound)', 'bad', 'down — bot cannot receive');
+  }
+  // 3) WhatsApp label link (Baileys linked device)
+  if(b.qr_available)      rows += connRow('WhatsApp labels (linked device)', 'warn', 'not linked — scan the QR below');
+  else if(b.running && b.linked) rows += connRow('WhatsApp labels (linked device)', 'ok', 'linked & syncing');
+  else if(b.linked)       rows += connRow('WhatsApp labels (linked device)', 'warn', 'linked but not running');
+  else                    rows += connRow('WhatsApp labels (linked device)', 'bad', 'not linked');
+  document.getElementById('connList').innerHTML = rows;
+
+  // QR / link button
+  const qrPanel=document.getElementById('qrPanel'), linkBtn=document.getElementById('linkBtn'), qrImg=document.getElementById('qrImg');
+  if(b.qr_available){
+    qrImg.src = '/api/qr?t=' + Date.now();       // cache-bust; QR refreshes itself
+    qrPanel.style.display = 'block';
+    linkBtn.style.display = 'none';
+  } else if(!b.linked){
+    qrPanel.style.display = 'none';
+    linkBtn.style.display = 'inline-block';
+    linkBtn.disabled = false; linkBtn.textContent = '🔗 Link WhatsApp (show QR)';
+  } else {
+    qrPanel.style.display = 'none';
+    linkBtn.style.display = 'none';
+  }
+}
+async function linkWhatsApp(){
+  const b=document.getElementById('linkBtn'); b.disabled=true; b.textContent='Starting… QR will appear';
+  try{ await fetch('/api/link-whatsapp',{method:'POST'}); }catch(e){}
+  setTimeout(refresh, 2000);
 }
 async function ctl(action){
   const b=document.getElementById(action+'Btn'); b.disabled=true; b.textContent='…';
