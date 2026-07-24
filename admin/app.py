@@ -46,7 +46,8 @@ BRIDGE_CREDS = os.path.join(REPO, "label-bridge", "auth", "creds.json")
 BRIDGE_QR = os.path.join(REPO, "progress", "label-bridge-qr.png")
 BRIDGE_LOG = os.path.join(REPO, "progress", "label-bridge.log")
 OPENCLAW_CONF = os.path.expanduser("~/.openclaw/openclaw.json")
-NOTIFY_PY = os.path.join(REPO, "workspace", "notify_admins.py")
+ADMINS_FILE = os.path.join(REPO, "workspace", "data", "admins.json")
+OWNER_NUMBER = "+923362615506"   # always an admin; cannot be removed
 NODE_BIN = "/usr/local/node-v22.21.1/bin"
 # When running under supervisor (Docker), drive the gateway via supervisorctl
 # instead of spawning/killing it directly.
@@ -363,12 +364,34 @@ def read_access():
 
 
 def read_admins():
-    """The numbers that receive handoff alerts (ADMINS in notify_admins.py)."""
+    """Handoff-alert recipients (workspace/data/admins.json). Owner always first."""
+    nums = []
     try:
-        m = re.search(r"ADMINS\s*=\s*\[([^\]]*)\]", open(NOTIFY_PY).read())
-        return re.findall(r"[\"'](\+?\d[\d]+)[\"']", m.group(1)) if m else []
+        nums = json.load(open(ADMINS_FILE)).get("admins", [])
     except Exception:
-        return []
+        nums = []
+    out, seen = [], set()
+    for n in [OWNER_NUMBER] + list(nums):
+        d = re.sub(r"\D", "", str(n))
+        if d and d not in seen:
+            seen.add(d)
+            out.append("+" + d)
+    return out or [OWNER_NUMBER]
+
+
+def write_admins(numbers):
+    """Persist the admin list (owner always kept). Atomic."""
+    out, seen = [], set()
+    for n in [OWNER_NUMBER] + list(numbers):
+        d = re.sub(r"\D", "", str(n))
+        if d and d not in seen:
+            seen.add(d)
+            out.append("+" + d)
+    tmp = ADMINS_FILE + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump({"admins": out}, f, indent=2)
+    os.replace(tmp, ADMINS_FILE)
+    return out
 
 
 def write_access(mode, numbers):
@@ -476,6 +499,24 @@ def api_access():
     a = read_access()
     a["admins"] = read_admins()
     return jsonify(a)
+
+
+@app.route("/api/admins", methods=["POST"])
+@require_auth
+def api_set_admins():
+    """Add/remove handoff-alert recipients. Owner is always kept. No gateway restart needed."""
+    data = request.get_json(silent=True) or {}
+    clean = []
+    for n in (data.get("numbers") or []):
+        d = re.sub(r"\D", "", str(n))
+        if not re.fullmatch(r"\d{6,15}", d):
+            return jsonify({"ok": False, "message": f"invalid number: {n}"}), 400
+        clean.append("+" + d)
+    try:
+        saved = write_admins(clean)
+        return jsonify({"ok": True, "admins": saved, "message": f"Saved {len(saved)} admin number(s)."})
+    except Exception as e:
+        return jsonify({"ok": False, "message": "save failed: " + str(e)}), 500
 
 
 @app.route("/api/access", methods=["POST"])
@@ -693,8 +734,14 @@ PAGE = r"""<!doctype html>
     <div style="margin-top:10px">
       <button class="start" id="applyAccBtn" onclick="applyAccess()">Apply &amp; restart bot</button>
     </div>
-    <div class="foot" style="margin-top:12px; border-top:1px solid var(--line); padding-top:10px">
-      <b>Admin numbers</b> (receive handoff alerts): <span id="adminNums">—</span>
+    <div style="margin-top:14px; border-top:1px solid var(--line); padding-top:12px">
+      <b style="font-size:14px">Admin numbers</b> <span class="foot">(receive handoff alerts — 🔥 hot leads, 📷 media, 😠 complaints, 🛒 orders)</span>
+      <div id="adminNums" class="numlist" style="margin-top:10px"></div>
+      <div style="display:flex; gap:8px; margin-top:10px">
+        <input type="text" id="newAdmin" placeholder="+9230XXXXXXXX" onkeydown="if(event.key==='Enter')addAdmin()">
+        <button class="ghost" onclick="addAdmin()">+ Add admin</button>
+        <button class="start" id="saveAdminsBtn" onclick="saveAdmins()">Save admins</button>
+      </div>
     </div>
   </div>
 
@@ -979,9 +1026,35 @@ async function loadAccess(){
     renderAccess();
   }catch(e){}
 }
+const OWNER_NUMBER = '+923362615506';
+function renderAdmins(){
+  const el=document.getElementById('adminNums');
+  el.innerHTML = (ACCESS.admins||[]).map(n=>{
+    const owner = n===OWNER_NUMBER;
+    return `<span class="numpill">${esc(n)}${owner?' <span class="foot">(owner)</span>':`<button title="Remove" onclick="removeAdmin('${esc(n)}')">×</button>`}</span>`;
+  }).join('') || '<span class="foot">none</span>';
+}
+function addAdmin(){
+  const el=document.getElementById('newAdmin'); const d=(el.value||'').replace(/\D/g,'');
+  if(d.length<8){ toast('Enter a full number with country code', true); return; }
+  const e='+'+d;
+  if(!ACCESS.admins.includes(e)) ACCESS.admins.push(e);
+  el.value=''; renderAdmins();
+}
+function removeAdmin(n){ if(n===OWNER_NUMBER) return; ACCESS.admins=ACCESS.admins.filter(x=>x!==n); renderAdmins(); }
+async function saveAdmins(){
+  const b=document.getElementById('saveAdminsBtn'); b.disabled=true; b.textContent='Saving…';
+  try{
+    const r=await fetch('/api/admins',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numbers:ACCESS.admins})});
+    const j=await r.json();
+    if(j.ok){ ACCESS.admins=j.admins; renderAdmins(); toast(j.message||'Saved'); }
+    else toast('Failed: '+(j.message||''), true);
+  }catch(e){ toast('Network error', true); }
+  b.disabled=false; b.textContent='Save admins';
+}
 function renderAccess(){
   document.querySelectorAll('input[name=accmode]').forEach(r=>{ r.checked=(r.value===ACCESS.mode); });
-  document.getElementById('adminNums').textContent = (ACCESS.admins||[]).join(', ') || '—';
+  renderAdmins();
   const box=document.getElementById('allowBox');
   const on = ACCESS.mode==='allowlist';
   box.style.opacity = on?'1':'.4'; box.style.pointerEvents = on?'auto':'none';

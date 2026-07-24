@@ -9,15 +9,37 @@ Usage:
 """
 
 import argparse
+import os
+import re
 import subprocess
 import sys
 import json
 import time
 from datetime import datetime
 
-ADMINS = ["+923362615506"]
-
+OWNER = "+923362615506"          # always an admin; cannot be removed
+ADMINS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "admins.json")
 ALERTS_FILE = "data/admin_alerts.json"
+
+
+def load_admins():
+    """Handoff-alert recipients. Editable from the dashboard (data/admins.json).
+    The owner is always included as a safety net."""
+    nums = []
+    try:
+        nums = json.load(open(ADMINS_FILE)).get("admins", [])
+    except Exception:
+        nums = []
+    out, seen = [], set()
+    for n in [OWNER] + list(nums):          # owner first, always present
+        d = re.sub(r"\D", "", str(n))
+        if d and d not in seen:
+            seen.add(d)
+            out.append("+" + d)
+    return out or [OWNER]
+
+
+ADMINS = load_admins()
 
 # Each handoff kind gets a bold, unmistakable banner at the TOP of the alert so
 # the owner knows at a glance what happened. (emoji, TITLE, one-line explanation)
