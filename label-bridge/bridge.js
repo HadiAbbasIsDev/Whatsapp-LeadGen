@@ -248,7 +248,12 @@ async function start() {
   })
 
   sock.ev.on('labels.association', ({ association, type }) => {
-    const a = association
+    const a = association || {}
+    // DIAGNOSTIC: log every association event the instant it arrives, before any
+    // filtering — this is how we confirm whether WhatsApp even delivers manual
+    // Business-app label changes to this linked device (coexistence question).
+    const quiet = Date.now() - connectedAt < WRITEBACK_QUIET_MS
+    log(`[app-event] labels.association type=${type} assocType=${a.type} chat=${String(a.chatId||'').split('@')[0]} label="${labels.get(a.labelId)||a.labelId}"${quiet ? ' (within quiet window — writeback suppressed)' : ''}`)
     if (!a || !a.chatId || !a.labelId) return
     if (a.type && a.type !== 'label_jid') return   // ignore message-level labels
     const set = chatLabels.get(a.chatId) || new Set()
