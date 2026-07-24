@@ -1,74 +1,94 @@
-# Pre-Launch Checklist — before opening the bot to real (public) customers
+# Pre-Launch Checklist — before opening the bot to the public
 
-Right now the bot is **safe because only allowlisted numbers can reach it**
-(owner + one tester). Everything below must be handled **before** you remove
-that allowlist and let the general public message the bot.
-
-Work top-to-bottom. Items marked **[blocker]** must be done; others are strongly
-recommended.
+The bot is safe today because only allowlisted numbers can reach it. Everything
+below should be handled **before** you switch to "Allow everyone". (You said you'll
+do the allow-everyone step yourself — it's Part E item 1 here for completeness.)
 
 ---
 
-## 1. [blocker] Close the secrets gap (exec can still read API keys)
+## PART A — Does the bot follow the flow diagram? (conformance check, 2026-07-24)
 
-**Why:** The bot must be able to run its scripts (`exec`), and that same power
-means a determined prompt-injection attack could make it read secret files —
-the Kapso / OpenRouter keys in `.env` and the DeepSeek key + gateway token in
-`~/.openclaw/openclaw.json`. openclaw's own audit flagged the plaintext secrets.
-Harmless today (allowlist), dangerous once the public can message the bot.
+Checked the flowchart against the real rules in `workspace/AGENTS.md` + scripts.
 
-**Options (pick one, then test):**
-- Restrict `exec` to an allowlist so the bot can only run the project's own
-  scripts, not arbitrary shell like `cat .env`.
-- Or move the secrets out of `exec`'s reach (e.g. a secrets store / separate
-  sending service the LLM can't read from), so the scripts still work but the
-  raw keys aren't catchable.
+| # | Flow (diagram) | Implemented? | Notes |
+|---|---|---|---|
+| 1 | Hot Lead → tag Hot Leads → human takes over | ✅ Matches | Triggers all present (negotiation, pricing, customization, ask-for-human, can't-answer, call, visit). Now also sends a "team will get back to you" line before going silent. |
+| 2 | Direct order → collect name/addr/phone → **place on renovate.pk** → confirm | ⚠️ **GAP** | The bot **cannot place orders on the website** (it has no web/browser ability, by design). Flow 2 tells it to "place the order on renovate.pk" and never alerts a human to actually do it. **Must fix** — see Part B item 2. |
+| 3 | Not responding → Followup → weekly ×3 → Junk | ✅ Matches | Timing runs via `scripts/followup_runner.py` (7-day, weekly, 3 max, then Junk). |
+| 4 | Human lists (Ahsan/Ahmed/Imran/Rafay) dead 7d → follow-up → reply? | ⚠️ Partial | Follow-up send works. BUT the silence gate blocks **inbound** from human-owned chats, so when that client **replies**, the bot doesn't see it. Their reply reaches the human, not the bot — acceptable, but know it. See Part C item 1. |
+| 5 | Store location → send address → Followup → weekly ×3 → Junk | ✅ Matches | Addresses exist in `USER.md` (Karachi + Lahore). Bot asks which city first (fine). **Verify the addresses/phones are current** — Part D item 6. |
+| 6 | Complaint → capture details → tag Complains → human | ✅ Matches | Now also sends a courtesy line before going silent. |
 
-**Also:** rotate any key that was ever shared in plaintext (DeepSeek, and the
-Anthropic key mentioned in `testapi.md`) before going live.
-
-_Context: tool lockdown already done 2026-07-23 — see `[[agent-tool-lockdown]]`
-memory / HISTORY. This item is the one residual it left open._
-
-## 2. [blocker] Open the allowlist deliberately
-
-- Decide who can message: keep a growing allowlist, or switch
-  `channels.kapso-whatsapp.dmSecurity` to `open` for the true public.
-- Live config: `~/.openclaw/openclaw.json` (not the repo template).
-- Remember: opening the allowlist is what makes items 1, 3, 4 actually matter.
-
-## 3. [blocker] Test with 2-3 real numbers at once
-
-- The bot has only ever been tested one number at a time. Before public load,
-  confirm concurrent chats work: labels, product sends, lead capture, handoff,
-  and the complaint/vendor silence flows all behaving per-chat.
-- Watch `workspace/data/` writes and `progress/*.log` under simultaneous use.
-
-## 4. WhatsApp / Meta rules for cold outreach
-
-- Free-text replies only work inside the 24-hour window; outside it, only the
-  approved templates (`renovate_interest_followup` / `decor_moments_interest_followup`)
-  may send. The follow-up runner already enforces this.
-- Keep marketing/cold campaigns off until any needed templates are Meta-approved.
-- Honor STOP/opt-out immediately (already enforced by `db.py can-message`).
-
-## 5. Reliability so it survives real traffic
-
-- Install the dashboard as a systemd service so it (and via it, the bot)
-  auto-starts and restarts on crash — the `@reboot` cron helps but a supervisor
-  is sturdier. (`admin/openclaw-admin.service`.)
-- Confirm daily backups are still running (`~/wa-lead-gen-backups/backup.log`).
-- After any `openclaw` update, re-run the patchers and confirm the category
-  gate + label flows still work.
-
-## 6. Polish / smaller items
-
-- Template wording says **"Aliya"** while the bot is named **"Alia"** — decide
-  whether to leave it or re-submit the template to Meta for approval.
-- Coexistence / WhatsApp-app labels: see the checklist in `toimplement.md`.
-- Fill or drop the 2 products with no image (ids 3519, 1454).
+**Extra flows we added (not in the diagram):** Vendor brush-off (SEVENTH) and
+owner-only cold outreach (EIGHTH). Both are fine to keep.
 
 ---
 
-_Keep this file updated as items are done. Companion to `progress/STATUS.md`
-(current state) and `progress/HISTORY.md` (dated log)._
+## PART B — BLOCKERS (must resolve before public launch)
+
+### 1. [blocker] Close the secrets gap (exec can still read API keys)
+The bot needs `exec` to run its scripts, and that same power means a crafted
+message could make it read secret files (Kapso/OpenRouter keys in `.env`;
+DeepSeek key + gateway token in `~/.openclaw/openclaw.json`). Harmless while the
+allowlist limits who reaches the bot; real once the public can message it.
+- Fix: restrict `exec` to the project's own scripts, OR move secrets out of its
+  reach. Also rotate any key ever shared in plaintext.
+
+### 2. [blocker] Fix Flow 2 — the bot can't place website orders
+Today Flow 2 tells the bot to "place the order on renovate.pk", which it cannot
+do, and it never hands the order to a person. Risk: the bot tells a customer
+"order placed" when nothing happened. **Decision needed** (see the question I
+asked): almost certainly the bot should **collect the details, alert the owner
+(handoff type "order") to place it, and tell the customer the team will confirm**
+— not claim it placed the order itself.
+
+---
+
+## PART C — Decisions / smaller fixes (recommended before launch)
+
+1. **Human-owned chat replies are blocked by the silence gate.** If a chat is in
+   Ahsan/Ahmed/Imran/Rafay and the client replies to a follow-up, the bot stays
+   silent (gate blocks it) and the human handles it. If you want the bot to pick
+   those replies back up, we'd add a cadence-status exception to the gate.
+2. **"Junk" chats are silenced forever.** A customer marked Junk (no reply for
+   3 weeks) who later messages again is ignored until you un-junk them on the
+   dashboard. Decide if that's OK or if junk should re-open on a new inbound.
+3. **Template name says "Aliya", bot is "Alia."** Cosmetic. Only Meta can change
+   approved template text (needs re-approval) — leave it or re-submit.
+
+---
+
+## PART D — Test every flow live (with 1-2 real numbers, before opening)
+
+Do a real WhatsApp test of each, watching the dashboard + logs:
+- [ ] 1. Ask to "speak to a person" / negotiate price → tagged Hot Leads, you get a 🔥 alert, courtesy line sent, bot goes silent.
+- [ ] 2. Say "I want to order X" → bot collects name/address/phone, then (after fix) alerts you to place it.
+- [ ] 3. Go silent mid-chat → after 7 days, weekly Renovate template goes out (test with `followup_runner.py --min-days 0`), 3 max → Junk.
+- [ ] 4. Human-owned chat left 7 days → re-engagement template goes out.
+- [ ] 5. Ask "where are your stores?" → correct city address sent → Followup.
+- [ ] 6. Raise a complaint → tagged Complains, ⚠️ alert, courtesy line, silence.
+- [ ] 7. Pose as a supplier ("we sell you wholesale…") → one polite brush-off → Vendor → silence.
+- [ ] 8. Photo/video → no reply to customer, silent 📷 handoff alert to you.
+- [ ] 9. Change a label in the WhatsApp app → bot database follows within a few seconds (two-way sync).
+
+---
+
+## PART E — Go-live operations
+
+1. **Open the allowlist** (you're handling this): dashboard → "Who can message
+   the bot" → Allow everyone → Apply. Only do this after Parts B & D are done.
+2. **Reliability**: install the dashboard as a systemd service so it (and the
+   bot) auto-start and restart on crash (`admin/openclaw-admin.service`). The
+   `@reboot` cron helps; a supervisor is sturdier.
+3. **Backups**: confirm the daily backup is running (`~/wa-lead-gen-backups/`).
+4. **After any `openclaw` update**: re-run the patchers and confirm the category
+   gate + label flows still work.
+5. **Meta rules**: keep cold outreach to numbers you have a lawful basis to
+   contact; free-text only works inside the 24h window (templates otherwise).
+6. **Verify store addresses** in `USER.md` are current (Karachi + Lahore).
+7. **Catalog**: 934 products; 2 have no image (ids 3519, 1454) — fill or drop.
+
+---
+
+_Companion to `progress/STATUS.md` (current state) and `progress/HISTORY.md`
+(dated log). Update this as items are done._
