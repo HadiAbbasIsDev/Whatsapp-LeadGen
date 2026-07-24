@@ -34,8 +34,7 @@ kapso plugin) redacts any known secret value from every outgoing message before
 it reaches the customer. Verified: a message containing the Kapso key goes out as
 `[REDACTED]`; normal messages are untouched; redactions are logged to
 `~/.openclaw/kapso-secrets.log`. Fails open (never blocks a legitimate reply).
-- **Still to do (you):** rotate any key ever shared in plaintext (DeepSeek +
-  the Anthropic key once in `testapi.md`), since those may already be exposed.
+- Key rotation: owner decided NOT to rotate (2026-07-24) — accepted.
 - Residual (low): the scrubber matches exact secret values, so a determined
   attacker could in theory obfuscate a key (e.g. base64) to slip past it. The
   allowlist is the first line of defense; this is defense-in-depth. Optional
