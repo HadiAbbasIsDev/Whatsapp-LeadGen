@@ -49,17 +49,16 @@ from claiming the order is placed. The owner places it on renovate.pk.
 
 ---
 
-## PART C — Decisions / smaller fixes (recommended before launch)
+## PART C — Decisions (settled 2026-07-24)
 
-1. **Human-owned chat replies are blocked by the silence gate.** If a chat is in
-   Ahsan/Ahmed/Imran/Rafay and the client replies to a follow-up, the bot stays
-   silent (gate blocks it) and the human handles it. If you want the bot to pick
-   those replies back up, we'd add a cadence-status exception to the gate.
-2. **"Junk" chats are silenced forever.** A customer marked Junk (no reply for
-   3 weeks) who later messages again is ignored until you un-junk them on the
-   dashboard. Decide if that's OK or if junk should re-open on a new inbound.
-3. **Template name says "Aliya", bot is "Alia."** Cosmetic. Only Meta can change
-   approved template text (needs re-approval) — leave it or re-submit.
+1. **Human-owned chat replies stay with the human.** ✅ DECIDED: leave as-is —
+   when a chat is in Ahsan/Ahmed/Imran/Rafay, the bot stays silent and the human
+   handles replies. (Already the behavior; no change.)
+2. **"Junk" chats stay silent.** ✅ DECIDED: a Junk customer who messages again
+   is ignored until you un-junk them on the dashboard. (Already the behavior; no
+   change.)
+3. **Template name says "Aliya", bot is "Alia."** Cosmetic, still open. Only Meta
+   can change approved template text (needs re-approval) — leave it or re-submit.
 
 ---
 
