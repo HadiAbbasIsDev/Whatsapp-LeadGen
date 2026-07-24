@@ -79,10 +79,26 @@ function saveState() {
 }
 
 // ---- write-back: owner changes a label in the APP -> update the bot DB ----
-// Suppressed briefly after every connect: boot resyncs replay ALL historical
-// label associations as "add" events, which must not rewrite categories.
-const WRITEBACK_QUIET_MS = 90_000
+// Suppressed only briefly after connect: the boot resync replays ALL historical
+// label associations as "add" events (within the first seconds), which must not
+// rewrite categories. Kept short so genuine user edits are honored quickly.
+const WRITEBACK_QUIET_MS = 15_000
 let connectedAt = 0
+
+// Distinguish the user's own in-app label edits from the echo of OUR reconcile
+// pushes: WhatsApp echoes every addChatLabel/removeChatLabel back as an event.
+const recentPush = new Map()        // `${jid}|${labelId}|${action}` -> ts
+const PUSH_ECHO_MS = 8000
+function markPush(jid, labelId, action) { recentPush.set(`${jid}|${labelId}|${action}`, Date.now()) }
+function isEchoOfOurPush(jid, labelId, action) {
+  const t = recentPush.get(`${jid}|${labelId}|${action}`)
+  return !!(t && Date.now() - t < PUSH_ECHO_MS)
+}
+
+// A chat the user just edited in the app: hold reconcile off it briefly so the
+// DB write lands before we'd otherwise re-push our old value and revert them.
+const userEditedAt = new Map()      // jid -> ts
+const USER_EDIT_GRACE_MS = 12_000
 
 function categoryForLabel(labelId) {
   const n = norm(labels.get(labelId) || '')
@@ -92,7 +108,7 @@ function categoryForLabel(labelId) {
 }
 
 function writeBack(jid, labelId) {
-  if (!connected || Date.now() - connectedAt < WRITEBACK_QUIET_MS) return
+  if (!connected) return
   if (!jid.endsWith('@s.whatsapp.net')) return
   const cat = categoryForLabel(labelId)
   if (!cat) return                                   // not one of our lists
@@ -113,7 +129,7 @@ function writeBackRemoval(jid, labelId) {
   // Owner stripped a label without filing the chat elsewhere. If it was the
   // label matching the bot's current category, re-open the chat: adopt any
   // remaining managed label, else fall back to "new customer".
-  if (!connected || Date.now() - connectedAt < WRITEBACK_QUIET_MS) return
+  if (!connected) return
   if (!jid.endsWith('@s.whatsapp.net')) return
   const cat = categoryForLabel(labelId)
   if (!cat) return
@@ -160,6 +176,7 @@ async function reconcile() {
       const digits = String(c.phone || '').replace(/\D/g, '')
       if (!digits) continue
       const jid = `${digits}@s.whatsapp.net`
+      if (Date.now() - (userEditedAt.get(jid) || 0) < USER_EDIT_GRACE_MS) continue  // let the user's in-app edit settle first
       const want = labelIdFor(c.category)
       if (want === null) continue
       if (want === undefined) {
@@ -173,6 +190,7 @@ async function reconcile() {
       const have = chatLabels.get(jid) || new Set()
       if (!have.has(want)) {
         log(`label + "${labels.get(want)}" -> ${digits}`)
+        markPush(jid, want, 'add')
         await sock.addChatLabel(jid, want)
         have.add(want); chatLabels.set(jid, have)
         saveState()
@@ -181,6 +199,7 @@ async function reconcile() {
       for (const id of [...have]) {
         if (id !== want && managed.has(id)) {
           log(`label - "${labels.get(id)}" -> ${digits}`)
+          markPush(jid, id, 'remove')
           await sock.removeChatLabel(jid, id)
           have.delete(id)
           saveState()
@@ -249,18 +268,19 @@ async function start() {
 
   sock.ev.on('labels.association', ({ association, type }) => {
     const a = association || {}
-    // DIAGNOSTIC: log every association event the instant it arrives, before any
-    // filtering — this is how we confirm whether WhatsApp even delivers manual
-    // Business-app label changes to this linked device (coexistence question).
-    const quiet = Date.now() - connectedAt < WRITEBACK_QUIET_MS
-    log(`[app-event] labels.association type=${type} assocType=${a.type} chat=${String(a.chatId||'').split('@')[0]} label="${labels.get(a.labelId)||a.labelId}"${quiet ? ' (within quiet window — writeback suppressed)' : ''}`)
-    if (!a || !a.chatId || !a.labelId) return
+    if (!a.chatId || !a.labelId) return
     if (a.type && a.type !== 'label_jid') return   // ignore message-level labels
+    const echo = isEchoOfOurPush(a.chatId, a.labelId, type)
+    const quiet = Date.now() - connectedAt < WRITEBACK_QUIET_MS   // startup resync burst
+    log(`[app-event] ${type} chat=${String(a.chatId).split('@')[0]} label="${labels.get(a.labelId) || a.labelId}"` +
+        `${echo ? ' (echo of our push)' : ' — GENUINE user edit'}${quiet ? ' [startup — ignored]' : ''}`)
+    // keep our view of the app's labels current either way
     const set = chatLabels.get(a.chatId) || new Set()
-    if (type === 'add') set.add(a.labelId)
-    else set.delete(a.labelId)
+    if (type === 'add') set.add(a.labelId); else set.delete(a.labelId)
     chatLabels.set(a.chatId, set)
     saveState()
+    if (echo || quiet) return                       // our own echo, or the boot resync — do not write back
+    userEditedAt.set(a.chatId, Date.now())          // hold reconcile off this chat so it can't revert us
     if (type === 'add') writeBack(a.chatId, a.labelId)
     else writeBackRemoval(a.chatId, a.labelId)
   })
