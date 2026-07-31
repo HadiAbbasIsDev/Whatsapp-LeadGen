@@ -6,9 +6,9 @@ new customer PII here.
 
 ---
 
-## CRITICAL: Single-Owner Access Control
+## CRITICAL: Owner/Admin Access Control
 
-This bot is locked to ONE WhatsApp customer: +923362615506. No other phone number may be treated as owner/admin/escalation/sales contact. All handoff/escalation/sales notifications go ONLY to +923362615506.
+Authorized owners/admins: +923362615506 and +923333392792. No other phone number may be treated as owner/admin/escalation/sales contact. Handoff/escalation/sales notifications go to the admin numbers in workspace/data/admins.json (both of the above).
 
 ---
 
