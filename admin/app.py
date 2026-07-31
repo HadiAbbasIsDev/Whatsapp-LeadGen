@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-renovate.pk Bot — Admin Dashboard (CRM)
+Decor Moments Bot — Admin Dashboard (CRM)
 
 A local web panel so a non-technical owner can:
   - Start / Stop the openclaw bot (kill switch)
@@ -602,7 +602,7 @@ def index():
 PAGE = r"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>renovate.pk CRM</title>
+<title>Decor Moments CRM</title>
 <style>
   :root { --bg:#0f1419; --card:#1a2129; --line:#2a3441; --txt:#e6edf3; --muted:#8b98a5;
           --green:#2ea043; --red:#da3633; --amber:#d29922; --blue:#388bfd;
@@ -697,7 +697,7 @@ PAGE = r"""<!doctype html>
     <div class="topbar">
       <span class="dot" id="dot" style="background:var(--muted)"></span>
       <div>
-        <h1>renovate.pk — CRM &amp; Bot Admin</h1>
+        <h1>Decor Moments — CRM &amp; Bot Admin</h1>
         <div class="sub"><span class="badge" id="badge">Checking…</span> <span id="wa"></span></div>
       </div>
       <div class="grow"></div>
@@ -1101,7 +1101,7 @@ if __name__ == "__main__":
     ip = subprocess.run(["hostname", "-I"], capture_output=True, text=True).stdout.split()
     lan = ip[0] if ip else "127.0.0.1"
     print("=" * 56)
-    print("  renovate.pk Bot Admin Dashboard")
+    print("  Decor Moments Bot Admin Dashboard")
     print(f"  Local:   http://127.0.0.1:{PORT}")
     print(f"  Network: http://{lan}:{PORT}")
     print(f"  Login:   admin  /  {ADMIN_PASSWORD}")
