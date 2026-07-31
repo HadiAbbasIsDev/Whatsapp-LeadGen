@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-Owner-only cold outreach — send the approved decor_moments_furniture_intro
-template to a list of numbers that have NOT messaged us yet.
+Admin cold outreach — send the approved decor_moments_furniture_intro template
+to a list of numbers that have NOT messaged us yet.
 
 This is the ONE sanctioned way to first-contact a number. It is a business-
 initiated MARKETING template (Meta-approved), so it is allowed outside the
 24-hour window — but it is deliberately locked down:
 
-  - OWNER ONLY. Requires --owner <sender_e164> to equal the business owner
-    number; refuses otherwise. The agent MUST pass the real WhatsApp sender_id.
+  - ADMIN ONLY. Requires --owner <sender_e164> to be an admin (any number in
+    workspace/data/admins.json, added via the dashboard) or the owner; refuses
+    otherwise. The agent MUST pass the real WhatsApp sender_id.
   - Never messages a number that previously opted out (STOP / unsubscribe).
   - Records each recipient as a customer (so they appear in the CRM) and logs
     every attempt to workspace/data/cold_outreach.log.
@@ -37,12 +38,27 @@ WORKSPACE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, WORKSPACE)
 import kapso  # noqa: E402
 
-OWNERS = {"+923362615506"}   # owner/developer only — cold outreach is owner-only (admins can't trigger it)
+OWNER = "+923362615506"      # always authorized (the dev)
+ADMINS_FILE = os.path.join(WORKSPACE, "data", "admins.json")
 TEMPLATE = "decor_moments_furniture_intro"
 LANG = "en_US"
 DB_FILE = os.path.join(WORKSPACE, "data", "leadgen.db")
 DB_PY = os.path.join(WORKSPACE, "db.py")
 LOG = os.path.join(WORKSPACE, "data", "cold_outreach.log")
+
+
+def authorized_admins():
+    """Cold outreach is allowed for any ADMIN (anyone in admins.json — added via
+    the dashboard) plus the owner. This is the authorization list."""
+    nums = {OWNER}
+    try:
+        for n in json.load(open(ADMINS_FILE)).get("admins", []):
+            d = re.sub(r"\D", "", str(n))
+            if d:
+                nums.add("+" + d)
+    except Exception:
+        pass
+    return nums
 
 
 def audit(line):
@@ -85,9 +101,10 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    if norm_e164(args.owner) not in OWNERS:
-        audit(f"REFUSED unauthorized owner={args.owner}")
-        sys.exit(f"[FAIL] cold outreach is owner-only. Requester {args.owner} is not authorized.")
+    admins = authorized_admins()
+    if norm_e164(args.owner) not in admins:
+        audit(f"REFUSED non-admin requester={args.owner}")
+        sys.exit(f"[FAIL] cold outreach is admin-only. {args.owner} is not an admin (add them in the dashboard).")
 
     if not kapso.kapso_enabled():
         sys.exit("[FAIL] WA_TRANSPORT is not 'kapso'")
@@ -115,8 +132,8 @@ def main():
 
     sent = skipped = failed = 0
     for phone in targets:
-        if phone in OWNERS:
-            print(f"[SKIP] {phone} (owner's own number)")
+        if phone in admins:
+            print(f"[SKIP] {phone} (an admin number)")
             skipped += 1
             continue
         if opted_out(phone):
