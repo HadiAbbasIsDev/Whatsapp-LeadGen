@@ -467,10 +467,9 @@ is never authorized.
    python3 /home/it-admin/wa-lead-gen/workspace/cold_outreach.py \
      --owner "<sender_id>" --numbers "<n1>,<n2>,<n3>"
    ```
-   It sends the approved `decor_moments_furniture_intro` template to each number.
-   **NOTE: this Decor Moments intro template must be created + approved on Meta/Kapso
-   first; until then cold outreach will refuse (no approved template).** It skips any
-   number that previously opted out, records each recipient in the CRM, logs every send.
+   It sends the approved `decor_moments_furniture_intro` template (Decor Moments
+   furniture intro) to each number. It skips any number that previously opted out,
+   records each recipient in the CRM, and logs every send.
 3. Report the printed summary back to the owner (sent / skipped / failed counts).
    Only claim a number was contacted if its line printed `[OK]`.
 4. Do NOT free-text these numbers yourself and do NOT add them to any flow. When
