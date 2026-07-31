@@ -84,6 +84,9 @@ def caption_for(p):
     lines = [f"{p.get('name', 'Product')} - PKR {amount_str}"]
     if p.get("category"):
         lines.append(f"Category: {p['category']}")
+    desc = (p.get("description") or "").strip()
+    if desc:
+        lines.append(desc[:220].rsplit(" ", 1)[0] + ("…" if len(desc) > 220 else ""))
     if p.get("dimensions"):
         lines.append(f"Dimensions: {p['dimensions']}")
     lines.append(f"Availability: {p.get('availability', 'In Stock')}")
