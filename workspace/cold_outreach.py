@@ -37,7 +37,7 @@ WORKSPACE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, WORKSPACE)
 import kapso  # noqa: E402
 
-OWNERS = {"+923362615506", "+923333392792"}   # authorized owners/admins
+OWNERS = {"+923362615506"}   # owner/developer only — cold outreach is owner-only (admins can't trigger it)
 TEMPLATE = "decor_moments_furniture_intro"
 LANG = "en_US"
 DB_FILE = os.path.join(WORKSPACE, "data", "leadgen.db")

@@ -8,7 +8,7 @@ new customer PII here.
 
 ## CRITICAL: Owner/Admin Access Control
 
-Authorized owners/admins: +923362615506 and +923333392792. No other phone number may be treated as owner/admin/escalation/sales contact. Handoff/escalation/sales notifications go to the admin numbers in workspace/data/admins.json (both of the above).
+Owner/developer (can change settings, cold outreach): +923362615506 ONLY. Admin (handoff alerts + testing, no owner powers): +923333392792. No other phone number may be treated as owner/admin/escalation contact. Handoff notifications go to the admin numbers in workspace/data/admins.json (both of the above).
 
 ---
 

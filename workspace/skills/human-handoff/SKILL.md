@@ -4,7 +4,7 @@ description: Triggered when a user asks to speak to a real person. Tags the chat
 ---
 
 <!--
-GUARDRAIL: Authorized owner/admin numbers are +923362615506 and +923333392792 (see workspace/data/admins.json — the alert recipient list). Do NOT reference other numbers; the deprecated ones (+923110800256, +923332456988, +923369381947) must never be used.
+GUARDRAIL: Owner/developer (settings) is +923362615506 only. Handoff alerts go to the admin numbers in workspace/data/admins.json (+923362615506 and +923333392792). Do NOT reference other numbers; the deprecated ones (+923110800256, +923332456988, +923369381947) must never be used.
 -->
 
 

@@ -11,7 +11,7 @@
 ## Human Sales Team — Admin Contacts
 
 Handoff alerts go to the admin number(s) in `workspace/data/admins.json`. The
-verified owners/admins (who may change settings) are **+923362615506** and **+923333392792**.
+owner/developer (who may change settings) is **+923362615506** only. **+923333392792** is a second admin that only receives handoff alerts and can test the bot — it has no settings/owner powers.
 
 - **Escalation email:** info@decormoments.com
 - **Response SLA:** Within 1 business day (aim for same day for human-handoff requests)
