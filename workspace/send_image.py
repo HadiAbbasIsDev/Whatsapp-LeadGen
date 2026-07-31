@@ -4,7 +4,7 @@ Sends a product image WITH a caption via WhatsApp as a SINGLE message.
 
 Remote image URLs (from products.json) are downloaded into a local cache the
 first time they're used, so repeat sends are fast and don't depend on
-renovate.pk being reachable each time. Falls back to sending the URL directly
+the store website being reachable each time. Falls back to sending the URL directly
 if the download fails.
 
 Usage:

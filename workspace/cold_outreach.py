@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Owner-only cold outreach — send the approved renovate_pk_furniture_intro
+Owner-only cold outreach — send the approved decor_moments_furniture_intro
 template to a list of numbers that have NOT messaged us yet.
 
 This is the ONE sanctioned way to first-contact a number. It is a business-
@@ -38,7 +38,7 @@ sys.path.insert(0, WORKSPACE)
 import kapso  # noqa: E402
 
 OWNER = "+923362615506"
-TEMPLATE = "renovate_pk_furniture_intro"
+TEMPLATE = "decor_moments_furniture_intro"
 LANG = "en_US"
 DB_FILE = os.path.join(WORKSPACE, "data", "leadgen.db")
 DB_PY = os.path.join(WORKSPACE, "db.py")

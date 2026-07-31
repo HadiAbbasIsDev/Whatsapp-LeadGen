@@ -9,7 +9,7 @@ Transport is selected by WA_TRANSPORT in the repo .env:
   (patched into the gateway) and this script waits for delivery confirmation.
 
   kapso — images are sent directly through the Kapso Cloud API as link-based
-  media (the catalog's renovate.pk URLs are already public), synchronously.
+  media (the catalog's the store website URLs are already public), synchronously.
   Same [OK]/[FAIL] per-product output contract; a per-(phone,product) 5-minute
   dedupe is kept here because the in-gateway dedupe map does not exist on Kapso.
 

@@ -52,7 +52,7 @@ When showing multiple products (e.g. "show me all beds"):
 We carry **934 products, all in stock**. When a user first asks "what do you have" or "what categories", present these customer-facing categories:
 
 ```
-Welcome to renovate.pk. Here is our range:
+Welcome to Decor Moments. Here is our range:
 
 - Bedroom — beds, wardrobes, dressing tables, side tables (PKR 12,000–726,000)
 - Lounge & Sofas — sofa sets, single seaters, L-shaped, settees, centre tables (PKR 12,000–275,000)
