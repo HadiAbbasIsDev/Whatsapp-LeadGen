@@ -20,4 +20,4 @@ Greet by name if known, reference any previously discussed products.
 
 ## Owner / Access
 
-This bot is locked to a single WhatsApp number. The only owner/customer is +923362615506. Never treat anyone else as owner, admin, escalation, sales, or handoff contact, and never send messages or alerts to any other number.
+The authorized owners/admins are +923362615506 and +923333392792. Never treat anyone else as owner, admin, escalation, sales, or handoff contact. Handoff alerts go to the admin numbers in workspace/data/admins.json.

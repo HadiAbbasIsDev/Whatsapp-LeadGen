@@ -4,7 +4,7 @@ description: Triggered when a user asks to speak to a real person. Tags the chat
 ---
 
 <!--
-GUARDRAIL: This skill is locked to single-owner WhatsApp number +923362615506 only. Do NOT add, modify, or reference any other phone numbers (+923110800256, +923332456988, +923369381947 are deprecated and must never be used).
+GUARDRAIL: Authorized owner/admin numbers are +923362615506 and +923333392792 (see workspace/data/admins.json — the alert recipient list). Do NOT reference other numbers; the deprecated ones (+923110800256, +923332456988, +923369381947) must never be used.
 -->
 
 
@@ -45,8 +45,9 @@ python3 ./notify_admins.py \
   --products "<product names discussed, comma-separated, or 'Not specified'>"
 ```
 
-This script sends a WhatsApp message to the owner number:
+This script sends the alert to the admin numbers in `workspace/data/admins.json`:
 - +923362615506
+- +923333392792
 
 **Run this script every time — do not skip it.**
 

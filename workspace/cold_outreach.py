@@ -37,7 +37,7 @@ WORKSPACE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, WORKSPACE)
 import kapso  # noqa: E402
 
-OWNER = "+923362615506"
+OWNERS = {"+923362615506", "+923333392792"}   # authorized owners/admins
 TEMPLATE = "decor_moments_furniture_intro"
 LANG = "en_US"
 DB_FILE = os.path.join(WORKSPACE, "data", "leadgen.db")
@@ -85,7 +85,7 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    if norm_e164(args.owner) != OWNER:
+    if norm_e164(args.owner) not in OWNERS:
         audit(f"REFUSED unauthorized owner={args.owner}")
         sys.exit(f"[FAIL] cold outreach is owner-only. Requester {args.owner} is not authorized.")
 
@@ -115,7 +115,7 @@ def main():
 
     sent = skipped = failed = 0
     for phone in targets:
-        if phone == OWNER:
+        if phone in OWNERS:
             print(f"[SKIP] {phone} (owner's own number)")
             skipped += 1
             continue
@@ -130,7 +130,7 @@ def main():
         ok, info = kapso.send_template(phone, TEMPLATE, LANG)
         if ok:
             print(f"[OK] {phone} ({info})")
-            audit(f"SENT to={phone} template={TEMPLATE} id={info} by={OWNER}")
+            audit(f"SENT to={phone} template={TEMPLATE} id={info} by={norm_e164(args.owner)}")
             # record as a contact so they surface in the CRM; category stays default
             subprocess.run(["python3", DB_PY, "upsert-customer", "--phone", phone,
                             "--notes", "cold outreach: furniture intro sent"],
