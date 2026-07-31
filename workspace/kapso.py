@@ -200,6 +200,20 @@ def list_messages(limit=20, after=None, phone_number_id=None, direction=None):
     return False, [], {"error": f"HTTP {status}: {resp}"}
 
 
+def list_conversations(limit=100, phone_number_id=None):
+    """List conversations (newest active first). Each carries kapso.last_inbound_at
+    and kapso.last_outbound_at — used to tell if a chat was already answered.
+    Returns (ok, data_list)."""
+    params = [f"limit={int(limit)}"]
+    if phone_number_id:
+        params.append("phone_number_id=" + urllib.request.quote(str(phone_number_id)))
+    url = f"{base_url()}/platform/v1/whatsapp/conversations?" + "&".join(params)
+    ok, status, resp = _request("GET", url, timeout=15)
+    if ok and isinstance(resp, dict):
+        return True, resp.get("data", [])
+    return False, [{"error": f"HTTP {status}: {resp}"}]
+
+
 def list_phone_numbers():
     ok, status, resp = _request("GET", f"{base_url()}/platform/v1/whatsapp/phone_numbers")
     if ok and isinstance(resp, dict):

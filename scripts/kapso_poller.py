@@ -43,7 +43,7 @@ import urllib.request
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPO, "workspace"))
-from kapso import env, list_messages, digits  # noqa: E402
+from kapso import env, list_messages, list_conversations, digits  # noqa: E402
 
 STATE_FILE = os.path.expanduser("~/.openclaw/kapso-poller-state.json")
 LOCK_FILE = os.path.expanduser("~/.openclaw/kapso-poller.lock")
@@ -51,6 +51,12 @@ SEEN_MAX = 1000
 PAGE_LIMIT = 50
 MAX_PAGES = 10
 WATERMARK_GRACE = 120  # seconds
+# Backlog handling (e.g. bot off overnight): a message older than this when we
+# pick it up is a catch-up, not real-time. For those we skip any chat a HUMAN
+# already replied to while we were off (their last outbound is newer than the
+# message) — the bot only answers still-unanswered messages, like a human would.
+STALE_SECONDS = 300
+ANSWERED_GRACE = 5     # seconds; outbound must be meaningfully after the inbound
 
 
 def log(msg):
@@ -248,6 +254,46 @@ def fetch_new(state):
     return msgs
 
 
+def answered_outbound_map():
+    """digits(phone) -> last-outbound epoch, for each active conversation. Used to
+    detect chats a human already replied to while the bot was off. {} on failure."""
+    out = {}
+    try:
+        ok, convs = list_conversations(limit=100, phone_number_id=env("KAPSO_PHONE_NUMBER_ID"))
+        if not ok:
+            return {}
+        for c in convs:
+            k = c.get("kapso") if isinstance(c.get("kapso"), dict) else {}
+            phone = digits(first(c.get("phone_number"), k.get("phone_number"), "") or "")
+            lo = to_epoch_seconds(first(k.get("last_outbound_at"), c.get("last_outbound_at")))
+            if phone and lo:
+                out[phone] = max(out.get(phone, 0), lo)
+    except Exception as e:
+        log(f"answered-map fetch failed: {e}")
+    return out
+
+
+def drop_already_answered(candidates, discard):
+    """From a backlog, remove messages a human already answered while we were off.
+    Only applies to STALE (old) messages; fresh real-time messages pass through."""
+    now = int(time.time())
+    if not any(ts < now - STALE_SECONDS for ts, _, _ in candidates):
+        return candidates
+    amap = answered_outbound_map()
+    if not amap:
+        return candidates  # can't tell — fail open, deliver (never drop silently)
+    kept = []
+    for ts, mid, event in candidates:
+        sender = digits((event.get("message") or {}).get("from", "") or "")
+        last_out = amap.get(sender, 0)
+        if ts < now - STALE_SECONDS and last_out > ts + ANSWERED_GRACE:
+            discard.append(mid)
+            log(f"skip {mid[:34]}… — chat {sender} already answered (human replied after this while bot was off)")
+        else:
+            kept.append((ts, mid, event))
+    return kept
+
+
 def poll_cycle(state, dry_run=False):
     msgs = fetch_new(state)
     if msgs is None:
@@ -280,6 +326,9 @@ def poll_cycle(state, dry_run=False):
             discard.append(mid)
         else:
             candidates.append((ts or int(time.time()), mid, event))
+
+    # Catch-up: drop backlog messages a human already answered while the bot was off.
+    candidates = drop_already_answered(candidates, discard)
 
     if dry_run:
         for _, mid, event in candidates:
