@@ -49,7 +49,7 @@ python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender
 ## Category Meaning
 
 - **new customer** — default for anyone who just started messaging (the only auto-assigned one).
-- **important** — human-handled / bot silent. Assigned automatically when a customer sends a photo/video (media handoff), or manually by the owner. Bot does not reply until the owner moves it back to `new customer`/`followup`.
+- **important** — assigned only when the business owner asks. Bot still serves the chat.
 - **hot leads** — high-intent prospects or human handoff requests; once assigned, the agent must stop replying.
 - **followup** — non-human-owned chat in an active follow-up cadence.
 - **junk** — follow-up exhausted; stop engaging.
@@ -59,15 +59,14 @@ python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender
 ## Rules
 
 - Runtime enforcement: the gateway itself now drops inbound messages from chats
-  whose category is NOT `new customer` or `followup` — you will never even see a
-  message from an `important` / `complaints` / `hot leads` / `junk` / `vendor` /
-  human-owned chat (all of those are human-handled, bot silent).
+  whose category is NOT `new customer`, `important`, or `followup` — you will never
+  even see a message from a `complaints` / `hot leads` / `junk` / `vendor` / human-owned chat.
   The rules below stay as defense-in-depth for the turn in which a category changes.
 - Category must be one of the valid categories above. Never invent a new one.
 - Do not change a customer's category automatically on a normal message. Use `upsert-customer`
   only; it never downgrades an existing category. Use `set-category` only on explicit owner instruction or a routing-flow action.
 - Never set an existing customer back to `new customer`.
-- If `get-customer` returns `category` = `important`, `complaints`, `hot leads`, or `vendor`, do not send a customer-facing reply.
+- If `get-customer` returns `category` = `complaints`, `hot leads`, or `vendor`, do not send a customer-facing reply.
 - If `get-customer` returns `category` = `ahsan`, `ahmed`, `imran`, or `rafay`, do not send a normal reply. Follow only the 7-day human-owned cold flow in AGENTS.md. Exception: if `cadence_status` is `followup` from that flow and the client is responding to the scheduled follow-up, route the reply into FIRST FLOW or SECOND FLOW.
 - One record per phone number (the DB deduplicates on phone automatically).
 - Never read customer records back to the customer; they are internal.
