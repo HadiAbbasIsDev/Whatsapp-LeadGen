@@ -418,7 +418,17 @@ def record_inbound(conn, phone):
         "ON CONFLICT(phone) DO UPDATE SET last_inbound_at=excluded.last_inbound_at,updated_at=excluded.updated_at",
         (phone, ts, ts),
     )
+    # Ensure the customer appears in the CRM with the default 'new customer'
+    # category the moment they first message — deterministic, not agent-dependent.
+    # INSERT OR IGNORE never overwrites an existing row (preserves hot leads /
+    # complaints / followup etc.); we only refresh last_message_at.
+    conn.execute(
+        "INSERT OR IGNORE INTO customers(phone,first_contact_at,last_message_at,updated_at) VALUES(?,?,?,?)",
+        (phone, ts, ts, ts),
+    )
+    conn.execute("UPDATE customers SET last_message_at=?, updated_at=? WHERE phone=?", (ts, ts, phone))
     conn.commit()
+    export_customers(conn)   # keep customers.json (gate + label-bridge source) in step
     print(json.dumps({"ok": True, "phone": phone, "last_inbound_at": ts}))
 
 
