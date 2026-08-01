@@ -803,7 +803,7 @@ const CAT = {
   'imran':        {label:'Imran',        cls:'c-team', team:true},
   'rafay':        {label:'Rafay',        cls:'c-team', team:true},
 };
-const SILENT = new Set(['hot leads','complaints','junk','vendor','ahsan','ahmed','imran','rafay']);
+const SILENT = new Set(['important','hot leads','complaints','junk','vendor','ahsan','ahmed','imran','rafay']);
 let DATA = {customers:[], counts:{}, categories:Object.keys(CAT), total:0};
 let LEADS = [];
 let filter = 'all';
@@ -900,7 +900,7 @@ async function changeCat(sel){
   const cur = (DATA.customers.find(c=>c.phone===phone)||{}).category;
   const m = catMeta(cat);
   let msg = `Move ${phone} to "${m.label}"?`;
-  if(SILENT.has(cat)) msg += `\n\nThe bot will STOP replying on this chat until you move it back to New customer / Important / Follow-up.`;
+  if(SILENT.has(cat)) msg += `\n\nThe bot will STOP replying on this chat until you move it back to New customer / Follow-up.`;
   else if(SILENT.has((cur||'').toLowerCase())) msg += `\n\nThe bot will START replying on this chat again.`;
   if(!confirm(msg)){ sel.value=(cur||'').toLowerCase(); sel.blur(); return; }
   sel.disabled = true;
