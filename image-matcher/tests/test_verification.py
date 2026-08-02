@@ -14,6 +14,7 @@ from decor_matcher.verification import (
     Acceptance,
     Thresholds,
     _seed_verified_artifact,
+    _scale_to_verification_space,
     accept_candidate,
     estimate_geometry,
     make_query_views,
@@ -85,6 +86,20 @@ def test_estimate_geometry_reports_inliers_and_normalized_hull_coverage():
     assert metrics.inlier_ratio == pytest.approx(1.0)
     assert metrics.query_coverage == pytest.approx(0.64)
     assert metrics.reference_coverage == pytest.approx(0.64)
+
+
+def test_small_image_coordinates_scale_to_actual_extractor_dimensions():
+    points = np.array([[0.0, 0.0], [101.0, 50.0]], dtype=np.float32)
+
+    scaled_points, scaled_size = _scale_to_verification_space(points, (101, 50))
+
+    assert scaled_size == (1024, 506)
+    np.testing.assert_allclose(
+        scaled_points,
+        np.array([[0.0, 0.0], [1024.0, 506.0]], dtype=np.float32),
+        rtol=0.0,
+        atol=1e-5,
+    )
 
 
 @pytest.mark.parametrize(

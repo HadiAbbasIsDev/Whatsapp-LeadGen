@@ -1,16 +1,23 @@
-from dataclasses import replace
+from dataclasses import dataclass, replace
+import math
 from pathlib import Path
 from typing import Callable, Protocol
 
 import numpy as np
 from PIL import Image, ImageOps
 
-from .index import DescriptorIndex, retrieve
+from .index import DescriptorIndex, load_index, retrieve
+from .sscd import SscdEncoder
 from .types import Candidate, GeometryMetrics, MatchResult
 from .verification import LightGlueVerifier, Thresholds, accept_candidate, make_query_views
 
 
 MAX_QUERY_BYTES = 20 * 1024 * 1024
+# Conservative decoded-image bounds accommodate normal high-resolution WhatsApp
+# photos while preventing tiny compressed files from expanding without limit.
+MAX_QUERY_WIDTH = 8192
+MAX_QUERY_HEIGHT = 8192
+MAX_QUERY_PIXELS = 40_000_000
 
 
 class Encoder(Protocol):
@@ -19,6 +26,16 @@ class Encoder(Protocol):
 
 class Verifier(Protocol):
     def verify(self, query: Image.Image, reference: Path, reprojection_px: float = 5.0) -> GeometryMetrics: ...
+
+
+@dataclass(frozen=True, slots=True)
+class ErrorMatcher:
+    """Inert matcher returned when dependency initialization fails closed."""
+
+    reason: str = "initialization_failed"
+
+    def match(self, path: Path) -> MatchResult:
+        return _error_result(self.reason)
 
 
 class CatalogMatcher:
@@ -65,6 +82,19 @@ class CatalogMatcher:
                 key=lambda candidate: (-candidate.score, candidate.product_id),
             )[:5]
             evidence: list[str] = ["thresholds=experimental"]
+            if len(ranked) >= 2:
+                top_margin = ranked[0].score - ranked[1].score
+                if not math.isfinite(top_margin) or top_margin < self.thresholds.margin_min:
+                    evidence.append(f"top_pair_margin={top_margin:.6f};reason=ambiguous_top_candidates")
+                    return MatchResult(
+                        decision="handoff",
+                        product_id=None,
+                        product_name=None,
+                        confidence=None,
+                        reason="ambiguous_top_candidates",
+                        evidence=tuple(evidence),
+                        experimental=True,
+                    )
             for position, candidate in enumerate(ranked):
                 runner_up = ranked[position + 1] if position + 1 < len(ranked) else None
                 metrics = self.verifier.verify(
@@ -98,12 +128,39 @@ class CatalogMatcher:
             return _error_result("matching_failed")
 
 
+def create_catalog_matcher(
+    sscd_model_path: Path,
+    index_dir: Path,
+    *,
+    device: str = "cpu",
+    verifier_model_dir: Path | None = None,
+    thresholds: Thresholds | None = None,
+) -> CatalogMatcher | ErrorMatcher:
+    """Build production dependencies behind a stable fail-closed boundary."""
+    try:
+        encoder = SscdEncoder(sscd_model_path, device=device)
+        index = load_index(index_dir)
+        verifier = LightGlueVerifier(device=device, model_dir=verifier_model_dir)
+        return CatalogMatcher(encoder, index, verifier, thresholds)
+    except Exception:
+        return ErrorMatcher()
+
+
 def _validated_query_image(path: Path) -> Image.Image:
     input_path = Path(path)
     size = input_path.stat().st_size
     if size <= 0 or size >= MAX_QUERY_BYTES:
         raise ValueError("query image must be non-empty and under 20 MiB")
     with Image.open(input_path) as source:
+        width, height = source.size
+        if (
+            width <= 0
+            or height <= 0
+            or width > MAX_QUERY_WIDTH
+            or height > MAX_QUERY_HEIGHT
+            or width * height > MAX_QUERY_PIXELS
+        ):
+            raise ValueError("query image decoded dimensions exceed safety limits")
         source.load()
         return ImageOps.exif_transpose(source).convert("RGB")
 

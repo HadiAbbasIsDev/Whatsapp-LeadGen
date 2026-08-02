@@ -222,8 +222,14 @@ def _scale_to_verification_space(
     image_size: tuple[int, int],
 ) -> tuple[np.ndarray, tuple[int, int]]:
     width, height = image_size
-    scale = min(1.0, 1024.0 / max(width, height))
-    scaled_size = (max(1, round(width * scale)), max(1, round(height * scale)))
+    if width >= height:
+        resized_width = 1024
+        resized_height = max(1, int(1024 * height / width))
+    else:
+        resized_width = max(1, int(1024 * width / height))
+        resized_height = 1024
+    scaled_size = (resized_width, resized_height)
+    scale = np.array([resized_width / width, resized_height / height], dtype=np.float32)
     return np.asarray(points, dtype=np.float32) * scale, scaled_size
 
 
