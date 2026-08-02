@@ -14,6 +14,7 @@ from lightglue.utils import rbd
 from PIL import Image, ImageOps
 
 from .artifacts import ArtifactSpec, ensure_artifact, validate_artifact
+from .image_safety import inspect_safe_image
 from .types import Candidate, GeometryMetrics
 
 
@@ -236,6 +237,7 @@ def _scale_to_verification_space(
 def _load_rgb(image: Image.Image | Path) -> Image.Image:
     if isinstance(image, Image.Image):
         return ImageOps.exif_transpose(image).convert("RGB")
+    inspect_safe_image(image, verify=True)
     with Image.open(image) as source:
         return ImageOps.exif_transpose(source).convert("RGB")
 
@@ -246,9 +248,20 @@ def _image_tensor(image: Image.Image, device: torch.device) -> torch.Tensor:
 
 
 def _fetch_artifact(url: str) -> bytes:
+    specs_by_url = {
+        DISK_DEPTH_ARTIFACT.url: DISK_DEPTH_ARTIFACT,
+        LIGHTGLUE_DISK_ARTIFACT.url: LIGHTGLUE_DISK_ARTIFACT,
+    }
+    try:
+        spec = specs_by_url[url]
+    except KeyError as exc:
+        raise ValueError("verifier artifact URL is not pinned") from exc
     request = Request(url, headers={"User-Agent": "DecorMatcher/0.1"})
     with urlopen(request, timeout=120) as response:
-        return response.read()
+        payload = response.read(spec.size + 1)
+    if len(payload) > spec.size:
+        raise ValueError("verifier artifact is larger than its pinned size")
+    return payload
 
 
 def _seed_verified_artifact(source: Path, destination: Path, spec: ArtifactSpec) -> None:

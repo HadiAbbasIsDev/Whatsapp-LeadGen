@@ -1,4 +1,5 @@
 import os
+import stat
 import tempfile
 from dataclasses import dataclass
 from hashlib import sha256
@@ -55,10 +56,35 @@ def ensure_artifact(
 def validate_artifact(path: Path, spec: ArtifactSpec) -> None:
     """Verify artifact size and SHA-256 before a caller loads it."""
     try:
-        payload = path.read_bytes()
+        metadata = path.stat()
     except OSError as exc:
         raise ArtifactValidationError(f"cannot read artifact {path}: {exc}") from exc
-    _validate_payload(payload, spec)
+    if not stat.S_ISREG(metadata.st_mode):
+        raise ArtifactValidationError(f"artifact is not a regular file: {path}")
+    if metadata.st_size != spec.size:
+        raise ArtifactValidationError(
+            f"artifact size mismatch: expected {spec.size}, got {metadata.st_size}"
+        )
+    digest = sha256()
+    total = 0
+    try:
+        with path.open("rb") as source:
+            for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                total += len(chunk)
+                if total > spec.size:
+                    raise ArtifactValidationError("artifact grew while it was being verified")
+                digest.update(chunk)
+    except OSError as exc:
+        raise ArtifactValidationError(f"cannot read artifact {path}: {exc}") from exc
+    if total != spec.size:
+        raise ArtifactValidationError(
+            f"artifact size mismatch: expected {spec.size}, got {total}"
+        )
+    actual_digest = digest.hexdigest()
+    if actual_digest != spec.sha256:
+        raise ArtifactValidationError(
+            f"artifact checksum mismatch: expected {spec.sha256}, got {actual_digest}"
+        )
 
 
 def _validate_payload(payload: bytes, spec: ArtifactSpec) -> None:

@@ -2,24 +2,29 @@ import ipaddress
 import json
 import os
 import re
+import socket
 import tempfile
 from dataclasses import replace
 from hashlib import sha256
-from io import BytesIO
 from pathlib import Path
 from typing import Callable, Iterable
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-from PIL import Image, UnidentifiedImageError
-
+from .image_safety import MAX_IMAGE_BYTES, ImageSafetyError, inspect_safe_image
 from .types import CatalogItem, ReferenceRecord
 
 
-MAX_RESPONSE_BYTES = 20 * 1024 * 1024
+MAX_RESPONSE_BYTES = MAX_IMAGE_BYTES
 _BROWSER_USER_AGENT = "Mozilla/5.0 (compatible; DecorMatcher/0.1)"
 _SAFE_FILENAME = re.compile(r"[^A-Za-z0-9._-]+")
 _FORMAT_SUFFIXES = {"JPEG": ".jpg", "PNG": ".png", "WEBP": ".webp", "GIF": ".gif", "BMP": ".bmp"}
+_ALLOWED_CATALOG_HOST = "cdn.shopify.com"
+
+
+class _RejectRedirects(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
 
 
 def load_catalog(path: Path) -> list[CatalogItem]:
@@ -68,10 +73,28 @@ def select_references(items: Iterable[CatalogItem], limit: int = 100) -> list[Re
     return [ReferenceRecord(item.product_id, item.product_name, item.image_url, None, None) for item in selected]
 
 
-def fetch_bytes(image_url: str) -> bytes:
+def fetch_bytes(
+    image_url: str,
+    *,
+    resolver: Callable[..., list[tuple]] = socket.getaddrinfo,
+    opener=None,
+) -> bytes:
     """Fetch one image payload with bounded network and memory use."""
+    parsed = _validated_catalog_url(image_url)
+    addresses = resolver(parsed.hostname, 443, type=socket.SOCK_STREAM)
+    if not addresses:
+        raise ValueError("catalog image host did not resolve")
+    for result in addresses:
+        try:
+            address = ipaddress.ip_address(result[4][0])
+        except (IndexError, TypeError, ValueError) as exc:
+            raise ValueError("catalog image host returned an invalid address") from exc
+        if not address.is_global or address.is_multicast:
+            raise ValueError("catalog image host must resolve only to globally routable addresses")
+
     request = Request(image_url, headers={"User-Agent": _BROWSER_USER_AGENT})
-    with urlopen(request, timeout=20) as response:
+    selected_opener = opener or build_opener(_RejectRedirects())
+    with selected_opener.open(request, timeout=20) as response:
         payload = response.read(MAX_RESPONSE_BYTES + 1)
     if len(payload) > MAX_RESPONSE_BYTES:
         raise ValueError(f"image exceeds {MAX_RESPONSE_BYTES} byte limit")
@@ -95,8 +118,8 @@ def cache_references(
             target = cache_dir / f"{_safe_product_id(record.product_id)}_{sha256(record.image_url.encode()).hexdigest()}{suffix}"
             _atomic_write(target, payload)
             cached.append(replace(record, cache_path=target, sha256=sha256(payload).hexdigest()))
-        except UnidentifiedImageError:
-            failures.append(f"{record.product_id}: cannot identify image file")
+        except ImageSafetyError as exc:
+            failures.append(f"{record.product_id}: {exc}")
         except Exception as exc:
             failures.append(f"{record.product_id}: {exc}")
 
@@ -104,27 +127,37 @@ def cache_references(
 
 
 def _is_public_http_url(value: str) -> bool:
-    parsed = urlsplit(value)
-    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
-        return False
-    hostname = parsed.hostname.rstrip(".").lower()
-    if hostname == "localhost" or hostname.endswith(".local"):
-        return False
     try:
-        address = ipaddress.ip_address(hostname)
+        _validated_catalog_url(value)
     except ValueError:
-        return True
-    return address.is_global and not address.is_multicast
+        return False
+    return True
+
+
+def _validated_catalog_url(value: str):
+    try:
+        parsed = urlsplit(value)
+        port = parsed.port
+    except ValueError as exc:
+        raise ValueError("invalid catalog image URL") from exc
+    hostname = (parsed.hostname or "").rstrip(".").lower()
+    if (
+        parsed.scheme != "https"
+        or hostname != _ALLOWED_CATALOG_HOST
+        or parsed.username is not None
+        or parsed.password is not None
+        or port not in (None, 443)
+    ):
+        raise ValueError("catalog image URL must use exact https://cdn.shopify.com host")
+    return parsed
 
 
 def _image_suffix(image_url: str, payload: bytes) -> str:
-    with Image.open(BytesIO(payload)) as image:
-        image.verify()
-        image_format = image.format
+    metadata = inspect_safe_image(payload, verify=True)
     url_suffix = Path(urlsplit(image_url).path).suffix.lower()
     if url_suffix in _FORMAT_SUFFIXES.values():
         return url_suffix
-    return _FORMAT_SUFFIXES.get(image_format or "", ".img")
+    return _FORMAT_SUFFIXES[metadata.image_format]
 
 
 def _safe_product_id(product_id: str) -> str:

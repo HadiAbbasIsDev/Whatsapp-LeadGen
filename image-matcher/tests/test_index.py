@@ -172,6 +172,76 @@ def test_load_index_rejects_vectors_from_a_different_generation(tmp_path):
         load_index(index_dir, allow_nonproduction=True)
 
 
+@pytest.mark.parametrize("mutation", ["missing", "changed", "directory"])
+def test_load_index_rejects_missing_mutated_or_non_regular_reference(tmp_path, mutation):
+    records = cached_records(tmp_path, ["a"])
+    index_dir = tmp_path / "index"
+    build_index(records, FakeEncoder({"a": [1.0, 0.0]}), index_dir, require_exact_count=False)
+    reference_path = records[0].cache_path
+    if mutation == "missing":
+        reference_path.unlink()
+    elif mutation == "changed":
+        reference_path.write_bytes(b"changed")
+    else:
+        reference_path.unlink()
+        reference_path.mkdir()
+
+    with pytest.raises(IndexValidationError, match="reference"):
+        load_index(index_dir, allow_nonproduction=True)
+
+
+def test_load_index_rejects_reference_with_unsafe_image_metadata(tmp_path):
+    records = cached_records(tmp_path, ["a"])
+    index_dir = tmp_path / "index"
+    build_index(records, FakeEncoder({"a": [1.0, 0.0]}), index_dir, require_exact_count=False)
+    Image.new("RGB", (8192, 1), "white").save(records[0].cache_path, format="PNG")
+    manifest_path = index_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["references"][0]["sha256"] = sha256(records[0].cache_path.read_bytes()).hexdigest()
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(IndexValidationError, match="unsafe image"):
+        load_index(index_dir, allow_nonproduction=True)
+
+
+def test_load_index_rejects_oversized_vector_before_reading_it(tmp_path, monkeypatch):
+    records = cached_records(tmp_path, ["a"])
+    index_dir = tmp_path / "index"
+    build_index(records, FakeEncoder({"a": [1.0, 0.0]}), index_dir, require_exact_count=False)
+    vector_path = index_dir / "sscd_vectors.npy"
+    with vector_path.open("wb") as destination:
+        destination.truncate(2 * 1024 * 1024)
+    real_read_bytes = Path.read_bytes
+
+    def reject_unbounded_read(path):
+        if path == vector_path:
+            raise AssertionError("oversized vector must be rejected from stat metadata")
+        return real_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", reject_unbounded_read)
+
+    with pytest.raises(IndexValidationError, match="vector"):
+        load_index(index_dir, allow_nonproduction=True)
+
+
+def test_load_index_rejects_oversized_manifest_before_unbounded_text_read(tmp_path, monkeypatch):
+    index_dir = tmp_path / "index"
+    index_dir.mkdir()
+    manifest_path = index_dir / "manifest.json"
+    with manifest_path.open("wb") as destination:
+        destination.truncate(1024 * 1024)
+
+    def reject_read_text(path, *args, **kwargs):
+        if path == manifest_path:
+            raise AssertionError("oversized manifest must be rejected from stat metadata")
+        return Path.read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", reject_read_text)
+
+    with pytest.raises(IndexValidationError, match="manifest"):
+        load_index(index_dir, allow_nonproduction=True)
+
+
 def test_load_index_decodes_the_same_verified_snapshot_during_vector_replace(tmp_path, monkeypatch):
     records = cached_records(tmp_path, ["a"])
     index_dir = tmp_path / "index"
@@ -187,31 +257,20 @@ def test_load_index_decodes_the_same_verified_snapshot_during_vector_replace(tmp
     np.save(replacement_buffer, np.array([[0.0, 1.0]], dtype=np.float32), allow_pickle=False)
     replacement_bytes = replacement_buffer.getvalue()
 
-    real_read_bytes = Path.read_bytes
-    real_sha256_file = index_module._sha256_file
+    real_read_bounded_bytes = index_module._read_bounded_bytes
     snapshot_reads = []
-    path_hashes = []
 
-    def read_then_replace(path):
-        snapshot = real_read_bytes(path)
+    def read_then_replace(path, max_bytes, label):
+        snapshot = real_read_bounded_bytes(path, max_bytes, label)
         if path == vector_path:
             snapshot_reads.append(snapshot)
             vector_path.write_bytes(replacement_bytes)
         return snapshot
 
-    def hash_then_replace(path):
-        digest = real_sha256_file(path)
-        if path == vector_path:
-            path_hashes.append(path)
-            vector_path.write_bytes(replacement_bytes)
-        return digest
-
-    monkeypatch.setattr(Path, "read_bytes", read_then_replace)
-    monkeypatch.setattr(index_module, "_sha256_file", hash_then_replace)
+    monkeypatch.setattr(index_module, "_read_bounded_bytes", read_then_replace)
 
     loaded = load_index(index_dir, allow_nonproduction=True)
 
     np.testing.assert_array_equal(loaded.vectors, np.array([[1.0, 0.0]], dtype=np.float32))
     assert snapshot_reads == [original_bytes]
-    assert path_hashes == []
-    assert real_read_bytes(vector_path) == replacement_bytes
+    assert vector_path.read_bytes() == replacement_bytes

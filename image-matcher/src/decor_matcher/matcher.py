@@ -7,17 +7,13 @@ import numpy as np
 from PIL import Image, ImageOps
 
 from .index import DescriptorIndex, load_index, retrieve
+from .image_safety import MAX_IMAGE_BYTES, inspect_safe_image
 from .sscd import SscdEncoder
 from .types import Candidate, GeometryMetrics, MatchResult
 from .verification import LightGlueVerifier, Thresholds, accept_candidate, make_query_views
 
 
-MAX_QUERY_BYTES = 20 * 1024 * 1024
-# Conservative decoded-image bounds accommodate normal high-resolution WhatsApp
-# photos while preventing tiny compressed files from expanding without limit.
-MAX_QUERY_WIDTH = 8192
-MAX_QUERY_HEIGHT = 8192
-MAX_QUERY_PIXELS = 40_000_000
+MAX_QUERY_BYTES = MAX_IMAGE_BYTES
 
 
 class Encoder(Protocol):
@@ -55,6 +51,16 @@ class CatalogMatcher:
         self.verifier = verifier
         self.thresholds = thresholds or Thresholds()
         self.retriever = retriever
+        products_by_sha: dict[str, set[str]] = {}
+        for record in index.records:
+            if record.sha256:
+                products_by_sha.setdefault(record.sha256, set()).add(record.product_id)
+        self.ambiguous_reference_products = {
+            product_id
+            for product_ids in products_by_sha.values()
+            if len(product_ids) > 1
+            for product_id in product_ids
+        }
 
     def match(self, path: Path) -> MatchResult:
         try:
@@ -70,8 +76,9 @@ class CatalogMatcher:
 
             candidates_by_product: dict[str, Candidate] = {}
             view_images = dict(views)
+            retrieval_count = max(6, len(self.index.records))
             for (view_name, _), vector in zip(views, vectors, strict=True):
-                for candidate in self.retriever(vector, self.index, top_k=5):
+                for candidate in self.retriever(vector, self.index, top_k=retrieval_count):
                     candidate_for_view = replace(candidate, query_view=view_name)
                     current = candidates_by_product.get(candidate.product_id)
                     if current is None or candidate_for_view.score > current.score:
@@ -80,7 +87,7 @@ class CatalogMatcher:
             ranked = sorted(
                 candidates_by_product.values(),
                 key=lambda candidate: (-candidate.score, candidate.product_id),
-            )[:5]
+            )
             evidence: list[str] = ["thresholds=experimental"]
             if len(ranked) >= 2:
                 top_margin = ranked[0].score - ranked[1].score
@@ -95,8 +102,19 @@ class CatalogMatcher:
                         evidence=tuple(evidence),
                         experimental=True,
                     )
-            for position, candidate in enumerate(ranked):
+            for position, candidate in enumerate(ranked[:5]):
                 runner_up = ranked[position + 1] if position + 1 < len(ranked) else None
+                if candidate.product_id in self.ambiguous_reference_products:
+                    evidence.append(f"product={candidate.product_id};reason=ambiguous_reference_image")
+                    return MatchResult(
+                        decision="handoff",
+                        product_id=None,
+                        product_name=None,
+                        confidence=None,
+                        reason="ambiguous_reference_image",
+                        evidence=tuple(evidence),
+                        experimental=True,
+                    )
                 metrics = self.verifier.verify(
                     view_images[candidate.query_view],
                     candidate.reference_path,
@@ -161,16 +179,8 @@ def _validated_query_image(path: Path) -> Image.Image:
     size = input_path.stat().st_size
     if size <= 0 or size >= MAX_QUERY_BYTES:
         raise ValueError("query image must be non-empty and under 20 MiB")
+    inspect_safe_image(input_path, verify=True)
     with Image.open(input_path) as source:
-        width, height = source.size
-        if (
-            width <= 0
-            or height <= 0
-            or width > MAX_QUERY_WIDTH
-            or height > MAX_QUERY_HEIGHT
-            or width * height > MAX_QUERY_PIXELS
-        ):
-            raise ValueError("query image decoded dimensions exceed safety limits")
         source.load()
         return ImageOps.exif_transpose(source).convert("RGB")
 

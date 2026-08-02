@@ -246,7 +246,7 @@ def test_ui_decompression_bomb_is_explicit_safe_handoff(tmp_path, monkeypatch):
     matcher = MatcherStub(MatchResult("handoff", None, None, None, "unused", (), True))
     app, upload_dir = _app(tmp_path, matcher, _index(reference))
     monkeypatch.setattr(
-        "decor_matcher.ui.Image.open",
+        "decor_matcher.image_safety.Image.open",
         lambda *args, **kwargs: (_ for _ in ()).throw(Image.DecompressionBombError("unsafe dimensions")),
     )
 

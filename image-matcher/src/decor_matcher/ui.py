@@ -1,5 +1,6 @@
 import base64
 import hmac
+import stat
 import tempfile
 from dataclasses import replace
 from hashlib import sha256
@@ -7,22 +8,18 @@ from pathlib import Path
 from typing import Protocol
 
 from flask import Flask, render_template_string, request
-from PIL import Image, UnidentifiedImageError
 from werkzeug.exceptions import RequestEntityTooLarge
 
 from .artifacts import SSCD_ARTIFACT
 from .index import DescriptorIndex, load_index
+from .image_safety import (
+    ImageSafetyError,
+    UnsafeImageDimensionsError,
+    UnsupportedImageFormatError,
+    inspect_safe_image,
+)
 from .matcher import MAX_QUERY_BYTES, create_catalog_matcher
 from .types import MatchResult
-
-
-_SUPPORTED_FORMATS = {
-    "JPEG": "image/jpeg",
-    "PNG": "image/png",
-    "WEBP": "image/webp",
-    "GIF": "image/gif",
-    "BMP": "image/bmp",
-}
 
 
 class Matcher(Protocol):
@@ -46,10 +43,18 @@ class ReferenceLookup:
         if record is None or record.cache_path is None or record.sha256 is None:
             return None
         try:
-            payload = record.cache_path.read_bytes()
+            metadata = record.cache_path.stat()
+            if (
+                not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_size <= 0
+                or metadata.st_size >= MAX_QUERY_BYTES
+            ):
+                return None
+            with record.cache_path.open("rb") as source:
+                payload = source.read(MAX_QUERY_BYTES)
         except OSError:
             return None
-        if len(payload) <= 0 or len(payload) >= MAX_QUERY_BYTES:
+        if len(payload) != metadata.st_size:
             return None
         if not hmac.compare_digest(sha256(payload).hexdigest(), record.sha256):
             return None
@@ -185,17 +190,14 @@ def _image_data_uri(payload: bytes) -> str | None:
 
 def _inspect_image(payload: bytes) -> tuple[str | None, str | None]:
     try:
-        from io import BytesIO
-
-        with Image.open(BytesIO(payload)) as image:
-            image_format = image.format
-            image.verify()
-    except Image.DecompressionBombError as exc:
+        metadata = inspect_safe_image(payload, verify=True)
+    except UnsupportedImageFormatError as exc:
+        return exc.image_format, None
+    except UnsafeImageDimensionsError as exc:
         raise UnsafeImageError("decoded image dimensions are unsafe") from exc
-    except (OSError, ValueError, UnidentifiedImageError):
+    except ImageSafetyError:
         return None, None
-    mime = _SUPPORTED_FORMATS.get(image_format or "")
-    return image_format, mime
+    return metadata.image_format, metadata.mime_type
 
 
 def _data_uri(payload: bytes, mime: str) -> str:

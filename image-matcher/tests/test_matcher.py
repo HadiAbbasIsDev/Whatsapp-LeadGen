@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from decor_matcher import matcher as matcher_module
 from decor_matcher.matcher import CatalogMatcher, create_catalog_matcher
-from decor_matcher.types import Candidate, GeometryMetrics
+from decor_matcher.types import Candidate, GeometryMetrics, ReferenceRecord
 from decor_matcher.index import DescriptorIndex
 
 
@@ -92,7 +92,7 @@ def test_matcher_deduplicates_by_max_score_and_verifies_originating_query_view(t
     assert result.product_id == "a"
     assert result.confidence == 0.93
     assert encoder.sizes == [(100, 80), (90, 72), (80, 64)]
-    assert retrieve.calls == [(0.0, 5), (1.0, 5), (2.0, 5)]
+    assert retrieve.calls == [(0.0, 6), (1.0, 6), (2.0, 6)]
     assert verifier.calls == [((90, 72), tmp_path / "a.jpg")]
     assert result.experimental is True
 
@@ -164,6 +164,54 @@ def test_matcher_stops_fallback_when_next_candidate_has_ambiguous_adjacent_margi
     assert [reference.stem for _, reference in verifier.calls] == ["a", "b"]
 
 
+def test_matcher_uses_rank_six_as_rank_five_runner_up(tmp_path):
+    verifier = RecordingVerifier({"a": WEAK, "b": WEAK, "c": WEAK, "d": WEAK, "e": STRONG})
+    retrieve = scripted_retriever(
+        [
+            [
+                make_candidate("a", 0.99, tmp_path),
+                make_candidate("b", 0.95, tmp_path),
+                make_candidate("c", 0.91, tmp_path),
+                make_candidate("d", 0.87, tmp_path),
+                make_candidate("e", 0.83, tmp_path),
+                make_candidate("f", 0.83, tmp_path),
+            ],
+            [],
+            [],
+        ]
+    )
+    matcher = CatalogMatcher(RecordingEncoder(), empty_index(tmp_path), verifier, retriever=retrieve)
+
+    result = matcher.match(image_file(tmp_path))
+
+    assert result.decision == "handoff"
+    assert result.reason == "ambiguous_adjacent_candidates"
+    assert [reference.stem for _, reference in verifier.calls] == ["a", "b", "c", "d", "e"]
+    assert retrieve.calls == [(0.0, 6), (1.0, 6), (2.0, 6)]
+
+
+def test_matcher_never_accepts_reference_checksum_shared_by_multiple_products(tmp_path):
+    shared_sha = "1" * 64
+    records = (
+        ReferenceRecord(
+            "a", "Product a", "https://cdn.shopify.com/a.jpg", tmp_path / "a.jpg", shared_sha
+        ),
+        ReferenceRecord(
+            "b", "Product b", "https://cdn.shopify.com/b.jpg", tmp_path / "b.jpg", shared_sha
+        ),
+    )
+    index = DescriptorIndex(np.ones((2, 1), dtype=np.float32), records, "unused")
+    verifier = RecordingVerifier({"a": STRONG})
+    retrieve = scripted_retriever([[make_candidate("a", 0.95, tmp_path)], [], []])
+    matcher = CatalogMatcher(RecordingEncoder(), index, verifier, retriever=retrieve)
+
+    result = matcher.match(image_file(tmp_path))
+
+    assert result.decision == "handoff"
+    assert result.reason == "ambiguous_reference_image"
+    assert verifier.calls == []
+
+
 def test_matcher_converts_verifier_exception_to_sanitized_error(tmp_path):
     verifier = RecordingVerifier({"a": RuntimeError("secret boom details")})
     retrieve = scripted_retriever([[make_candidate("a", 0.95, tmp_path)], [], []])
@@ -211,7 +259,7 @@ def test_matcher_rejects_input_over_twenty_mib_before_decoding(tmp_path):
     assert result.reason == "invalid_query_image"
 
 
-@pytest.mark.parametrize("dimensions", [(8193, 1), (6500, 6500)])
+@pytest.mark.parametrize("dimensions", [(8193, 1), (6500, 6500), (8192, 1)])
 def test_matcher_rejects_extreme_decoded_dimensions_before_pixel_load(
     tmp_path,
     monkeypatch,
@@ -230,6 +278,33 @@ def test_matcher_rejects_extreme_decoded_dimensions_before_pixel_load(
     monkeypatch.setattr(Image.Image, "load", reject_load)
     encoder = RecordingEncoder()
     matcher = CatalogMatcher(encoder, empty_index(tmp_path), RecordingVerifier({}), retriever=scripted_retriever([]))
+
+    result = matcher.match(path)
+
+    assert result.decision == "error"
+    assert result.reason == "invalid_query_image"
+    assert load_attempted is False
+    assert encoder.sizes == []
+
+
+def test_matcher_rejects_decodable_unsupported_format_before_pixel_load(tmp_path, monkeypatch):
+    path = tmp_path / "query.tiff"
+    Image.new("RGB", (40, 30), "white").save(path, format="TIFF")
+    load_attempted = False
+
+    def reject_load(*args, **kwargs):
+        nonlocal load_attempted
+        load_attempted = True
+        raise AssertionError("unsupported input must not be decoded")
+
+    monkeypatch.setattr(Image.Image, "load", reject_load)
+    encoder = RecordingEncoder()
+    matcher = CatalogMatcher(
+        encoder,
+        empty_index(tmp_path),
+        RecordingVerifier({}),
+        retriever=scripted_retriever([]),
+    )
 
     result = matcher.match(path)
 

@@ -14,6 +14,7 @@ from decor_matcher.verification import (
     Acceptance,
     Thresholds,
     _seed_verified_artifact,
+    _fetch_artifact,
     _scale_to_verification_space,
     accept_candidate,
     estimate_geometry,
@@ -145,3 +146,25 @@ def test_seed_verified_artifact_atomically_replaces_unverified_destination(tmp_p
     _seed_verified_artifact(source, destination, spec)
 
     assert destination.read_bytes() == payload
+
+
+def test_verifier_download_reads_size_plus_one_and_rejects_overrun(monkeypatch):
+    reads = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self, limit):
+            reads.append(limit)
+            return b"x" * limit
+
+    monkeypatch.setattr("decor_matcher.verification.urlopen", lambda *_args, **_kwargs: Response())
+
+    with pytest.raises(ValueError, match="larger than its pinned size"):
+        _fetch_artifact("https://raw.githubusercontent.com/cvlab-epfl/disk/master/depth-save.pth")
+
+    assert reads == [4_375_832 + 1]

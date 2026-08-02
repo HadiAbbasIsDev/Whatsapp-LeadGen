@@ -1,5 +1,6 @@
 import json
 import os
+import stat
 import tempfile
 from dataclasses import dataclass
 from hashlib import sha256
@@ -11,11 +12,14 @@ import numpy as np
 from PIL import Image
 
 from .artifacts import SSCD_ARTIFACT
+from .image_safety import MAX_IMAGE_BYTES, ImageSafetyError, inspect_safe_image
 from .types import Candidate, ReferenceRecord
 
 
 VECTOR_FILENAME = "sscd_vectors.npy"
 MANIFEST_FILENAME = "manifest.json"
+MAX_MANIFEST_BYTES = 512 * 1024
+MAX_VECTOR_BYTES = 100 * 512 * np.dtype(np.float32).itemsize + 4096
 
 
 class IndexValidationError(ValueError):
@@ -68,6 +72,12 @@ def build_index(
                     raise IndexValidationError(
                         f"source image checksum mismatch for reference {record.product_id}"
                     )
+                try:
+                    inspect_safe_image(record.cache_path, verify=True)
+                except ImageSafetyError as exc:
+                    raise IndexValidationError(
+                        f"unsafe image for reference {record.product_id}: {exc}"
+                    ) from exc
                 with Image.open(record.cache_path) as source:
                     image = source.convert("RGB")
                 image.filename = str(record.cache_path)
@@ -105,16 +115,21 @@ def load_index(index_dir: Path, *, allow_nonproduction: bool = False) -> Descrip
     """Load an index only when vectors and ordered reference metadata agree."""
     vector_path = index_dir / VECTOR_FILENAME
     try:
-        manifest = json.loads((index_dir / MANIFEST_FILENAME).read_text(encoding="utf-8"))
+        manifest_bytes = _read_bounded_bytes(
+            index_dir / MANIFEST_FILENAME,
+            MAX_MANIFEST_BYTES,
+            "manifest",
+        )
+        manifest = json.loads(manifest_bytes.decode("utf-8"))
         references = manifest["references"]
         model_sha256 = manifest["model_sha256"]
         vectors_sha256 = manifest["vectors_sha256"]
-    except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeDecodeError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         raise IndexValidationError(f"cannot load index: {exc}") from exc
 
     try:
-        vector_bytes = vector_path.read_bytes()
-    except OSError as exc:
+        vector_bytes = _read_bounded_bytes(vector_path, MAX_VECTOR_BYTES, "vector file")
+    except (OSError, ValueError) as exc:
         raise IndexValidationError(f"cannot read index vectors: {exc}") from exc
     if not isinstance(vectors_sha256, str) or vectors_sha256 != sha256(vector_bytes).hexdigest():
         raise IndexValidationError("vector file checksum does not match manifest")
@@ -156,6 +171,9 @@ def load_index(index_dir: Path, *, allow_nonproduction: bool = False) -> Descrip
             for value in (record.product_id, record.product_name, record.image_url, record.sha256)
         ):
             raise IndexValidationError(f"invalid reference metadata at position {position}")
+        if len(record.sha256) != 64 or any(character not in "0123456789abcdef" for character in record.sha256):
+            raise IndexValidationError(f"invalid reference checksum at position {position}")
+        _validate_reference_file(record, position)
         records.append(record)
 
     return DescriptorIndex(vectors, tuple(records), model_sha256)
@@ -238,3 +256,60 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: source.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _read_bounded_bytes(path: Path, max_bytes: int, label: str) -> bytes:
+    try:
+        metadata = path.stat()
+    except OSError as exc:
+        raise IndexValidationError(f"cannot stat {label}: {exc}") from exc
+    if not stat.S_ISREG(metadata.st_mode):
+        raise IndexValidationError(f"{label} is not a regular file")
+    if metadata.st_size <= 0 or metadata.st_size > max_bytes:
+        raise IndexValidationError(
+            f"{label} size {metadata.st_size} is outside the permitted bound {max_bytes}"
+        )
+    try:
+        with path.open("rb") as source:
+            payload = source.read(max_bytes + 1)
+    except OSError as exc:
+        raise IndexValidationError(f"cannot read {label}: {exc}") from exc
+    if len(payload) != metadata.st_size or len(payload) > max_bytes:
+        raise IndexValidationError(f"{label} changed or exceeded its bound while being read")
+    return payload
+
+
+def _validate_reference_file(record: ReferenceRecord, position: int) -> None:
+    path = record.cache_path
+    if path is None:
+        raise IndexValidationError(f"reference file is missing at position {position}")
+    try:
+        metadata = path.stat()
+    except OSError as exc:
+        raise IndexValidationError(f"cannot stat reference file at position {position}: {exc}") from exc
+    if not stat.S_ISREG(metadata.st_mode):
+        raise IndexValidationError(f"reference path at position {position} is not a regular file")
+    if metadata.st_size <= 0 or metadata.st_size > MAX_IMAGE_BYTES:
+        raise IndexValidationError(f"reference file at position {position} has an unsafe size")
+
+    digest = sha256()
+    total = 0
+    try:
+        with path.open("rb") as source:
+            for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                total += len(chunk)
+                if total > MAX_IMAGE_BYTES:
+                    raise IndexValidationError(
+                        f"reference file at position {position} exceeded its size bound"
+                    )
+                digest.update(chunk)
+    except OSError as exc:
+        raise IndexValidationError(f"cannot read reference file at position {position}: {exc}") from exc
+    if total != metadata.st_size:
+        raise IndexValidationError(f"reference file at position {position} changed while hashing")
+    if digest.hexdigest() != record.sha256:
+        raise IndexValidationError(f"reference checksum mismatch at position {position}")
+    try:
+        inspect_safe_image(path, verify=True)
+    except ImageSafetyError as exc:
+        raise IndexValidationError(f"unsafe image for reference at position {position}: {exc}") from exc
