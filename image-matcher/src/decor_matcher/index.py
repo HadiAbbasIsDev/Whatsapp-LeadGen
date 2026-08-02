@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 from dataclasses import dataclass
+from hashlib import sha256
 from pathlib import Path
 from typing import Protocol, Sequence
 
@@ -56,6 +57,16 @@ def build_index(
             for record in batch_records:
                 if record.cache_path is None or record.sha256 is None:
                     raise IndexValidationError(f"reference {record.product_id} is not cached")
+                try:
+                    source_sha256 = _sha256_file(record.cache_path)
+                except OSError as exc:
+                    raise IndexValidationError(
+                        f"cannot hash source image for reference {record.product_id}: {exc}"
+                    ) from exc
+                if source_sha256 != record.sha256:
+                    raise IndexValidationError(
+                        f"source image checksum mismatch for reference {record.product_id}"
+                    )
                 with Image.open(record.cache_path) as source:
                     image = source.convert("RGB")
                 image.filename = str(record.cache_path)
@@ -82,30 +93,44 @@ def build_index(
     model_sha256 = str(getattr(encoder, "model_sha256", SSCD_ARTIFACT.sha256))
     index = DescriptorIndex(vectors, ordered_records, model_sha256)
     index_dir.mkdir(parents=True, exist_ok=True)
-    _atomic_save_vectors(index_dir / VECTOR_FILENAME, vectors)
-    _atomic_write_json(index_dir / MANIFEST_FILENAME, _manifest(index))
+    vector_path = index_dir / VECTOR_FILENAME
+    _atomic_save_vectors(vector_path, vectors)
+    vectors_sha256 = _sha256_file(vector_path)
+    _atomic_write_json(index_dir / MANIFEST_FILENAME, _manifest(index, vectors_sha256))
     return index
 
 
-def load_index(index_dir: Path) -> DescriptorIndex:
+def load_index(index_dir: Path, *, allow_nonproduction: bool = False) -> DescriptorIndex:
     """Load an index only when vectors and ordered reference metadata agree."""
+    vector_path = index_dir / VECTOR_FILENAME
     try:
-        vectors = np.load(index_dir / VECTOR_FILENAME, allow_pickle=False)
         manifest = json.loads((index_dir / MANIFEST_FILENAME).read_text(encoding="utf-8"))
         references = manifest["references"]
         model_sha256 = manifest["model_sha256"]
+        vectors_sha256 = manifest["vectors_sha256"]
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         raise IndexValidationError(f"cannot load index: {exc}") from exc
 
+    if not isinstance(vectors_sha256, str) or vectors_sha256 != _sha256_file(vector_path):
+        raise IndexValidationError("vector file checksum does not match manifest")
+    try:
+        vectors = np.load(vector_path, allow_pickle=False)
+    except (OSError, ValueError, TypeError) as exc:
+        raise IndexValidationError(f"cannot load index vectors: {exc}") from exc
+
     if vectors.dtype != np.float32 or vectors.ndim != 2:
         raise IndexValidationError("vectors must be a two-dimensional float32 array")
+    if not allow_nonproduction and vectors.shape != (100, 512):
+        raise IndexValidationError(
+            f"production SSCD vectors must have shape (100, 512), got {vectors.shape}"
+        )
     if not isinstance(references, list) or vectors.shape[0] != len(references):
         raise IndexValidationError(
             f"manifest/vector row mismatch: {len(references) if isinstance(references, list) else 'invalid'} references, "
             f"{vectors.shape[0]} vectors"
         )
-    if not isinstance(model_sha256, str) or not model_sha256:
-        raise IndexValidationError("manifest model_sha256 must be a non-empty string")
+    if model_sha256 != SSCD_ARTIFACT.sha256:
+        raise IndexValidationError("manifest model checksum does not match pinned SSCD artifact")
     if not np.all(np.isfinite(vectors)):
         raise IndexValidationError("vectors contain non-finite values")
 
@@ -164,9 +189,10 @@ def retrieve(
     ]
 
 
-def _manifest(index: DescriptorIndex) -> dict[str, object]:
+def _manifest(index: DescriptorIndex, vectors_sha256: str) -> dict[str, object]:
     return {
         "model_sha256": index.model_sha256,
+        "vectors_sha256": vectors_sha256,
         "references": [
             {
                 "product_id": record.product_id,
@@ -199,3 +225,11 @@ def _atomic_write_json(target: Path, payload: dict[str, object]) -> None:
         os.replace(temporary_path, target)
     finally:
         temporary_path.unlink(missing_ok=True)
+
+
+def _sha256_file(path: Path) -> str:
+    digest = sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
