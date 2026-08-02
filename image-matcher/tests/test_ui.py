@@ -202,6 +202,67 @@ def test_ui_deletes_temp_upload_when_matcher_raises(tmp_path):
     assert list(upload_dir.iterdir()) == []
 
 
+def test_ui_deletes_partial_temp_upload_when_write_fails(tmp_path, monkeypatch):
+    reference = tmp_path / "reference.jpg"
+    reference.write_bytes(_jpeg_bytes())
+    matcher = MatcherStub(MatchResult("handoff", None, None, None, "unused", (), True))
+    app, upload_dir = _app(tmp_path, matcher, _index(reference))
+    partial_path = upload_dir / "partial.upload"
+
+    class WriteFailingTemporary:
+        name = str(partial_path)
+
+        def __enter__(self):
+            return self
+
+        def write(self, payload):
+            partial_path.write_bytes(payload[:8])
+            raise OSError("disk full")
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+    monkeypatch.setattr(
+        "decor_matcher.ui.tempfile.NamedTemporaryFile",
+        lambda **kwargs: WriteFailingTemporary(),
+    )
+
+    response = app.test_client().post(
+        "/",
+        data={"image": (BytesIO(_jpeg_bytes()), "query.jpg")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 500
+    assert b"Human handoff" in response.data
+    assert b"upload_storage_failed" in response.data
+    assert not partial_path.exists()
+    assert matcher.paths == []
+
+
+def test_ui_decompression_bomb_is_explicit_safe_handoff(tmp_path, monkeypatch):
+    reference = tmp_path / "reference.jpg"
+    reference.write_bytes(_jpeg_bytes())
+    matcher = MatcherStub(MatchResult("handoff", None, None, None, "unused", (), True))
+    app, upload_dir = _app(tmp_path, matcher, _index(reference))
+    monkeypatch.setattr(
+        "decor_matcher.ui.Image.open",
+        lambda *args, **kwargs: (_ for _ in ()).throw(Image.DecompressionBombError("unsafe dimensions")),
+    )
+
+    response = app.test_client().post(
+        "/",
+        data={"image": (BytesIO(_jpeg_bytes()), "query.jpg")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 413
+    assert b"Human handoff" in response.data
+    assert b"decompression_bomb" in response.data
+    assert matcher.paths == []
+    assert list(upload_dir.iterdir()) == []
+
+
 def test_ui_get_explains_local_exact_copy_test(tmp_path):
     reference = tmp_path / "reference.jpg"
     reference.write_bytes(_jpeg_bytes())

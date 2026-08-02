@@ -8,6 +8,7 @@ from typing import Sequence
 from urllib.request import Request, urlopen
 
 import numpy as np
+from werkzeug.serving import make_server
 
 from .artifacts import SSCD_ARTIFACT, ArtifactSpec, ensure_artifact
 from .catalog import cache_references, fetch_bytes, load_catalog, select_references
@@ -16,7 +17,7 @@ from .index import build_index, load_index, retrieve
 from .matcher import CatalogMatcher, create_catalog_matcher
 from .sscd import SscdEncoder
 from .types import MatchResult, ReferenceRecord
-from .ui import run_local_ui
+from .ui import create_app
 from .verification import DISK_DEPTH_ARTIFACT, LIGHTGLUE_DISK_ARTIFACT, make_query_views
 
 
@@ -175,8 +176,10 @@ def benchmark_runtime(
     }
 
 
-def serve_ui(runtime: Path, port: int) -> None:
-    run_local_ui(runtime, port)
+def make_ui_server(runtime: Path, port: int):
+    """Initialize and bind the local server before announcing readiness."""
+    app = create_app(Path(runtime))
+    return make_server("127.0.0.1", port, app)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -198,11 +201,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not 1 <= args.port <= 65535:
             _print_json({"status": "error", "reason": "invalid_port"})
             return 1
+        try:
+            server = make_ui_server(args.runtime, args.port)
+        except (Exception, SystemExit):
+            _print_json({"status": "error", "reason": "ui_startup_failed"})
+            return 1
         _print_json({"status": "serving", "host": "127.0.0.1", "port": args.port})
         try:
-            serve_ui(args.runtime, args.port)
-        except Exception:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        except (Exception, SystemExit):
             return 1
+        finally:
+            try:
+                server.server_close()
+            except (Exception, SystemExit):
+                pass
         return 0
 
     try:

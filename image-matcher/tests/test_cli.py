@@ -67,17 +67,55 @@ def test_build_cli_rejects_any_limit_other_than_100(capsys, tmp_path):
 
 def test_ui_cli_starts_only_on_loopback(capsys, monkeypatch, tmp_path):
     calls = []
+
+    class ServerStub:
+        def serve_forever(self):
+            calls.append("served")
+
+        def server_close(self):
+            calls.append("closed")
+
     monkeypatch.setattr(
-        "decor_matcher.cli.serve_ui",
-        lambda runtime, port: calls.append((runtime, port)),
+        "decor_matcher.cli.make_ui_server",
+        lambda runtime, port: calls.append((runtime, port)) or ServerStub(),
     )
 
     exit_code = main(["ui", "--runtime", str(tmp_path / "runtime"), "--port", "8765"])
 
     assert exit_code == 0
-    assert calls == [(tmp_path / "runtime", 8765)]
+    assert calls == [(tmp_path / "runtime", 8765), "served", "closed"]
     output = json.loads(capsys.readouterr().out)
     assert output == {"host": "127.0.0.1", "port": 8765, "status": "serving"}
+
+
+def test_ui_cli_initialization_failure_emits_one_error_json(capsys, monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "decor_matcher.cli.make_ui_server",
+        lambda runtime, port: (_ for _ in ()).throw(RuntimeError("models unavailable")),
+    )
+
+    exit_code = main(["ui", "--runtime", str(tmp_path / "runtime")])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out.count("\n") == 1
+    assert json.loads(captured.out) == {"status": "error", "reason": "ui_startup_failed"}
+    assert "models unavailable" not in captured.out
+
+
+def test_ui_cli_catches_bind_system_exit_before_claiming_serving(capsys, monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "decor_matcher.cli.make_ui_server",
+        lambda runtime, port: (_ for _ in ()).throw(SystemExit(1)),
+    )
+
+    exit_code = main(["ui", "--runtime", str(tmp_path / "runtime"), "--port", "8765"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out.count("\n") == 1
+    assert json.loads(captured.out) == {"status": "error", "reason": "ui_startup_failed"}
+    assert "serving" not in captured.out
 
 
 def test_benchmark_cli_passes_explicit_negative_bound(capsys, monkeypatch, tmp_path):

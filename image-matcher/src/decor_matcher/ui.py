@@ -29,6 +29,10 @@ class Matcher(Protocol):
     def match(self, path: Path) -> MatchResult: ...
 
 
+class UnsafeImageError(ValueError):
+    """Raised when Pillow rejects unsafe decoded image dimensions."""
+
+
 class ReferenceLookup:
     """Resolve only immutable index records; request values never become paths."""
 
@@ -99,7 +103,13 @@ def create_app(
         if len(payload) >= MAX_QUERY_BYTES:
             return _render_handoff("upload_too_large", message="Images must be under 20 MiB."), 413
 
-        image_format, preview_mime = _inspect_image(payload)
+        try:
+            image_format, preview_mime = _inspect_image(payload)
+        except UnsafeImageError:
+            return _render_handoff(
+                "decompression_bomb",
+                message="The decoded image dimensions are unsafe.",
+            ), 413
         if image_format is not None and preview_mime is None:
             return _render_handoff(
                 "unsupported_image_format",
@@ -108,9 +118,19 @@ def create_app(
 
         temporary_path: Path | None = None
         try:
-            with tempfile.NamedTemporaryFile(dir=temporary_dir, suffix=".upload", delete=False) as temporary:
-                temporary.write(payload)
-                temporary_path = Path(temporary.name)
+            try:
+                with tempfile.NamedTemporaryFile(
+                    dir=temporary_dir,
+                    suffix=".upload",
+                    delete=False,
+                ) as temporary:
+                    temporary_path = Path(temporary.name)
+                    temporary.write(payload)
+            except Exception:
+                return _render_handoff(
+                    "upload_storage_failed",
+                    message="The upload could not be stored safely for matching.",
+                ), 500
 
             try:
                 result = matcher.match(temporary_path)
@@ -155,13 +175,11 @@ def create_app(
     return app
 
 
-def run_local_ui(runtime: Path, port: int = 7860) -> None:
-    """Serve the app on loopback only; there is intentionally no host option."""
-    create_app(runtime).run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
-
-
 def _image_data_uri(payload: bytes) -> str | None:
-    _image_format, mime = _inspect_image(payload)
+    try:
+        _image_format, mime = _inspect_image(payload)
+    except UnsafeImageError:
+        return None
     return _data_uri(payload, mime) if mime is not None else None
 
 
@@ -172,6 +190,8 @@ def _inspect_image(payload: bytes) -> tuple[str | None, str | None]:
         with Image.open(BytesIO(payload)) as image:
             image_format = image.format
             image.verify()
+    except Image.DecompressionBombError as exc:
+        raise UnsafeImageError("decoded image dimensions are unsafe") from exc
     except (OSError, ValueError, UnidentifiedImageError):
         return None, None
     mime = _SUPPORTED_FORMATS.get(image_format or "")
