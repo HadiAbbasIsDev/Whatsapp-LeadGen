@@ -8,8 +8,10 @@ Run date: 2026-08-02
 ## Result
 
 The real build completed with exactly 100 deterministically selected catalog
-products, 100 cached primary images, and 100 indexed SSCD descriptors. The
-bounded CPU smoke then produced:
+products, 100 cached primary-image reference files, and 100 indexed SSCD
+descriptors. The 100 reference files contain 98 byte-distinct image payloads:
+two product pairs reuse an identical primary image. The bounded CPU smoke then
+produced:
 
 - transformed positives: 5/5 top-1 correct and 5/5 verified correct;
 - unindexed catalog negatives: 1/1 handed off;
@@ -35,10 +37,20 @@ design remains required before any WhatsApp integration.
 | Selection | sort valid unique products by SHA-256 of string product ID; take 100 |
 | Selection digest | `192d77264781d253edebd0c090d1f2fe98446e92a2dcfa53075541864d335998` |
 | Digest serialization | UTF-8 product IDs in the order below, joined by LF, with no trailing LF |
+| Unique indexed product IDs | 100 |
 | Cached reference files | 100 files, 25,912,359 bytes |
+| Byte-distinct cached images | 98 |
+| Duplicate-image groups | 2 groups, each shared by 2 products |
 | Index manifest SHA-256 | `9e7832f271285d99bb69b786a6213fa6bb4d671180c72f13e1b71a77ffdb0e30` |
 | SSCD vectors SHA-256 | `98768db864b8404677c01bc871e6cf77a954fc26984580e30cd02976b811058e` |
 | Fixture truth SHA-256 | `794bf18cca2c5d8c1e470283d3310b89ae8c9b7539ec91a39877d9fc933337ef` |
+
+The byte-identical reference pairs are:
+
+| Image SHA-256 | Product ID and name | Product ID and name |
+|---|---|---|
+| `3e6c0148ab922aaaaab72ca33669a18146d976744c3b0cb832e29916b3d972ab` | `7848563769407` — Narva Dining Set | `7848565080127` — Narva Side Board |
+| `4d5ffdefa77071597454c57658d6eb7141dbcfa0f137f650f1faf5ce725eedf5` | `7822913208383` — Estela Dining Set | `7822920450111` — Estella Side Board |
 
 ### Selected product IDs
 
@@ -277,8 +289,13 @@ fixtures, negative cache, and index remained ignored runtime data.
 - The negative set contains one unindexed catalog image and contains no live
   customer photos, similar-but-different room photos, multi-product screenshots,
   off-center tiny products, or heavily occluded products.
-- Only 100 primary images from 100 of the catalog's 256 products are indexed.
-  Gallery-image expansion is not included.
+- The index has 100 primary-image reference records from 100 of the catalog's
+  256 products, but only 98 byte-distinct image payloads. Gallery-image
+  expansion is not included.
+- Pixel-only evidence cannot choose between the two products in either
+  byte-identical pair listed above. Their SSCD scores are identical for the
+  shared image, so the adjacent-candidate margin gate hands off rather than
+  guessing which product record the customer intended.
 - The matcher is exact-copy oriented. A different or live photograph of the
   same furniture is expected to hand off rather than identify the SKU.
 - OCR and product-name text matching are not implemented in this MVP. All
