@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Deliver a standalone CPU-capable CLI that indexes exactly 100 deterministic Decor Moments primary catalog images, retrieves exact copies with SSCD, verifies them with DISK + LightGlue + homography, and returns JSON match-or-handoff results.
+**Goal:** Deliver a standalone CPU-capable CLI and local browser UI that index exactly 100 deterministic Decor Moments primary catalog images, retrieve exact copies with SSCD, verify them with DISK + LightGlue + homography, and return match-or-handoff results.
 
 **Architecture:** A small Python package owns catalog sampling/caching, pinned model artifacts, a NumPy SSCD index, geometric verification, orchestration, and a CLI. Generated images, weights, indexes, and benchmark fixtures live under ignored runtime directories. Pure decision and data functions are tested without model downloads; explicit integration tests prove the real SSCD and LightGlue paths.
 
@@ -263,19 +263,23 @@ git add image-matcher
 git commit -m "feat: verify exact catalog copies with LightGlue"
 ```
 
-### Task 4: CLI, generated fixtures, and user-facing documentation
+### Task 4: CLI, local test UI, generated fixtures, and user-facing documentation
 
 **Files:**
 - Create: `image-matcher/src/decor_matcher/fixtures.py`
 - Create: `image-matcher/src/decor_matcher/cli.py`
+- Create: `image-matcher/src/decor_matcher/ui.py`
 - Create: `image-matcher/src/decor_matcher/__main__.py`
 - Create: `image-matcher/tests/test_fixtures.py`
 - Create: `image-matcher/tests/test_cli.py`
+- Create: `image-matcher/tests/test_ui.py`
+- Modify: `image-matcher/pyproject.toml`
 - Create: `image-matcher/README.md`
 
 **Interfaces:**
-- Produces commands: `build`, `match IMAGE`, `make-fixtures`, and `benchmark`.
+- Produces commands: `build`, `match IMAGE`, `ui`, `make-fixtures`, and `benchmark`.
 - All commands print one JSON object to stdout and diagnostics to stderr; exit codes are 0 for successful command execution (including a legitimate `handoff`) and 1 for operational `error`.
+- `ui` serves a Flask upload form on `127.0.0.1` by default, reuses the production matcher, and renders a side-by-side input/reference result without retaining the upload.
 
 - [ ] **Step 1: Write failing fixture and CLI tests**
 
@@ -292,33 +296,41 @@ def test_match_cli_prints_one_json_object(capsys, monkeypatch, tmp_path):
     assert exit_code == 0
     assert output["decision"] == "catalog_match"
     assert output["product_id"] == "42"
+
+def test_ui_handoff_and_temp_cleanup(client, matcher_stub, upload_dir):
+    response = client.post("/", data={"image": (valid_image(), "query.jpg")})
+    assert response.status_code == 200
+    assert b"Human handoff" in response.data
+    assert list(upload_dir.iterdir()) == []
 ```
 
 - [ ] **Step 2: Run tests and verify RED**
 
-Run: `python -m pytest image-matcher/tests/test_fixtures.py image-matcher/tests/test_cli.py -q`
+Run: `python -m pytest image-matcher/tests/test_fixtures.py image-matcher/tests/test_cli.py image-matcher/tests/test_ui.py -q`
 
-Expected: imports fail because fixtures and CLI are absent.
+Expected: imports fail because fixtures, CLI, and UI are absent.
 
 - [ ] **Step 3: Implement commands and deterministic transforms**
 
 `build` selects/caches exactly 100 references, ensures artifacts, and creates the index. `match` loads the completed runtime and emits the `MatchResult`. `make-fixtures` creates JPEG-55, 50%-resize, 12%-crop, white screenshot-frame, and text-overlay variants with a JSON truth manifest. `benchmark` evaluates selected indexed positives and unindexed catalog negatives, reports top-1 retrieval, verified acceptance, false accepts, handoffs, and per-query latency percentiles.
 
-README commands must be complete PowerShell and Bash examples, including isolated virtual-environment creation, PyTorch CPU installation, editable package installation, `build`, `make-fixtures`, `benchmark`, and manual `match` usage. State clearly that the MVP is not connected to WhatsApp and its thresholds are experimental.
+`ui` adds Flask as a pinned dependency and serves only on `127.0.0.1` unless a developer explicitly changes the code. It accepts common image formats up to 20 MiB, calls the same matcher as the CLI, deletes each temporary upload in a `finally` path, and presents either the uploaded image beside its matched cached catalog reference or a prominent `Human handoff` result. Test the match view, handoff view, oversize rejection, unsupported payload rejection, and temporary cleanup with Flask's test client.
+
+README commands must be complete PowerShell and Bash examples, including isolated virtual-environment creation, PyTorch CPU installation, editable package installation, `build`, `ui`, `make-fixtures`, `benchmark`, and manual `match` usage. State clearly that the MVP is not connected to WhatsApp and its thresholds are experimental.
 
 - [ ] **Step 4: Run CLI tests and an offline help smoke test**
 
-Run: `python -m pytest image-matcher/tests/test_fixtures.py image-matcher/tests/test_cli.py -q`
+Run: `python -m pytest image-matcher/tests/test_fixtures.py image-matcher/tests/test_cli.py image-matcher/tests/test_ui.py -q`
 
 Run: `python -m decor_matcher --help`
 
-Expected: tests pass and help lists `build`, `match`, `make-fixtures`, and `benchmark`.
+Expected: tests pass and help lists `build`, `match`, `ui`, `make-fixtures`, and `benchmark`.
 
 - [ ] **Step 5: Commit Task 4**
 
 ```bash
 git add image-matcher
-git commit -m "feat: add matcher CLI and reproducible test fixtures"
+git commit -m "feat: add matcher CLI and local test UI"
 ```
 
 ### Task 5: Build the real 100-image MVP and publish its benchmark report

@@ -22,7 +22,7 @@ The system is intentionally an exact-copy recognizer, not a visual recommendatio
 
 The first runnable delivery indexes exactly 100 primary catalog images from `workspace/data/products.json`, one image per unique product. Selection is deterministic: sort products by the SHA-256 digest of their string product ID and take the first 100 valid public-image records. This avoids a catalog-order bias while producing the same sample on every machine.
 
-The MVP includes catalog sampling and caching, SSCD indexing and top-five retrieval, DISK + LightGlue + geometric verification, JSON CLI output, transformed positive fixtures, unindexed-catalog hard negatives, and a benchmark report. It excludes gallery-image expansion, OCR, WhatsApp integration, customer-image retention, and model fine-tuning. Those remain subsequent phases.
+The MVP includes catalog sampling and caching, SSCD indexing and top-five retrieval, DISK + LightGlue + geometric verification, JSON CLI output, a simple local browser UI, transformed positive fixtures, unindexed-catalog hard negatives, and a benchmark report. It excludes gallery-image expansion, OCR, WhatsApp integration, customer-image retention, and model fine-tuning. Those remain subsequent phases.
 
 The MVP is a test artifact, not authorization to change the live image flow. Its thresholds are reported as experimental and cannot be reused for live auto-replies until the full acceptance gate later in this document passes with real customer-style negatives.
 
@@ -178,6 +178,12 @@ Fallback response:
   "candidates": []
 }
 ```
+
+### 8. Local test UI
+
+The MVP exposes a small web page bound to `127.0.0.1` only. A tester uploads one image and sees the uploaded screenshot beside the matched cached catalog image, together with the product name, product ID, confidence, and evidence. A non-match or operational failure is shown as a clear human-handoff result and never as a catalog match.
+
+The UI accepts only supported image payloads up to 20 MiB, uses the same decoded-dimension checks as the library, and removes temporary uploads after each request. It does not retain customer images, expose a public server, call WhatsApp, or introduce a separate matching path.
 
 The Python library exposes the same result structure so later integration does not parse human-readable output.
 
