@@ -18,6 +18,14 @@ The system is intentionally an exact-copy recognizer, not a visual recommendatio
 
 ## Scope
 
+### 100-image MVP slice
+
+The first runnable delivery indexes exactly 100 primary catalog images from `workspace/data/products.json`, one image per unique product. Selection is deterministic: sort products by the SHA-256 digest of their string product ID and take the first 100 valid public-image records. This avoids a catalog-order bias while producing the same sample on every machine.
+
+The MVP includes catalog sampling and caching, SSCD indexing and top-five retrieval, DISK + LightGlue + geometric verification, JSON CLI output, transformed positive fixtures, unindexed-catalog hard negatives, and a benchmark report. It excludes gallery-image expansion, OCR, WhatsApp integration, customer-image retention, and model fine-tuning. Those remain subsequent phases.
+
+The MVP is a test artifact, not authorization to change the live image flow. Its thresholds are reported as experimental and cannot be reused for live auto-replies until the full acceptance gate later in this document passes with real customer-style negatives.
+
 ### Included
 
 - Read canonical product metadata from `products.json` and all available reference-image URLs from the public Shopify product feed.
