@@ -72,6 +72,18 @@ def test_load_catalog_rejects_invalid_catalog_items(tmp_path, entry):
         load_catalog(path)
 
 
+@pytest.mark.parametrize("host", ["100.64.0.1", "224.0.0.1"])
+def test_load_catalog_rejects_cgnat_and_multicast_image_urls(tmp_path, host):
+    path = tmp_path / "catalog.json"
+    path.write_text(
+        f'{{"catalog": [{{"id": "42", "name": "Lamp", "image": "https://{host}/lamp.jpg"}}]}}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError):
+        load_catalog(path)
+
+
 def test_cache_references_continues_after_invalid_image(tmp_path):
     records = [
         ReferenceRecord("bad", "Broken", "https://img/bad.jpg", None, None),

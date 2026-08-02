@@ -114,7 +114,7 @@ def _is_public_http_url(value: str) -> bool:
         address = ipaddress.ip_address(hostname)
     except ValueError:
         return True
-    return not (address.is_private or address.is_loopback or address.is_link_local or address.is_reserved or address.is_unspecified)
+    return address.is_global and not address.is_multicast
 
 
 def _image_suffix(image_url: str, payload: bytes) -> str:
