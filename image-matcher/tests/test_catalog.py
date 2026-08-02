@@ -8,7 +8,15 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
-from decor_matcher.catalog import cache_references, fetch_bytes, load_catalog, select_references
+from decor_matcher.catalog import (
+    MAX_FEED_PAGE_BYTES,
+    cache_references,
+    fetch_bytes,
+    fetch_gallery_page,
+    load_catalog,
+    load_gallery_references,
+    select_references,
+)
 from decor_matcher.types import CatalogItem, ReferenceRecord
 
 
@@ -24,6 +32,21 @@ def make_image_bytes(image_format="JPEG", size=(1, 1)) -> bytes:
 
 def make_jpeg_bytes() -> bytes:
     return make_image_bytes()
+
+
+def feed_payload(products) -> bytes:
+    import json
+
+    return json.dumps({"products": products}, separators=(",", ":")).encode()
+
+
+def feed_product(product_id, images, *, variants=()):
+    return {
+        "id": product_id,
+        "title": f"Feed product {product_id}",
+        "images": [{"src": image_url} for image_url in images],
+        "variants": [{"id": variant_id} for variant_id in variants],
+    }
 
 
 def test_select_references_is_deterministic_and_exactly_100(tmp_path):
@@ -223,3 +246,194 @@ def test_cache_references_rejects_unsupported_or_dangerous_images_before_persist
     assert len(failures) == 1
     assert failure_fragment in failures[0]
     assert list(tmp_path.iterdir()) == []
+
+
+def test_gallery_feed_joins_exact_ids_and_deduplicates_urls_within_product():
+    canonical = [
+        product("42", "https://cdn.shopify.com/primary-42.jpg"),
+        product("43", "https://cdn.shopify.com/primary-43.jpg"),
+    ]
+    pages = {
+        1: feed_payload(
+            [
+                feed_product(
+                    42,
+                    [
+                        "https://cdn.shopify.com/42-primary.jpg",
+                        "https://cdn.shopify.com/42-primary.jpg",
+                        "https://cdn.shopify.com/42-room.jpg",
+                    ],
+                    variants=(1, 2),
+                ),
+                feed_product("43", ["https://cdn.shopify.com/43-primary.jpg"], variants=(3,)),
+            ]
+        )
+    }
+    calls = []
+
+    def fetch_page(_url, page, limit):
+        calls.append((page, limit))
+        return pages[page]
+
+    gallery = load_gallery_references(
+        canonical,
+        "https://decormoments.com/products.json",
+        fetch_page=fetch_page,
+    )
+
+    assert calls == [(1, 250)]
+    assert [(record.product_id, record.product_name, record.image_url) for record in gallery.references] == [
+        ("42", "Product 42", "https://cdn.shopify.com/42-primary.jpg"),
+        ("42", "Product 42", "https://cdn.shopify.com/42-room.jpg"),
+        ("43", "Product 43", "https://cdn.shopify.com/43-primary.jpg"),
+    ]
+    assert gallery.feed_product_count == 2
+    assert gallery.variant_count == 3
+    assert gallery.page_sha256 == (sha256(pages[1]).hexdigest(),)
+
+
+def test_gallery_feed_requires_every_canonical_id_without_name_fallback():
+    canonical = [product("042", "https://cdn.shopify.com/primary.jpg")]
+    payload = feed_payload([feed_product(42, ["https://cdn.shopify.com/feed.jpg"])])
+
+    with pytest.raises(ValueError, match="missing canonical product IDs"):
+        load_gallery_references(
+            canonical,
+            "https://decormoments.com/products.json",
+            fetch_page=lambda *_args: payload,
+        )
+
+
+def test_gallery_feed_rejects_duplicate_ids_across_pages():
+    canonical = [product("42", "https://cdn.shopify.com/primary.jpg")]
+    first_page = [
+        feed_product(index, [f"https://cdn.shopify.com/{index}.jpg"])
+        for index in range(1000, 1249)
+    ] + [feed_product(42, ["https://cdn.shopify.com/42-a.jpg"])]
+    second_page = feed_payload([feed_product(42, ["https://cdn.shopify.com/42-b.jpg"])])
+
+    with pytest.raises(ValueError, match="duplicate feed product ID"):
+        load_gallery_references(
+            canonical,
+            "https://decormoments.com/products.json",
+            fetch_page=lambda _url, page, _limit: feed_payload(first_page) if page == 1 else second_page,
+        )
+
+
+@pytest.mark.parametrize(
+    "bad_product",
+    [
+        {"id": 42, "title": "Missing images", "variants": []},
+        {"id": 42, "title": "Empty images", "images": [], "variants": []},
+        {"id": 42, "title": "Bad image", "images": [{}], "variants": []},
+        {"id": 42, "title": "Bad variants", "images": [{"src": "https://cdn.shopify.com/42.jpg"}]},
+    ],
+)
+def test_gallery_feed_rejects_incomplete_images_or_variants(bad_product):
+    with pytest.raises(ValueError, match="feed product"):
+        load_gallery_references(
+            [product("42", "https://cdn.shopify.com/primary.jpg")],
+            "https://decormoments.com/products.json",
+            fetch_page=lambda *_args: feed_payload([bad_product]),
+        )
+
+
+def test_fetch_gallery_page_enforces_exact_host_global_dns_no_redirects_and_json_cap(monkeypatch):
+    handlers = []
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self, limit):
+            assert limit == MAX_FEED_PAGE_BYTES + 1
+            return b'{"products":[]}'
+
+    class Opener:
+        def open(self, request, timeout):
+            assert request.full_url == "https://decormoments.com/products.json?limit=250&page=3"
+            assert timeout == 20
+            return Response()
+
+    def fake_build_opener(*received_handlers):
+        handlers.extend(received_handlers)
+        return Opener()
+
+    monkeypatch.setattr("decor_matcher.catalog.build_opener", fake_build_opener)
+    resolver = lambda *_args, **_kwargs: [(2, 1, 6, "", ("23.227.38.65", 443))]
+
+    assert fetch_gallery_page(
+        "https://decormoments.com/products.json", 3, 250, resolver=resolver
+    ) == b'{"products":[]}'
+    assert len(handlers) == 1
+    assert handlers[0].redirect_request(None, None, 302, "Found", {}, "https://example.com") is None
+
+    with pytest.raises(ValueError, match="exact https://decormoments.com/products.json"):
+        fetch_gallery_page(
+            "https://evil.example/products.json",
+            1,
+            250,
+            resolver=lambda *_args, **_kwargs: pytest.fail("invalid host must not resolve"),
+        )
+
+    with pytest.raises(ValueError, match="globally routable"):
+        fetch_gallery_page(
+            "https://decormoments.com/products.json",
+            1,
+            250,
+            resolver=lambda *_args, **_kwargs: [(2, 1, 6, "", ("127.0.0.1", 443))],
+            opener=Opener(),
+        )
+
+
+def test_fetch_gallery_page_rejects_payload_over_explicit_json_cap():
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self, limit):
+            assert limit == MAX_FEED_PAGE_BYTES + 1
+            return b"x" * limit
+
+    class Opener:
+        def open(self, _request, timeout):
+            assert timeout == 20
+            return Response()
+
+    with pytest.raises(ValueError, match="exceeds"):
+        fetch_gallery_page(
+            "https://decormoments.com/products.json",
+            1,
+            250,
+            resolver=lambda *_args, **_kwargs: [(2, 1, 6, "", ("23.227.38.65", 443))],
+            opener=Opener(),
+        )
+
+
+def test_gallery_feed_fails_closed_when_twenty_pages_are_still_full():
+    canonical = [product("1", "https://cdn.shopify.com/primary.jpg")]
+
+    def fetch_page(_url, page, _limit):
+        products = [
+            feed_product(
+                page * 10_000 + position,
+                [f"https://cdn.shopify.com/{page}-{position}.jpg"],
+            )
+            for position in range(250)
+        ]
+        if page == 1:
+            products[0]["id"] = 1
+        return feed_payload(products)
+
+    with pytest.raises(ValueError, match="exceeded 20 pages"):
+        load_gallery_references(
+            canonical,
+            "https://decormoments.com/products.json",
+            fetch_page=fetch_page,
+        )

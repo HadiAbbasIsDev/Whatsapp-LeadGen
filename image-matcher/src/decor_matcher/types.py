@@ -26,6 +26,7 @@ class Candidate:
     score: float
     reference_path: Path
     query_view: str = "full"
+    reference_sha256: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,3 +47,4 @@ class MatchResult:
     reason: str | None
     evidence: tuple[str, ...]
     experimental: bool
+    reference_sha256: str | None = None

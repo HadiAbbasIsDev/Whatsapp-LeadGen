@@ -18,8 +18,9 @@ from .types import Candidate, ReferenceRecord
 
 VECTOR_FILENAME = "sscd_vectors.npy"
 MANIFEST_FILENAME = "manifest.json"
-MAX_MANIFEST_BYTES = 512 * 1024
-MAX_VECTOR_BYTES = 100 * 512 * np.dtype(np.float32).itemsize + 4096
+MAX_PRODUCTION_REFERENCES = 5000
+MAX_MANIFEST_BYTES = 4 * 1024 * 1024
+MAX_VECTOR_BYTES = MAX_PRODUCTION_REFERENCES * 512 * np.dtype(np.float32).itemsize + 1024 * 1024
 
 
 class IndexValidationError(ValueError):
@@ -47,10 +48,12 @@ def build_index(
 ) -> DescriptorIndex:
     """Encode ordered cached references and atomically persist their descriptor index."""
     ordered_records = tuple(records)
-    if require_exact_count and len(ordered_records) != 100:
-        raise IndexValidationError(f"production index requires exactly 100 records, got {len(ordered_records)}")
     if not ordered_records:
         raise IndexValidationError("index requires at least one record")
+    if require_exact_count and len(ordered_records) > MAX_PRODUCTION_REFERENCES:
+        raise IndexValidationError(
+            f"production index permits at most {MAX_PRODUCTION_REFERENCES} records"
+        )
     if batch_size <= 0:
         raise ValueError("batch_size must be positive")
 
@@ -96,9 +99,9 @@ def build_index(
     vectors = np.concatenate(batches, axis=0).astype(np.float32, copy=False)
     if not np.all(np.isfinite(vectors)):
         raise IndexValidationError("encoder returned non-finite descriptors")
-    if require_exact_count and vectors.shape != (100, 512):
+    if require_exact_count and vectors.shape != (len(ordered_records), 512):
         raise IndexValidationError(
-            f"production SSCD vectors must have shape (100, 512), got {vectors.shape}"
+            f"production SSCD vectors must have shape (N, 512), got {vectors.shape}"
         )
 
     model_sha256 = str(getattr(encoder, "model_sha256", SSCD_ARTIFACT.sha256))
@@ -122,6 +125,7 @@ def load_index(index_dir: Path, *, allow_nonproduction: bool = False) -> Descrip
         )
         manifest = json.loads(manifest_bytes.decode("utf-8"))
         references = manifest["references"]
+        reference_count = manifest["reference_count"]
         model_sha256 = manifest["model_sha256"]
         vectors_sha256 = manifest["vectors_sha256"]
     except (OSError, UnicodeDecodeError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
@@ -140,9 +144,29 @@ def load_index(index_dir: Path, *, allow_nonproduction: bool = False) -> Descrip
 
     if vectors.dtype != np.float32 or vectors.ndim != 2:
         raise IndexValidationError("vectors must be a two-dimensional float32 array")
-    if not allow_nonproduction and vectors.shape != (100, 512):
+    if (
+        not allow_nonproduction
+        and (
+            vectors.shape[1] != 512
+            or vectors.shape[0] <= 0
+            or vectors.shape[0] > MAX_PRODUCTION_REFERENCES
+        )
+    ):
         raise IndexValidationError(
-            f"production SSCD vectors must have shape (100, 512), got {vectors.shape}"
+            f"production SSCD vectors must have shape (N, 512) for 1 <= N <= {MAX_PRODUCTION_REFERENCES}, "
+            f"got {vectors.shape}"
+        )
+    if isinstance(reference_count, bool) or not isinstance(reference_count, int):
+        raise IndexValidationError("manifest reference count must be an integer")
+    if reference_count <= 0 or reference_count > MAX_PRODUCTION_REFERENCES:
+        raise IndexValidationError("manifest reference count is outside the production bound")
+    if (
+        not isinstance(references, list)
+        or reference_count != len(references)
+        or reference_count != vectors.shape[0]
+    ):
+        raise IndexValidationError(
+            "manifest reference count does not match reference metadata and vectors"
         )
     if not isinstance(references, list) or vectors.shape[0] != len(references):
         raise IndexValidationError(
@@ -207,6 +231,7 @@ def retrieve(
             product_name=index.records[position].product_name,
             score=float(scores[position]),
             reference_path=index.records[position].cache_path,
+            reference_sha256=index.records[position].sha256,
         )
         for position in ranked
     ]
@@ -216,6 +241,7 @@ def _manifest(index: DescriptorIndex, vectors_sha256: str) -> dict[str, object]:
     return {
         "model_sha256": index.model_sha256,
         "vectors_sha256": vectors_sha256,
+        "reference_count": len(index.records),
         "references": [
             {
                 "product_id": record.product_id,

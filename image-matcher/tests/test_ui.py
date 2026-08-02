@@ -1,3 +1,4 @@
+import base64
 from hashlib import sha256
 from io import BytesIO
 from pathlib import Path
@@ -70,10 +71,20 @@ def test_ui_handoff_and_temp_cleanup(tmp_path):
 def test_ui_match_shows_input_and_safe_catalog_reference_side_by_side(tmp_path):
     reference = tmp_path / "reference.jpg"
     reference.write_bytes(_jpeg_bytes((200, 80, 60)))
+    index = _index(reference)
     matcher = MatcherStub(
-        MatchResult("catalog_match", "42", "Aura Chair", 0.94, "accepted", ("sscd", "lightglue"), True)
+        MatchResult(
+            "catalog_match",
+            "42",
+            "Aura Chair",
+            0.94,
+            "accepted",
+            ("sscd", "lightglue"),
+            True,
+            reference_sha256=index.records[0].sha256,
+        )
     )
-    app, upload_dir = _app(tmp_path, matcher, _index(reference))
+    app, upload_dir = _app(tmp_path, matcher, index)
 
     response = app.test_client().post(
         "/",
@@ -107,6 +118,74 @@ def test_ui_never_uses_unrecognized_result_id_as_a_path(tmp_path):
     )
 
     assert response.status_code == 200
+    assert b"Human handoff" in response.data
+    assert b"catalog_reference_unavailable" in response.data
+    assert response.data.count(b"<img") == 1
+
+
+def test_ui_resolves_only_exact_product_and_reference_digest_pair(tmp_path):
+    first = tmp_path / "first.jpg"
+    second = tmp_path / "second.jpg"
+    first.write_bytes(_jpeg_bytes((200, 20, 20)))
+    second.write_bytes(_jpeg_bytes((20, 200, 20)))
+    records = tuple(
+        ReferenceRecord(
+            "42",
+            "Aura Chair",
+            f"https://cdn.shopify.com/{path.stem}.jpg",
+            path,
+            sha256(path.read_bytes()).hexdigest(),
+        )
+        for path in (first, second)
+    )
+    index = DescriptorIndex(np.ones((2, 2), dtype=np.float32), records, "test-model")
+    matcher = MatcherStub(
+        MatchResult(
+            "catalog_match",
+            "42",
+            "Aura Chair",
+            0.94,
+            "accepted",
+            ("sscd", "lightglue"),
+            True,
+            reference_sha256=records[1].sha256,
+        )
+    )
+    app, _ = _app(tmp_path, matcher, index)
+
+    response = app.test_client().post(
+        "/",
+        data={"image": (BytesIO(_jpeg_bytes()), "query.jpg")},
+        content_type="multipart/form-data",
+    )
+
+    assert base64.b64encode(second.read_bytes()) in response.data
+    assert base64.b64encode(first.read_bytes()) not in response.data
+
+
+def test_ui_hands_off_when_reference_digest_is_not_in_verified_index(tmp_path):
+    reference = tmp_path / "reference.jpg"
+    reference.write_bytes(_jpeg_bytes())
+    matcher = MatcherStub(
+        MatchResult(
+            "catalog_match",
+            "42",
+            "Aura Chair",
+            0.99,
+            "accepted",
+            (),
+            True,
+            reference_sha256="f" * 64,
+        )
+    )
+    app, _ = _app(tmp_path, matcher, _index(reference))
+
+    response = app.test_client().post(
+        "/",
+        data={"image": (BytesIO(_jpeg_bytes()), "query.jpg")},
+        content_type="multipart/form-data",
+    )
+
     assert b"Human handoff" in response.data
     assert b"catalog_reference_unavailable" in response.data
     assert response.data.count(b"<img") == 1

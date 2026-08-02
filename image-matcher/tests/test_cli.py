@@ -65,6 +65,54 @@ def test_build_cli_rejects_any_limit_other_than_100(capsys, tmp_path):
     assert "exactly 100" in output["reason"]
 
 
+def test_build_cli_full_catalog_mode_is_mutually_exclusive_with_sample_limit(capsys):
+    exit_code = main(
+        [
+            "build",
+            "--limit",
+            "100",
+            "--all-products",
+            "--gallery-feed",
+            "https://decormoments.com/products.json",
+        ]
+    )
+
+    assert exit_code == 2
+
+
+def test_build_cli_full_catalog_uses_separate_default_runtime(capsys, monkeypatch, tmp_path):
+    calls = []
+
+    def fake_build(catalog, runtime, limit, *, all_products, gallery_feed):
+        calls.append((catalog, runtime, limit, all_products, gallery_feed))
+        return {"status": "ok", "indexed": 671}
+
+    monkeypatch.setattr("decor_matcher.cli.build_runtime", fake_build)
+    catalog = tmp_path / "products.json"
+    exit_code = main(
+        [
+            "build",
+            "--catalog",
+            str(catalog),
+            "--all-products",
+            "--gallery-feed",
+            "https://decormoments.com/products.json",
+        ]
+    )
+
+    assert exit_code == 0
+    assert calls == [
+        (
+            catalog,
+            Path("image-matcher/runtime-full"),
+            None,
+            True,
+            "https://decormoments.com/products.json",
+        )
+    ]
+    assert json.loads(capsys.readouterr().out)["indexed"] == 671
+
+
 def test_ui_cli_starts_only_on_loopback(capsys, monkeypatch, tmp_path):
     calls = []
 

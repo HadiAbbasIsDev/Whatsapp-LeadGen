@@ -34,12 +34,20 @@ class ReferenceLookup:
     """Resolve only immutable index records; request values never become paths."""
 
     def __init__(self, index: DescriptorIndex | None) -> None:
-        self._records = {} if index is None else {record.product_id: record for record in index.records}
+        self._records = (
+            {}
+            if index is None
+            else {
+                (record.product_id, record.sha256): record
+                for record in index.records
+                if record.sha256 is not None
+            }
+        )
 
-    def image_data_uri(self, product_id: str | None) -> str | None:
-        if product_id is None:
+    def image_data_uri(self, product_id: str | None, reference_sha256: str | None) -> str | None:
+        if product_id is None or reference_sha256 is None:
             return None
-        record = self._records.get(product_id)
+        record = self._records.get((product_id, reference_sha256))
         if record is None or record.cache_path is None or record.sha256 is None:
             return None
         try:
@@ -161,7 +169,7 @@ def create_app(
                     input_data_uri=input_data_uri,
                 )
 
-            reference_data_uri = lookup.image_data_uri(result.product_id)
+            reference_data_uri = lookup.image_data_uri(result.product_id, result.reference_sha256)
             if reference_data_uri is None:
                 safe_result = replace(
                     result,

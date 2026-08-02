@@ -11,7 +11,13 @@ import numpy as np
 from werkzeug.serving import make_server
 
 from .artifacts import SSCD_ARTIFACT, ArtifactSpec, ensure_artifact
-from .catalog import cache_references, fetch_bytes, load_catalog, select_references
+from .catalog import (
+    cache_references,
+    fetch_bytes,
+    load_catalog,
+    load_gallery_references,
+    select_references,
+)
 from .fixtures import generate_fixture_set
 from .index import build_index, load_index, retrieve
 from .matcher import CatalogMatcher, create_catalog_matcher
@@ -22,6 +28,7 @@ from .verification import DISK_DEPTH_ARTIFACT, LIGHTGLUE_DISK_ARTIFACT, make_que
 
 
 DEFAULT_RUNTIME = Path("image-matcher/runtime")
+DEFAULT_FULL_RUNTIME = Path("image-matcher/runtime-full")
 DEFAULT_CATALOG = Path("workspace/data/products.json")
 DEFAULT_NEGATIVES = 5
 
@@ -35,17 +42,35 @@ def make_matcher(runtime: Path):
     )
 
 
-def build_runtime(catalog: Path, runtime: Path, limit: int = 100) -> dict[str, object]:
-    if limit != 100:
+def build_runtime(
+    catalog: Path,
+    runtime: Path,
+    limit: int | None = 100,
+    *,
+    all_products: bool = False,
+    gallery_feed: str | None = None,
+) -> dict[str, object]:
+    if all_products and limit is not None:
+        raise ValueError("--all-products is mutually exclusive with --limit")
+    if not all_products and limit != 100:
         raise ValueError("the MVP must index exactly 100 references")
+    if all_products and gallery_feed is None:
+        raise ValueError("--gallery-feed is required with --all-products")
+    if not all_products and gallery_feed is not None:
+        raise ValueError("--gallery-feed requires --all-products")
     runtime = Path(runtime)
     items = load_catalog(Path(catalog))
-    selected = select_references(items, limit=limit)
-    if len(selected) != 100:
-        raise ValueError(f"catalog produced {len(selected)} valid unique references; exactly 100 required")
+    gallery = None
+    if all_products:
+        gallery = load_gallery_references(items, gallery_feed)
+        selected = list(gallery.references)
+    else:
+        selected = select_references(items, limit=100)
+        if len(selected) != 100:
+            raise ValueError(f"catalog produced {len(selected)} valid unique references; exactly 100 required")
 
     cached, failures = cache_references(selected, runtime / "cache", fetch_bytes)
-    if failures or len(cached) != 100:
+    if failures or len(cached) != len(selected):
         raise RuntimeError(
             f"reference caching failed: cached={len(cached)}, failures={len(failures)}"
         )
@@ -57,13 +82,43 @@ def build_runtime(catalog: Path, runtime: Path, limit: int = 100) -> dict[str, o
     }
     encoder = SscdEncoder(artifact_paths[SSCD_ARTIFACT.filename], device="cpu")
     index = build_index(cached, encoder, runtime / "index")
-    return {
+    products_by_sha: dict[str, set[str]] = {}
+    references_by_sha: dict[str, int] = {}
+    for record in cached:
+        if record.sha256 is None:
+            continue
+        products_by_sha.setdefault(record.sha256, set()).add(record.product_id)
+        references_by_sha[record.sha256] = references_by_sha.get(record.sha256, 0) + 1
+    duplicate_groups = [
+        {
+            "sha256": reference_sha256,
+            "product_ids": sorted(product_ids),
+            "reference_count": references_by_sha[reference_sha256],
+        }
+        for reference_sha256, product_ids in sorted(products_by_sha.items())
+        if len(product_ids) > 1
+    ]
+    result: dict[str, object] = {
         "status": "ok",
         "selected": len(selected),
         "cached": len(cached),
         "indexed": len(index.records),
+        "distinct_image_bytes": len(products_by_sha),
+        "duplicate_content_group_count": len(duplicate_groups),
+        "duplicate_content_groups": duplicate_groups,
         "artifacts": {spec.filename: spec.sha256 for spec in artifacts},
     }
+    if gallery is not None:
+        result.update(
+            {
+                "canonical_products": len(items),
+                "feed_products": gallery.feed_product_count,
+                "gallery_references": len(gallery.references),
+                "variants": gallery.variant_count,
+                "feed_page_sha256": list(gallery.page_sha256),
+            }
+        )
+    return result
 
 
 def generate_fixtures_runtime(
@@ -222,9 +277,15 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         if args.command == "build":
-            if args.limit != 100:
-                raise ValueError("the MVP must index exactly 100 references")
-            output = build_runtime(args.catalog, args.runtime, args.limit)
+            limit = None if args.all_products else (100 if args.limit is None else args.limit)
+            runtime = args.runtime or (DEFAULT_FULL_RUNTIME if args.all_products else DEFAULT_RUNTIME)
+            output = build_runtime(
+                args.catalog,
+                runtime,
+                limit,
+                all_products=args.all_products,
+                gallery_feed=args.gallery_feed,
+            )
         elif args.command == "make-fixtures":
             output = generate_fixtures_runtime(
                 args.runtime,
@@ -250,7 +311,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             "make-fixtures": "make_fixtures_failed",
             "benchmark": "benchmark_failed",
         }.get(args.command, "operation_failed")
-        if args.command == "build" and getattr(args, "limit", 100) != 100:
+        if (
+            args.command == "build"
+            and not getattr(args, "all_products", False)
+            and getattr(args, "limit", None) not in (None, 100)
+        ):
             reason = "the MVP must index exactly 100 references"
         elif args.command == "benchmark" and getattr(args, "max_negatives", 0) < 0:
             reason = "max_negatives must be non-negative"
@@ -265,10 +330,13 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="decor_matcher", description="Decor Moments exact image matcher MVP")
     commands = parser.add_subparsers(dest="command")
 
-    build = commands.add_parser("build", help="cache exactly 100 references and build the index")
+    build = commands.add_parser("build", help="build the 100-reference sample or full gallery index")
     build.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
-    build.add_argument("--runtime", type=Path, default=DEFAULT_RUNTIME)
-    build.add_argument("--limit", type=int, default=100)
+    build.add_argument("--runtime", type=Path)
+    build_mode = build.add_mutually_exclusive_group()
+    build_mode.add_argument("--limit", type=int)
+    build_mode.add_argument("--all-products", action="store_true")
+    build.add_argument("--gallery-feed")
 
     match = commands.add_parser("match", help="match one local image")
     match.add_argument("image", type=Path)

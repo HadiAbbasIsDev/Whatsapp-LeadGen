@@ -55,11 +55,10 @@ class CatalogMatcher:
         for record in index.records:
             if record.sha256:
                 products_by_sha.setdefault(record.sha256, set()).add(record.product_id)
-        self.ambiguous_reference_products = {
-            product_id
-            for product_ids in products_by_sha.values()
+        self.ambiguous_reference_sha256 = {
+            reference_sha256
+            for reference_sha256, product_ids in products_by_sha.items()
             if len(product_ids) > 1
-            for product_id in product_ids
         }
 
     def match(self, path: Path) -> MatchResult:
@@ -104,7 +103,7 @@ class CatalogMatcher:
                     )
             for position, candidate in enumerate(ranked[:5]):
                 runner_up = ranked[position + 1] if position + 1 < len(ranked) else None
-                if candidate.product_id in self.ambiguous_reference_products:
+                if candidate.reference_sha256 in self.ambiguous_reference_sha256:
                     evidence.append(f"product={candidate.product_id};reason=ambiguous_reference_image")
                     return MatchResult(
                         decision="handoff",
@@ -141,6 +140,7 @@ class CatalogMatcher:
                         reason=acceptance.reason,
                         evidence=tuple(evidence),
                         experimental=True,
+                        reference_sha256=candidate.reference_sha256,
                     )
 
             return MatchResult(
@@ -187,7 +187,8 @@ def _validated_query_image(path: Path) -> Image.Image:
 
 def _evidence(candidate: Candidate, metrics: GeometryMetrics, reason: str) -> str:
     return (
-        f"product={candidate.product_id};view={candidate.query_view};sscd={candidate.score:.6f};"
+        f"product={candidate.product_id};reference_sha256={candidate.reference_sha256 or 'unknown'};"
+        f"view={candidate.query_view};sscd={candidate.score:.6f};"
         f"matches={metrics.matches};inliers={metrics.inliers};ratio={metrics.inlier_ratio:.6f};"
         f"query_coverage={metrics.query_coverage:.6f};"
         f"reference_coverage={metrics.reference_coverage:.6f};reason={reason}"

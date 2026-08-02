@@ -12,7 +12,14 @@ sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from decor_matcher.artifacts import SSCD_ARTIFACT
 from decor_matcher import index as index_module
-from decor_matcher.index import IndexValidationError, build_index, load_index, retrieve
+from decor_matcher.index import (
+    MAX_MANIFEST_BYTES,
+    MAX_PRODUCTION_REFERENCES,
+    IndexValidationError,
+    build_index,
+    load_index,
+    retrieve,
+)
 from decor_matcher.types import ReferenceRecord
 
 
@@ -96,27 +103,55 @@ def test_index_loader_rejects_manifest_vector_mismatch(tmp_path):
         load_index(tmp_path, allow_nonproduction=True)
 
 
-def test_build_index_requires_exactly_100_records_by_default(tmp_path):
+def test_production_index_accepts_bounded_variable_count_and_records_manifest_count(tmp_path):
+    records = cached_records(tmp_path, ["a", "b", "c"])
+    descriptors = {record.product_id: np.ones(512, dtype=np.float32) for record in records}
+
+    built = build_index(records, FakeEncoder(descriptors), tmp_path / "index")
+    loaded = load_index(tmp_path / "index")
+    manifest = json.loads((tmp_path / "index" / "manifest.json").read_text(encoding="utf-8"))
+
+    assert built.vectors.shape == (3, 512)
+    assert loaded.vectors.shape == (3, 512)
+    assert manifest["reference_count"] == 3
+
+
+def test_production_index_rejects_manifest_count_mismatch(tmp_path):
     records = cached_records(tmp_path, ["a"])
-    encoder = FakeEncoder({"a": [1.0, 0.0]})
-
-    with pytest.raises(IndexValidationError, match="exactly 100"):
-        build_index(records, encoder, tmp_path / "index")
-
-
-@pytest.mark.parametrize("shape", [(99, 512), (100, 2)])
-def test_load_index_rejects_nonproduction_shape_by_default(tmp_path, shape):
-    records = cached_records(tmp_path, [str(index) for index in range(shape[0])])
-    descriptors = {record.product_id: np.ones(shape[1], dtype=np.float32) for record in records}
     build_index(
         records,
-        FakeEncoder(descriptors),
+        FakeEncoder({"a": np.ones(512, dtype=np.float32)}),
         tmp_path / "index",
-        require_exact_count=False,
+    )
+    manifest_path = tmp_path / "index" / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["reference_count"] = 2
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(IndexValidationError, match="reference count"):
+        load_index(tmp_path / "index")
+
+
+@pytest.mark.parametrize("shape", [(0, 512), (100, 2), (MAX_PRODUCTION_REFERENCES + 1, 512)])
+def test_load_index_rejects_nonproduction_shape_by_default(tmp_path, shape):
+    index_dir = tmp_path / "index"
+    index_dir.mkdir()
+    vector_path = index_dir / "sscd_vectors.npy"
+    np.save(vector_path, np.ones(shape, dtype=np.float32))
+    (index_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "model_sha256": SSCD_ARTIFACT.sha256,
+                "vectors_sha256": sha256(vector_path.read_bytes()).hexdigest(),
+                "reference_count": shape[0],
+                "references": [],
+            }
+        ),
+        encoding="utf-8",
     )
 
-    with pytest.raises(IndexValidationError, match=r"\(100, 512\)"):
-        load_index(tmp_path / "index")
+    with pytest.raises(IndexValidationError, match="production SSCD vectors"):
+        load_index(index_dir)
 
 
 def test_load_index_rejects_tampered_model_checksum(tmp_path):
@@ -229,7 +264,7 @@ def test_load_index_rejects_oversized_manifest_before_unbounded_text_read(tmp_pa
     index_dir.mkdir()
     manifest_path = index_dir / "manifest.json"
     with manifest_path.open("wb") as destination:
-        destination.truncate(1024 * 1024)
+        destination.truncate(MAX_MANIFEST_BYTES + 1)
 
     def reject_read_text(path, *args, **kwargs):
         if path == manifest_path:

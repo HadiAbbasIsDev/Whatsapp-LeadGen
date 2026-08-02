@@ -70,8 +70,14 @@ def scripted_retriever(responses):
     return retrieve
 
 
-def make_candidate(product_id, score, tmp_path):
-    return Candidate(product_id, f"Product {product_id}", score, tmp_path / f"{product_id}.jpg")
+def make_candidate(product_id, score, tmp_path, reference_sha256=None):
+    return Candidate(
+        product_id,
+        f"Product {product_id}",
+        score,
+        tmp_path / f"{product_id}.jpg",
+        reference_sha256=reference_sha256,
+    )
 
 
 def test_matcher_deduplicates_by_max_score_and_verifies_originating_query_view(tmp_path):
@@ -202,7 +208,9 @@ def test_matcher_never_accepts_reference_checksum_shared_by_multiple_products(tm
     )
     index = DescriptorIndex(np.ones((2, 1), dtype=np.float32), records, "unused")
     verifier = RecordingVerifier({"a": STRONG})
-    retrieve = scripted_retriever([[make_candidate("a", 0.95, tmp_path)], [], []])
+    retrieve = scripted_retriever(
+        [[make_candidate("a", 0.95, tmp_path, reference_sha256=shared_sha)], [], []]
+    )
     matcher = CatalogMatcher(RecordingEncoder(), index, verifier, retriever=retrieve)
 
     result = matcher.match(image_file(tmp_path))
@@ -210,6 +218,27 @@ def test_matcher_never_accepts_reference_checksum_shared_by_multiple_products(tm
     assert result.decision == "handoff"
     assert result.reason == "ambiguous_reference_image"
     assert verifier.calls == []
+
+
+def test_matcher_propagates_exact_accepted_reference_digest_for_multi_image_product(tmp_path):
+    unique_sha = "2" * 64
+    shared_sha = "1" * 64
+    records = (
+        ReferenceRecord("a", "Product a", "https://cdn.shopify.com/a-unique.jpg", tmp_path / "a.jpg", unique_sha),
+        ReferenceRecord("a", "Product a", "https://cdn.shopify.com/a-shared.jpg", tmp_path / "a2.jpg", shared_sha),
+        ReferenceRecord("b", "Product b", "https://cdn.shopify.com/b-shared.jpg", tmp_path / "b.jpg", shared_sha),
+    )
+    index = DescriptorIndex(np.ones((3, 1), dtype=np.float32), records, "unused")
+    verifier = RecordingVerifier({"a": STRONG})
+    retrieve = scripted_retriever(
+        [[make_candidate("a", 0.95, tmp_path, reference_sha256=unique_sha)], [], []]
+    )
+
+    result = CatalogMatcher(RecordingEncoder(), index, verifier, retriever=retrieve).match(image_file(tmp_path))
+
+    assert result.decision == "catalog_match"
+    assert result.product_id == "a"
+    assert result.reference_sha256 == unique_sha
 
 
 def test_matcher_converts_verifier_exception_to_sanitized_error(tmp_path):
