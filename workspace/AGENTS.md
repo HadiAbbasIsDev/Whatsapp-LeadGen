@@ -453,7 +453,7 @@ not lost.
 
 **Actions (all just do it):**
 1. Reply ONCE, politely and professionally (then never again):
-   > "Thank you for reaching out. I've noted your details and shared them with our purchasing team — they will get back to you if there is interest."
+   > "Thank you for reaching out. I've noted your details and shared them with our purchasing team — they will get back to you as and when required."
 2. Tag the chat as **"vendor"**:
    ```
    python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<customer_phone>" --category "vendor"
