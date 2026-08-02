@@ -3,6 +3,7 @@ import os
 import tempfile
 from dataclasses import dataclass
 from hashlib import sha256
+from io import BytesIO
 from pathlib import Path
 from typing import Protocol, Sequence
 
@@ -111,10 +112,14 @@ def load_index(index_dir: Path, *, allow_nonproduction: bool = False) -> Descrip
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         raise IndexValidationError(f"cannot load index: {exc}") from exc
 
-    if not isinstance(vectors_sha256, str) or vectors_sha256 != _sha256_file(vector_path):
+    try:
+        vector_bytes = vector_path.read_bytes()
+    except OSError as exc:
+        raise IndexValidationError(f"cannot read index vectors: {exc}") from exc
+    if not isinstance(vectors_sha256, str) or vectors_sha256 != sha256(vector_bytes).hexdigest():
         raise IndexValidationError("vector file checksum does not match manifest")
     try:
-        vectors = np.load(vector_path, allow_pickle=False)
+        vectors = np.load(BytesIO(vector_bytes), allow_pickle=False)
     except (OSError, ValueError, TypeError) as exc:
         raise IndexValidationError(f"cannot load index vectors: {exc}") from exc
 

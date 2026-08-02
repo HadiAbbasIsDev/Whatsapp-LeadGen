@@ -1,5 +1,6 @@
 import json
 from hashlib import sha256
+from io import BytesIO
 from pathlib import Path
 import sys
 
@@ -10,6 +11,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from decor_matcher.artifacts import SSCD_ARTIFACT
+from decor_matcher import index as index_module
 from decor_matcher.index import IndexValidationError, build_index, load_index, retrieve
 from decor_matcher.types import ReferenceRecord
 
@@ -168,3 +170,48 @@ def test_load_index_rejects_vectors_from_a_different_generation(tmp_path):
 
     with pytest.raises(IndexValidationError, match="vector file checksum"):
         load_index(index_dir, allow_nonproduction=True)
+
+
+def test_load_index_decodes_the_same_verified_snapshot_during_vector_replace(tmp_path, monkeypatch):
+    records = cached_records(tmp_path, ["a"])
+    index_dir = tmp_path / "index"
+    build_index(
+        records,
+        FakeEncoder({"a": [1.0, 0.0]}),
+        index_dir,
+        require_exact_count=False,
+    )
+    vector_path = index_dir / "sscd_vectors.npy"
+    original_bytes = vector_path.read_bytes()
+    replacement_buffer = BytesIO()
+    np.save(replacement_buffer, np.array([[0.0, 1.0]], dtype=np.float32), allow_pickle=False)
+    replacement_bytes = replacement_buffer.getvalue()
+
+    real_read_bytes = Path.read_bytes
+    real_sha256_file = index_module._sha256_file
+    snapshot_reads = []
+    path_hashes = []
+
+    def read_then_replace(path):
+        snapshot = real_read_bytes(path)
+        if path == vector_path:
+            snapshot_reads.append(snapshot)
+            vector_path.write_bytes(replacement_bytes)
+        return snapshot
+
+    def hash_then_replace(path):
+        digest = real_sha256_file(path)
+        if path == vector_path:
+            path_hashes.append(path)
+            vector_path.write_bytes(replacement_bytes)
+        return digest
+
+    monkeypatch.setattr(Path, "read_bytes", read_then_replace)
+    monkeypatch.setattr(index_module, "_sha256_file", hash_then_replace)
+
+    loaded = load_index(index_dir, allow_nonproduction=True)
+
+    np.testing.assert_array_equal(loaded.vectors, np.array([[1.0, 0.0]], dtype=np.float32))
+    assert snapshot_reads == [original_bytes]
+    assert path_hashes == []
+    assert real_read_bytes(vector_path) == replacement_bytes
