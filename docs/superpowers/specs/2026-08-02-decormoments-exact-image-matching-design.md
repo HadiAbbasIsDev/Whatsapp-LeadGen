@@ -26,6 +26,14 @@ The MVP includes catalog sampling and caching, SSCD indexing and top-five retrie
 
 The MVP is a test artifact, not authorization to change the live image flow. Its thresholds are reported as experimental and cannot be reused for live auto-replies until the full acceptance gate later in this document passes with real customer-style negatives.
 
+### Full-catalog local test expansion
+
+After the 100-reference feasibility slice, the local tester expands to every canonical product in branch `DecorMomentsBot` and every gallery image exposed by the public Decor Moments Shopify product feed. On 2026-08-02 this is 256 canonical products, 671 gallery-image references, and 1,549 variants; these counts are recorded build evidence rather than permanent constants.
+
+The join is exact on the string Shopify product ID. Product names are never used to invent a mapping. A full build fails if any canonical branch product is absent from the feed, any feed product ID is duplicated across pages, or any selected reference fails validation or download. URLs are deduplicated within a product, while identical image bytes shared by different products remain explicit ambiguity groups that can only hand off.
+
+The paginated feed fetch is bounded, HTTPS-only, redirect-denying, and restricted to `decormoments.com`; gallery images remain restricted to Shopify's CDN. Full-catalog runtime artifacts are built separately from the retained 100-reference evidence runtime. The UI displays the exact accepted gallery reference identified by the matcher, not an arbitrary image belonging to the same product.
+
 ### Included
 
 - Read canonical product metadata from `products.json` and all available reference-image URLs from the public Shopify product feed.
@@ -122,6 +130,8 @@ For each valid reference image, compute and store:
 - a content hash tying features to the exact cached image.
 
 The index is rebuilt when the catalog or reference content changes. Generated model weights, downloaded images, and indexes are not committed to Git.
+
+The persisted format records its reference count and supports both the fixed 100-reference feasibility generation and a bounded full-catalog generation. Production loading requires 512-wide finite descriptors, a count matching the manifest, and verified cached bytes for every reference; it does not assume that one product has only one gallery image.
 
 ### 4. Query preparation
 

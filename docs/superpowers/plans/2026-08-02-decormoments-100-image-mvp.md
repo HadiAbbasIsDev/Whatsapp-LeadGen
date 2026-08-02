@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Deliver a standalone CPU-capable CLI and local browser UI that index exactly 100 deterministic Decor Moments primary catalog images, retrieve exact copies with SSCD, verify them with DISK + LightGlue + homography, and return match-or-handoff results.
+**Goal:** Deliver a standalone CPU-capable CLI and local browser UI that first prove a deterministic 100-primary-image slice, then expand to all canonical Decor Moments products and gallery images, retrieve exact copies with SSCD, verify them with DISK + LightGlue + homography, and return match-or-handoff results.
 
 **Architecture:** A small Python package owns catalog sampling/caching, pinned model artifacts, a NumPy SSCD index, geometric verification, orchestration, and a CLI. Generated images, weights, indexes, and benchmark fixtures live under ignored runtime directories. Pure decision and data functions are tested without model downloads; explicit integration tests prove the real SSCD and LightGlue paths.
 
@@ -395,4 +395,67 @@ Expected: tests pass, diff check is clean, and only the intended report/source/t
 ```bash
 git add image-matcher/reports/100-image-mvp.md image-matcher
 git commit -m "test: validate 100-image catalog matcher MVP"
+```
+
+### Task 6: Expand the local tester to every product and gallery image
+
+**Files:**
+- Modify: `image-matcher/src/decor_matcher/types.py`
+- Modify: `image-matcher/src/decor_matcher/catalog.py`
+- Modify: `image-matcher/src/decor_matcher/index.py`
+- Modify: `image-matcher/src/decor_matcher/matcher.py`
+- Modify: `image-matcher/src/decor_matcher/ui.py`
+- Modify: `image-matcher/src/decor_matcher/cli.py`
+- Modify: `image-matcher/tests/test_catalog.py`
+- Modify: `image-matcher/tests/test_index.py`
+- Modify: `image-matcher/tests/test_matcher.py`
+- Modify: `image-matcher/tests/test_ui.py`
+- Modify: `image-matcher/tests/test_cli.py`
+- Modify: `image-matcher/README.md`
+- Create: `image-matcher/reports/full-catalog-local-mvp.md`
+
+**Interfaces:**
+- `build --all-products --gallery-feed https://decormoments.com/products.json` pages the bounded public feed, joins by exact product ID, and builds a separate full-catalog runtime.
+- The normal `build --limit 100` path and its committed evidence remain reproducible.
+- A production index supports a bounded positive reference count with exactly 512 descriptor columns and a manifest count that must match vectors and records.
+- An accepted `MatchResult` carries an immutable reference digest so the UI can display the exact matched gallery image through index-only lookup.
+
+- [ ] **Step 1: Write failing full-feed, variable-index, exact-reference, UI, and CLI tests**
+
+Cover bounded pagination, exact-ID joining, missing/duplicate product failures, URL deduplication within one product, multiple gallery references per product, full-count manifest validation, exact accepted-reference propagation, safe UI lookup by product ID plus digest, and mutual exclusion of `--limit` with `--all-products`.
+
+- [ ] **Step 2: Run focused tests and verify RED**
+
+Run: `python -m pytest image-matcher/tests/test_catalog.py image-matcher/tests/test_index.py image-matcher/tests/test_matcher.py image-matcher/tests/test_ui.py image-matcher/tests/test_cli.py -q`
+
+Expected: the new interfaces or assertions fail before implementation.
+
+- [ ] **Step 3: Implement full-catalog ingestion and exact gallery-reference results**
+
+Fetch at most 20 Shopify pages of at most 250 products each with bounded JSON responses, exact `https://decormoments.com` host validation, globally routable DNS, and no redirects. Join feed products to every canonical branch product by exact string ID and collect each product's unique validated `images[*].src` URLs. Fail rather than build a partial generation.
+
+Generalize persisted production indexes to a bounded non-zero row count and exactly 512 columns while retaining manifest/vector/cache integrity checks. Retrieve and verify unique products as before. Propagate the accepted reference SHA-256 through `Candidate` and `MatchResult`; resolve UI references only by the `(product_id, reference_sha256)` pair already present in the verified index.
+
+- [ ] **Step 4: Build and verify the real full gallery runtime**
+
+Use separate ignored runtime `image-matcher/runtime-full`. Record live feed payload hashes and observed counts. At the time of planning, the feed contains 256 products, 671 image references, and 1,549 variants; build evidence must report the observed values and fail on incomplete download/indexing instead of assuming those counts forever.
+
+Smoke-test at least one exact copy from a product outside the original 100 and one transformed secondary gallery image. Also run one unrelated synthetic handoff case, clearly labeled functional rather than statistical evidence. Do not alter thresholds from these cases.
+
+- [ ] **Step 5: Document, verify, and commit**
+
+The report includes commands, feed hashes/counts, canonical join counts, cached/indexed/distinct-image counts, duplicate-content ambiguity groups, smoke results, latency, and the same prominent `NOT CONNECTED TO WHATSAPP` warning.
+
+Run:
+
+```powershell
+image-matcher/.venv/Scripts/python -m pytest image-matcher/tests -q
+image-matcher/.venv/Scripts/python -m compileall -q image-matcher/src image-matcher/tests
+git diff --check
+git status --short
+```
+
+```bash
+git add image-matcher docs/superpowers
+git commit -m "feat: index the full Decor Moments gallery catalog"
 ```
