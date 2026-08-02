@@ -141,6 +141,29 @@ def test_matcher_rejects_globally_ambiguous_top_pair_without_verification(tmp_pa
     assert verifier.calls == []
 
 
+def test_matcher_stops_fallback_when_next_candidate_has_ambiguous_adjacent_margin(tmp_path):
+    verifier = RecordingVerifier({"a": WEAK, "b": STRONG, "c": STRONG})
+    retrieve = scripted_retriever(
+        [
+            [
+                make_candidate("a", 0.95, tmp_path),
+                make_candidate("b", 0.90, tmp_path),
+                make_candidate("c", 0.89, tmp_path),
+                make_candidate("d", 0.70, tmp_path),
+            ],
+            [],
+            [],
+        ]
+    )
+    matcher = CatalogMatcher(RecordingEncoder(), empty_index(tmp_path), verifier, retriever=retrieve)
+
+    result = matcher.match(image_file(tmp_path))
+
+    assert result.decision == "handoff"
+    assert result.reason == "ambiguous_adjacent_candidates"
+    assert [reference.stem for _, reference in verifier.calls] == ["a", "b"]
+
+
 def test_matcher_converts_verifier_exception_to_sanitized_error(tmp_path):
     verifier = RecordingVerifier({"a": RuntimeError("secret boom details")})
     retrieve = scripted_retriever([[make_candidate("a", 0.95, tmp_path)], [], []])

@@ -104,6 +104,16 @@ class CatalogMatcher:
                 )
                 acceptance = accept_candidate(candidate, runner_up, metrics, self.thresholds)
                 evidence.append(_evidence(candidate, metrics, acceptance.reason))
+                if acceptance.reason == "margin_below_threshold":
+                    return MatchResult(
+                        decision="handoff",
+                        product_id=None,
+                        product_name=None,
+                        confidence=None,
+                        reason="ambiguous_adjacent_candidates",
+                        evidence=tuple(evidence),
+                        experimental=True,
+                    )
                 if acceptance.accepted:
                     return MatchResult(
                         decision="catalog_match",
