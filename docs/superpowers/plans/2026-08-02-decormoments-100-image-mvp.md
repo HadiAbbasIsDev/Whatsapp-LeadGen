@@ -370,11 +370,11 @@ Expected JSON contains `"status":"ok"`, `"selected":100`, `"cached":100`, `"inde
 - [ ] **Step 3: Generate fixtures and run the benchmark**
 
 ```powershell
-image-matcher/.venv/Scripts/python -m decor_matcher make-fixtures --runtime image-matcher/runtime --output image-matcher/runtime/fixtures --max-products 20
-image-matcher/.venv/Scripts/python -m decor_matcher benchmark --runtime image-matcher/runtime --fixtures image-matcher/runtime/fixtures --catalog workspace/data/products.json
+image-matcher/.venv/Scripts/python -m decor_matcher make-fixtures --runtime image-matcher/runtime --output image-matcher/runtime/fixtures --max-products 1
+image-matcher/.venv/Scripts/python -m decor_matcher benchmark --runtime image-matcher/runtime --fixtures image-matcher/runtime/fixtures --catalog workspace/data/products.json --max-negatives 1
 ```
 
-Expected: command completes and reports 100 indexed references, transformed positive results, unindexed negative results, false accepts, handoffs, and latency. Do not hide misses or adjust thresholds against the final reported cases without documenting a separate calibration split.
+Expected: the bounded CPU smoke benchmark completes and reports 100 indexed references, all five transformed positive results, one deterministic unindexed negative, false accepts, handoffs, and latency. Do not hide misses or adjust thresholds against the final reported cases. State prominently that this six-query smoke run is functional evidence, not threshold calibration or statistical validation; the larger customer-style benchmark remains required before WhatsApp integration.
 
 - [ ] **Step 4: Write the evidence report and run final verification**
 
