@@ -138,7 +138,11 @@ python3 /home/it-admin/wa-lead-gen/workspace/send_template.py --to "<customer_ph
 
 - The ONLY way a product (photo + info) reaches the customer is by running `send_product.py` and seeing `[OK] <id> sent` in its output **in this same turn**.
 - **NEVER say or imply you have sent, shown, shared, or "bhej di" a product, photo, or its details unless you actually ran `send_product.py` this turn and it returned `[OK]`.** No "I've sent…", "here are the options…", "photos bhej di hain", etc. unless it truly happened.
-- When the customer asks to see products (e.g. "beds under 100k", "dikhao", "show me"), you MUST: read `products.json`, filter by their request (category keyword + price), pick up to **10** matching `id`s — **send all 10; if fewer than 10 match, send every matching one** (e.g. only 6 sofas under 100k exist → send all 6). Run `send_product.py --ids "..."` (all ids in ONE call), confirm each printed `[OK]`, and only THEN tell the customer they've been sent.
+- When the customer asks to see products (e.g. "beds under 100k", "dikhao", "show me"), you MUST get the matching ids from **`search_products.py`** (do NOT eyeball `products.json` and guess — that wrongly mixes settees/chairs into a "sofa" request):
+  ```
+  python3 /home/it-admin/wa-lead-gen/workspace/search_products.py --query "<what they asked, e.g. sofa>" --max-price <e.g. 100000>
+  ```
+  It prints `IDS: id1,id2,...` — the exact matches (category-accurate, cheapest first, up to 10). **Send ALL of them; if fewer than 10 match, it returns every matching one** (e.g. only 6 sofas under 100k → 6 ids). Then run `send_product.py --ids "<those ids>"` (all ids in ONE call), confirm each printed `[OK]`, and only THEN tell the customer they've been sent. If `IDS:` is empty, tell the customer nothing matched and offer alternatives.
 - If the script did not run or did not return `[OK]`, tell the customer honestly and retry. Never pretend.
 
 ---

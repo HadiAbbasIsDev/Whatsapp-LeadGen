@@ -41,11 +41,21 @@ python3 /home/it-admin/wa-lead-gen/workspace/send_product.py --to "+923362615506
 - Do not use emojis anywhere.
 - Do NOT use `send_image.py` or `openclaw message send --media` directly — they do not deliver WhatsApp images. Always use `send_product.py`.
 
-## Listing Multiple Products
+## Finding the right products — use search_products.py (do NOT filter by hand)
 
-When showing multiple products (e.g. "show me all beds"):
-- Pass up to 10 ids at once: `send_product.py --to <phone> --ids "6203,6201,6205,..."`. If fewer than 10 match, send all that exist.
-- After sending, ask: "Would you like to see more options?"
+To find which products match a customer's request, run **`search_products.py`**. It
+filters by **category** (so "sofa" returns only sofas — never settees or chairs) and
+price, cheapest first, and prints the matching ids:
+```
+python3 /home/it-admin/wa-lead-gen/workspace/search_products.py --query "sofa" --max-price 100000
+```
+It prints `IDS: id1,id2,...` (up to 10; all matches if fewer than 10 exist). Pass those
+ids straight to send_product.py — do NOT eyeball products.json and pick by hand:
+```
+python3 /home/it-admin/wa-lead-gen/workspace/send_product.py --to <phone> --ids "<ids from search>"
+```
+If `IDS:` is empty, tell the customer nothing matched and offer alternatives. After
+sending, ask: "Would you like to see more options?"
 
 ## Category Listing (no image needed)
 

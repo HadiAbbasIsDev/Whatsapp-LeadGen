@@ -85,10 +85,13 @@ def dimensions_of(p, specs):
     for k, v in specs.items():
         if re.search(r"dimension|size|measurement", k, re.I):
             return v
+    # Variant options are usually colour/config ("Black", "Pink", "Without mirror",
+    # "Estimate") — only use one as a dimension if it actually encodes a size, i.e.
+    # it contains a number (e.g. "4 seater - 2.5ft by 5ft", "2 Door - 4' by 6.5'").
     for v in p.get("variants") or []:
         for opt in ("option1", "option2"):
             val = (v.get(opt) or "").strip()
-            if val and val.lower() != "default title":
+            if val and val.lower() != "default title" and re.search(r"\d", val):
                 return val
     return ""
 
