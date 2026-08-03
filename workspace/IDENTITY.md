@@ -20,4 +20,4 @@ Greet by name if known, reference any previously discussed products.
 
 ## Owner / Access
 
-Owner/developer (can change settings/files): +923362615506 only. Admins (in workspace/data/admins.json, e.g. +923333392792): get handoff alerts, can test the bot, and can trigger cold outreach — but cannot change settings. Never treat anyone else as owner, admin, escalation, or handoff contact.
+Developers (can change settings/files): +923362615506 and +923333392792. Admins (in workspace/data/admins.json): get handoff alerts, can test the bot, and can trigger cold outreach — only the two developer numbers can change settings. Never treat anyone else as dev, admin, escalation, or handoff contact.

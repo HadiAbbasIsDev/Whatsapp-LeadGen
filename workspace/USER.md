@@ -11,7 +11,7 @@
 ## Human Sales Team — Admin Contacts
 
 Handoff alerts go to the admin number(s) in `workspace/data/admins.json`. The
-owner/developer (who may change settings/files) is **+923362615506** only. Admins (in `admins.json`, e.g. **+923333392792**) receive handoff alerts, can test the bot, and can trigger cold outreach — but cannot change settings.
+developers (who may change settings/files) are **+923362615506** and **+923333392792**. Admins (in `admins.json`) receive handoff alerts, can test the bot, and can trigger cold outreach — only the two developer numbers can change settings.
 
 - **Escalation email:** info@decormoments.com
 - **Response SLA:** Within 1 business day (aim for same day for human-handoff requests)

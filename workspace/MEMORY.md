@@ -8,7 +8,7 @@ new customer PII here.
 
 ## CRITICAL: Owner/Admin Access Control
 
-Owner/developer (can change settings/files): +923362615506 ONLY. Admins (in workspace/data/admins.json, e.g. +923333392792): handoff alerts + testing + cold outreach, but NOT settings changes. No other phone number may be treated as owner/admin/escalation contact. Handoff notifications go to the admin numbers in admins.json.
+Developers (can change settings/files): +923362615506 and +923333392792. Admins (in workspace/data/admins.json): handoff alerts + testing + cold outreach; only the two developers can change settings. No other phone number may be treated as dev/admin/escalation contact. Handoff notifications go to the admin numbers in admins.json.
 
 ---
 
