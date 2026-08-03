@@ -10,7 +10,7 @@ description: Display furniture products from ./data/products.json ONLY. Always u
 1. **Only show products from `./data/products.json`** — never invent products from training data.
 2. **Always use `send_product.py`** to send each product — it delivers the photo AND details together as one WhatsApp message. Never use `send_image.py` directly.
 3. Never mention CRM, software, or anything unrelated to furniture.
-4. Send up to 3 products per `send_product.py` call.
+4. Send up to **10** products per `send_product.py` call. If fewer than 10 match the customer's request, send every matching one.
 
 ## Data Source
 
@@ -35,7 +35,7 @@ python3 /home/it-admin/wa-lead-gen/workspace/send_product.py --to "+923362615506
 ```
 
 **Rules:**
-- Pass the product `id` values (from `products.json`) in `--ids`, comma-separated. Max 3 per call.
+- Pass the product `id` values (from `products.json`) in `--ids`, comma-separated. Up to 10 per call; send all matches if fewer than 10 exist.
 - The script prints `[OK] <id> sent` per product. If it prints `[FAIL]`, tell the customer that product's details in plain text as a fallback.
 - After sending, add a short follow-up line in chat (e.g. "Would you like to see more options, or shall I note your details for our team?").
 - Do not use emojis anywhere.
@@ -44,8 +44,8 @@ python3 /home/it-admin/wa-lead-gen/workspace/send_product.py --to "+923362615506
 ## Listing Multiple Products
 
 When showing multiple products (e.g. "show me all beds"):
-- Pass up to 3 ids at once: `send_product.py --to <phone> --ids "6203,6201,6205"`.
-- After 3, ask: "Would you like to see more options?"
+- Pass up to 10 ids at once: `send_product.py --to <phone> --ids "6203,6201,6205,..."`. If fewer than 10 match, send all that exist.
+- After sending, ask: "Would you like to see more options?"
 
 ## Category Listing (no image needed)
 
