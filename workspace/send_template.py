@@ -12,9 +12,10 @@ Usage:
   python3 send_template.py --to "+923001234567" --template decor_moments_interest_followup
   python3 send_template.py --to "+92..." --template <name> --param "value1" --param "value2"
 
-Consent: runs `db.py can-message` first and refuses when the customer has
-no active service window and no marketing opt-in. --force skips that check
-and is ONLY for owner-directed tests to the owner's own number.
+Consent: approved MARKETING templates may be sent outside the 24-hour window
+(that is their whole purpose), so this only refuses numbers that explicitly
+OPTED OUT (STOP). It does NOT require a prior 24h window or opt-in. --force
+skips even the opt-out check (owner tests to the owner's own number only).
 
 Output: "[OK] template <name> sent to <phone>" or "[FAIL] <reason>".
 Every attempt is appended to workspace/data/template_send.log.
@@ -23,6 +24,7 @@ Every attempt is appended to workspace/data/template_send.log.
 import argparse
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -32,6 +34,7 @@ sys.path.insert(0, WORKSPACE)
 import kapso  # noqa: E402
 
 DB_PY = os.path.join(WORKSPACE, "db.py")
+DB_FILE = os.path.join(WORKSPACE, "data", "leadgen.db")
 LOG = os.path.join(WORKSPACE, "data", "template_send.log")
 
 
@@ -43,14 +46,20 @@ def audit(line):
         pass
 
 
-def consent_allows(phone):
+def opted_out(phone):
+    """True only if this number explicitly opted out (STOP / unsubscribe).
+    Approved MARKETING templates (e.g. the re-engagement one) are allowed to be
+    sent OUTSIDE the 24-hour window — that is their whole purpose — so we do NOT
+    require a service window or a prior opt-in. We only block explicit opt-outs."""
     try:
-        r = subprocess.run(["python3", DB_PY, "can-message", "--phone", phone],
-                           capture_output=True, text=True, timeout=30)
-        data = json.loads(r.stdout.strip() or "{}")
-        return bool(data.get("allowed")), data.get("reason", "unknown")
-    except Exception as e:
-        return False, f"consent check failed: {e}"
+        conn = sqlite3.connect(f"file:{DB_FILE}?mode=ro", uri=True, timeout=5)
+        row = conn.execute(
+            "SELECT opted_out_at, marketing_opt_in FROM messaging_consent WHERE phone=?",
+            (phone,)).fetchone()
+        conn.close()
+        return bool(row and row[0]) and not (row and row[1])
+    except Exception:
+        return False  # DB unreadable -> don't block; caller logs the send
 
 
 def main():
@@ -88,11 +97,9 @@ def main():
         if match.get("status") != "APPROVED":
             sys.exit(f"[FAIL] template '{args.template}' is {match.get('status')}, not APPROVED")
 
-    if not args.force:
-        allowed, reason = consent_allows(args.to)
-        if not allowed:
-            audit(f"REFUSED to={args.to} template={args.template} reason={reason}")
-            sys.exit(f"[FAIL] consent check refused: {reason}")
+    if not args.force and opted_out(args.to):
+        audit(f"REFUSED to={args.to} template={args.template} reason=opted_out")
+        sys.exit(f"[FAIL] {args.to} has opted out (STOP) — not messaging them.")
 
     sent, info = kapso.send_template(args.to, args.template, args.lang, args.param or None)
     if sent:

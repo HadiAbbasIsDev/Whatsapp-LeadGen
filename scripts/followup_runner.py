@@ -14,8 +14,9 @@ The agent only acts when a customer writes. This script supplies the WHEN:
 Safety:
   - If the gateway config says dmSecurity=allowlist, ONLY allowlisted numbers
     are ever followed up (mirrors inbound policy during testing).
-  - Sends go through send_template.py, which enforces the db.py can-message
-    consent check (opt-outs are never messaged) and audit-logs every attempt.
+  - Sends go through send_template.py: approved marketing templates are allowed
+    outside the 24h window, so only opted-out (STOP) numbers are skipped. Every
+    attempt is audit-logged.
   - At most one send per customer per run; the cron runs once daily.
 
 Usage:
