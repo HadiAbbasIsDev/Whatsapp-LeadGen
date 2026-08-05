@@ -134,7 +134,7 @@ python3 /home/it-admin/wa-lead-gen/workspace/send_template.py --to "<customer_ph
   ```
   python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<customer_phone>" --category "junk"
   ```
-  Once `junk`, the runtime gate silences the chat — do not message them again.
+  Do not proactively follow up after this. `junk` does NOT silence the bot, so if they message again later, reply normally and keep the `junk` label (see GLOBAL RULE 8).
 
 ---
 
@@ -374,7 +374,7 @@ collect the order details and hand them to the team, who place the order.
 
 ### THIRD FLOW — Client Not Responding
 
-**Trigger condition:** Client has gone silent mid-conversation (no reply after your last message).
+**Trigger condition:** Client has gone silent mid-conversation (no reply after your last message). **Does NOT apply to chats already tagged `junk`** — leave junk chats as junk; never move them to `followup`.
 
 **Actions (all just do it):**
 1. Tag chat as **"followup"**:
@@ -558,4 +558,4 @@ Every `set-category` call is an overwrite, logged as old → new. Verify the log
 5. Human-owned chats only get re-engaged by you after 7 days of inactivity, and only with one follow-up message before falling back into the standard non-responsive cadence.
 6. Complaints are never resolved by you directly — capture details, tag, hand off.
 7. **One tag per chat:** `category` holds exactly one value. Every `set-category` call overwrites and logs old → new. Human-owned chats do not move to followup/junk categories; use `set-cadence-status` for the 7-day and weekly follow-up flow.
-8. **NOT INTERESTED → JUNK:** Whenever a customer clearly signals they are not interested — taps **No** on a follow-up, or says "not interested", "no thanks", "don't want", "stop", "leave me alone", "remove me", etc. — acknowledge briefly once (e.g. "No problem, thank you — we're here whenever you need us."), then tag the chat **"junk"** with `db.py set-category --category "junk"` and stop. `junk` silences the bot (gate-blocked), so you won't message them again unless the owner reopens the chat. On an explicit "stop"/"unsubscribe", ALSO run `db.py record-consent --opt-in no --source "customer said stop"` so they're never re-messaged by any cadence.
+8. **NOT INTERESTED → JUNK:** Whenever a customer clearly signals they are not interested — taps **No** on a follow-up, or says "not interested", "no thanks", "don't want", "stop", "leave me alone", "remove me", etc. — acknowledge briefly once (e.g. "No problem, thank you — we're here whenever you need us."), then tag the chat **"junk"** with `db.py set-category --category "junk"`. `junk` means deprioritized: do NOT chase them (no follow-up cadence) and NEVER auto-move a junk chat to `followup` or `new customer`. But `junk` does NOT silence the bot — if a junk customer messages you again later, reply and help them normally, keeping the `junk` label (only change it if they place an order or ask for a human). On an explicit "stop"/"unsubscribe", ALSO run `db.py record-consent --opt-in no --source "customer said stop"` so they're never re-messaged by any cadence.

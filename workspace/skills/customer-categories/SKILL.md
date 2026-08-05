@@ -52,7 +52,7 @@ python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender
 - **important** — assigned only when the business owner asks. Bot still serves the chat.
 - **hot leads** — high-intent prospects or human handoff requests; once assigned, the agent must stop replying.
 - **followup** — non-human-owned chat in an active follow-up cadence.
-- **junk** — follow-up exhausted; stop engaging.
+- **junk** — not interested / deprioritized. Do NOT chase them (no follow-up cadence), but the bot still REPLIES if they message again. Never auto-move a junk chat to `followup` or `new customer` — leave it `junk` unless they order (order handoff) or ask for a human (hot leads).
 - **complaints** — active customer complaint handed to a human; once assigned, the agent must stop replying.
 - **ahsan / ahmed / imran / rafay** — human-owned chats. Do not reply normally; only the 7-day scheduled re-engagement flow may send one follow-up.
 
@@ -60,7 +60,7 @@ python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<sender
 
 - Runtime enforcement: the gateway itself now drops inbound messages from chats
   whose category is NOT `new customer`, `important`, or `followup` — you will never
-  even see a message from a `complaints` / `hot leads` / `junk` / `vendor` / human-owned chat.
+  even see a message from a `complaints` / `hot leads` / `vendor` / human-owned chat (junk chats DO reach you — the bot still replies to them).
   The rules below stay as defense-in-depth for the turn in which a category changes.
 - Category must be one of the valid categories above. Never invent a new one.
 - Do not change a customer's category automatically on a normal message. Use `upsert-customer`

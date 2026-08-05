@@ -60,7 +60,7 @@ function kapsoCategoryGateAllows(from) {
         }
         const digits = String(from || "").replace(/\D/g, "");
         const cat = (digits && __kgState.byPhone.get(digits)) || "new customer";
-        const allowed = ["new customer", "important", "followup"];
+        const allowed = ["new customer", "important", "followup", "junk"];
         if (allowed.includes(cat)) return { allowed: true, category: cat };
         try { __kgAppend(__kgHomedir() + "/.openclaw/kapso-gate.log", JSON.stringify({ ts: new Date().toISOString(), from: digits, category: cat, action: "blocked" }) + "\n"); } catch {}
         return { allowed: false, category: cat };

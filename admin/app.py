@@ -803,7 +803,7 @@ const CAT = {
   'imran':        {label:'Imran',        cls:'c-team', team:true},
   'rafay':        {label:'Rafay',        cls:'c-team', team:true},
 };
-const SILENT = new Set(['hot leads','complaints','junk','vendor','ahsan','ahmed','imran','rafay']);
+const SILENT = new Set(['hot leads','complaints','vendor','ahsan','ahmed','imran','rafay']);
 let DATA = {customers:[], counts:{}, categories:Object.keys(CAT), total:0};
 let LEADS = [];
 let filter = 'all';
