@@ -1,0 +1,246 @@
+#!/usr/bin/env python3
+"""
+Photo → product matcher (vision).
+
+A customer sends a photo (an ad screenshot, a catalog picture, a room photo).
+This looks at the image with a vision model, works out what furniture is in it,
+and returns the closest catalog products so the bot can show them.
+
+Designed for the real traffic we measured: Facebook/Instagram ad screenshots
+(video frames with UI clutter) and multi-product album screenshots — cases an
+exact-copy matcher cannot handle.
+
+  python3 match_photo.py --image /path/to.jpg
+  python3 match_photo.py --url "https://...media..." --json
+
+Output (JSON with --json):
+  {"ok":true,"decision":"match","query":"green boucle swivel armchair",
+   "category":"Single Seater","ids":["123","456"],"products":[...]}
+  decision is "match" (send these products) or "handoff" (nothing confident).
+
+Cost note: uses xiaomi/mimo-v2.5 via OpenRouter (~$0.14 per 1M input tokens),
+roughly a fraction of a cent per photo.
+"""
+import argparse
+import base64
+import json
+import os
+import re
+import sys
+import urllib.request
+
+WORKSPACE = os.path.dirname(os.path.abspath(__file__))
+CATALOG = os.path.join(WORKSPACE, "data", "products.json")
+MODEL = "xiaomi/mimo-v2.5"
+API = "https://openrouter.ai/api/v1/chat/completions"
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
+
+
+def env(key, default=""):
+    v = os.environ.get(key)
+    if v:
+        return v
+    try:
+        for line in open(os.path.join(os.path.dirname(WORKSPACE), ".env")):
+            if line.startswith(key + "="):
+                return line.split("=", 1)[1].strip().strip('"')
+    except Exception:
+        pass
+    return default
+
+
+def load_catalog():
+    with open(CATALOG, encoding="utf-8") as f:
+        return json.load(f).get("catalog", [])
+
+
+def categories(catalog):
+    return sorted({c.get("category", "") for c in catalog if c.get("category")})
+
+
+def fetch_image(url):
+    headers = {"User-Agent": "Mozilla/5.0"}
+    if "kapso" in url:
+        headers["X-API-Key"] = env("KAPSO_API_KEY")
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=60) as r:
+        data = r.read(MAX_IMAGE_BYTES + 1)
+    if len(data) > MAX_IMAGE_BYTES:
+        raise ValueError("image too large")
+    return data
+
+
+def shrink(image_bytes, max_side=900):
+    """Downscale before sending: fewer tokens = faster and cheaper, and a 900px
+    view is plenty to identify furniture. Falls back to the original on error."""
+    try:
+        import io
+        from PIL import Image, ImageOps
+        im = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes)).convert("RGB"))
+        if max(im.size) > max_side:
+            im.thumbnail((max_side, max_side))
+        buf = io.BytesIO()
+        im.save(buf, format="JPEG", quality=82, optimize=True)
+        return buf.getvalue()
+    except Exception:
+        return image_bytes
+
+
+def describe(image_bytes, cats):
+    """Ask the vision model what furniture is in the photo."""
+    key = env("OPENROUTER_API_KEY")
+    if not key:
+        raise RuntimeError("OPENROUTER_API_KEY not set")
+    b64 = base64.b64encode(shrink(image_bytes)).decode()
+    prompt = (
+        "You are a furniture shop assistant looking at a photo a customer sent on WhatsApp. "
+        "It may be a screenshot of one of our ads, a catalogue picture, or a room photo, and may "
+        "have phone UI clutter (status bar, buttons) — ignore all UI and focus on the FURNITURE.\n\n"
+        f"Our product categories are: {', '.join(cats)}.\n\n"
+        "Reply with ONLY a JSON object, no other text:\n"
+        '{"item": "<short description: colour + material + furniture type, e.g. green boucle swivel armchair>",\n'
+        ' "category": "<the ONE closest category from the list above, or empty if none fit>",\n'
+        ' "keywords": "<3-6 words a shop would search: colour, material, shape>",\n'
+        ' "multiple": <true if the photo shows several different products, else false>,\n'
+        ' "confident": <true if you can clearly see a furniture item, false if blurry/unclear/no furniture>}'
+    )
+    body = {
+        "model": MODEL,
+        "messages": [{"role": "user", "content": [
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+        ]}],
+        # mimo-v2.5 is a reasoning model: its internal reasoning shares this budget,
+        # so a small limit leaves the actual answer empty. Keep it generous.
+        "max_tokens": 3000,
+        "temperature": 0,
+    }
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+               "HTTP-Referer": env("OPENROUTER_HTTP_REFERER", "https://decormoments.com"),
+               "X-Title": env("OPENROUTER_APP_TITLE", "Decor Moments Bot")}
+    # Retry: transient DNS/network blips and occasional empty completions are
+    # common enough that one attempt loses real customers.
+    last = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(API, data=json.dumps(body).encode(),
+                                         method="POST", headers=headers)
+            with urllib.request.urlopen(req, timeout=90) as r:
+                resp = json.load(r)
+            msg = (resp.get("choices") or [{}])[0].get("message", {}) or {}
+            if (msg.get("content") or msg.get("reasoning")):
+                break
+            last = "empty completion"
+        except Exception as e:
+            last = f"{type(e).__name__}: {str(e)[:80]}"
+        if attempt < 2:
+            import time
+            time.sleep(1.5 * (attempt + 1))
+    else:
+        raise RuntimeError(f"vision request failed after retries ({last})")
+    msg = (resp.get("choices") or [{}])[0].get("message", {}) or {}
+    usage = resp.get("usage") or {}
+    # Reasoning model: the answer is normally in `content` (often fenced in ```json),
+    # but can end up only in the reasoning trace. Try content first, then reasoning,
+    # and accept the LAST candidate that actually parses — earlier ones are usually
+    # half-formed thoughts.
+    parsed = None
+    for source in (msg.get("content") or "", msg.get("reasoning") or ""):
+        if not source:
+            continue
+        cleaned = re.sub(r"```(?:json)?|```", "", source)
+        for cand in re.findall(r"\{[^{}]*\}", cleaned, re.S):
+            try:
+                obj = json.loads(cand)
+            except Exception:
+                continue
+            if isinstance(obj, dict) and "item" in obj:
+                parsed = obj      # keep going; last valid one wins
+        if parsed:
+            break
+    if parsed is None:
+        raise ValueError(f"model did not return usable JSON: {(msg.get('content') or '')[:120]}")
+    return parsed, usage
+
+
+def score(product, want_cat, words):
+    """Rank a catalog product against the described item."""
+    cat = str(product.get("category", "")).lower()
+    hay = " ".join([cat, str(product.get("name", "")), str(product.get("keywords", "")),
+                    str(product.get("description", ""))]).lower()
+    s = 0
+    if want_cat and want_cat.lower() in cat:
+        s += 10                      # same category is the strongest signal
+    for w in words:
+        if len(w) > 2 and w in hay:
+            s += 2                   # colour/material/shape word hits
+    return s
+
+
+def find(desc, catalog, limit=6):
+    words = re.findall(r"[a-z]{3,}", (desc.get("keywords", "") + " " + desc.get("item", "")).lower())
+    stop = {"the", "and", "with", "for", "furniture", "modern", "style", "photo"}
+    words = [w for w in words if w not in stop]
+    want = desc.get("category", "") or ""
+    ranked = sorted(catalog, key=lambda p: -score(p, want, words))
+    best = [p for p in ranked if score(p, want, words) > 0][:limit]
+    return best
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--image", help="local image path")
+    ap.add_argument("--url", help="image URL (Kapso media url ok)")
+    ap.add_argument("--limit", type=int, default=6)
+    ap.add_argument("--json", action="store_true", help="machine-readable output")
+    args = ap.parse_args()
+
+    out = {"ok": False, "decision": "handoff"}
+    try:
+        if args.image:
+            data = open(args.image, "rb").read()
+        elif args.url:
+            data = fetch_image(args.url)
+        else:
+            sys.exit("[FAIL] give --image or --url")
+
+        catalog = load_catalog()
+        desc, usage = describe(data, categories(catalog))
+        out["query"] = desc.get("item", "")
+        out["category"] = desc.get("category", "")
+        out["multiple"] = bool(desc.get("multiple"))
+        out["tokens"] = usage.get("total_tokens")
+
+        if not desc.get("confident"):
+            out["reason"] = "vision model not confident about the item"
+        else:
+            hits = find(desc, catalog, args.limit)
+            if hits:
+                out.update(ok=True, decision="match",
+                           ids=[str(p["id"]) for p in hits],
+                           products=[{"id": str(p["id"]), "name": p["name"],
+                                      "category": p["category"],
+                                      "price": (p.get("price") or {}).get("amount")} for p in hits])
+            else:
+                out["reason"] = "no catalog product matched the description"
+    except Exception as e:
+        out["reason"] = f"{type(e).__name__}: {str(e)[:150]}"
+
+    if args.json:
+        print(json.dumps(out))
+    else:
+        if out["decision"] == "match":
+            print(f"Seen: {out['query']}  (category: {out['category']})")
+            print("IDS: " + ",".join(out["ids"]))
+            for p in out["products"]:
+                amt = f"PKR {p['price']:,}" if p.get("price") else ""
+                print(f"  {p['id']}  {p['name']} — {amt} — {p['category']}")
+        else:
+            print(f"HANDOFF — {out.get('reason', 'no match')}")
+            if out.get("query"):
+                print(f"  (saw: {out['query']})")
+    return 0 if out["ok"] else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
