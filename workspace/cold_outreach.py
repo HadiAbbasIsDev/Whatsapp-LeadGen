@@ -99,6 +99,7 @@ def main():
     ap.add_argument("--numbers", help="comma-separated recipient numbers")
     ap.add_argument("--to", action="append", default=[], help="a recipient number (repeatable)")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--template", default=TEMPLATE, help="approved template name (default: the furniture intro)")
     args = ap.parse_args()
 
     admins = authorized_admins()
@@ -124,11 +125,11 @@ def main():
     # confirm the template is approved before blasting
     ok, templates = kapso.list_templates()
     if ok:
-        t = next((x for x in templates if x.get("name") == TEMPLATE), None)
+        t = next((x for x in templates if x.get("name") == args.template), None)
         if t is None:
-            sys.exit(f"[FAIL] template '{TEMPLATE}' not found on the WABA")
+            sys.exit(f"[FAIL] template '{args.template}' not found on the WABA")
         if t.get("status") != "APPROVED":
-            sys.exit(f"[FAIL] template '{TEMPLATE}' is {t.get('status')}, not APPROVED")
+            sys.exit(f"[FAIL] template '{args.template}' is {t.get('status')}, not APPROVED")
 
     sent = skipped = failed = 0
     for phone in targets:
@@ -142,12 +143,12 @@ def main():
             skipped += 1
             continue
         if args.dry_run:
-            print(f"[DRY] would send {TEMPLATE} to {phone}")
+            print(f"[DRY] would send {args.template} to {phone}")
             continue
-        ok, info = kapso.send_template(phone, TEMPLATE, LANG)
+        ok, info = kapso.send_template(phone, args.template, LANG)
         if ok:
             print(f"[OK] {phone} ({info})")
-            audit(f"SENT to={phone} template={TEMPLATE} id={info} by={norm_e164(args.owner)}")
+            audit(f"SENT to={phone} template={args.template} id={info} by={norm_e164(args.owner)}")
             # record as a contact so they surface in the CRM; category stays default
             subprocess.run(["python3", DB_PY, "upsert-customer", "--phone", phone,
                             "--notes", "cold outreach: furniture intro sent"],
