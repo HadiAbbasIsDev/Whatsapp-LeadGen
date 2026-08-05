@@ -62,12 +62,25 @@ def fetch_image(url):
     headers = {"User-Agent": "Mozilla/5.0"}
     if "kapso" in url:
         headers["X-API-Key"] = env("KAPSO_API_KEY")
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req, timeout=60) as r:
-        data = r.read(MAX_IMAGE_BYTES + 1)
-    if len(data) > MAX_IMAGE_BYTES:
-        raise ValueError("image too large")
-    return data
+    last = None
+    for attempt in range(3):          # transient DNS/network blips are common
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=60) as r:
+                data = r.read(MAX_IMAGE_BYTES + 1)
+            if len(data) > MAX_IMAGE_BYTES:
+                raise ValueError("image too large")
+            if not data:
+                raise ValueError("empty image download")
+            return data
+        except ValueError:
+            raise
+        except Exception as e:
+            last = f"{type(e).__name__}: {str(e)[:80]}"
+            if attempt < 2:
+                import time
+                time.sleep(1.5 * (attempt + 1))
+    raise RuntimeError(f"could not download image ({last})")
 
 
 def shrink(image_bytes, max_side=900):
