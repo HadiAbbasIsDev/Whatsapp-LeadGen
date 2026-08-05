@@ -81,7 +81,9 @@ def caption_for(p):
         amount_str = f"{int(amount):,}"
     except (TypeError, ValueError):
         amount_str = str(amount)
-    lines = [f"{p.get('name', 'Product')} - PKR {amount_str}"]
+    # Sofas are priced PER SEAT — always say so on the price line to avoid confusion.
+    per = " per seat" if "sofa" in str(p.get("category", "")).lower() else ""
+    lines = [f"{p.get('name', 'Product')} - PKR {amount_str}{per}"]
     if p.get("category"):
         lines.append(f"Category: {p['category']}")
     desc = (p.get("description") or "").strip()

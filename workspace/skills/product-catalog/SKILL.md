@@ -11,6 +11,7 @@ description: Display furniture products from ./data/products.json ONLY. Always u
 2. **Always use `send_product.py`** to send each product — it delivers the photo AND details together as one WhatsApp message. Never use `send_image.py` directly.
 3. Never mention CRM, software, or anything unrelated to furniture.
 4. Send up to **10** products per `send_product.py` call. If fewer than 10 match the customer's request, send every matching one.
+5. **SOFA PRICING IS PER SEAT.** Whenever you quote a sofa's price — in a photo caption (handled automatically) OR in your own text — you MUST say "PKR X **per seat**", never just "PKR X". E.g. "This sofa is PKR 45,000 per seat." This applies to any sofa (Sofa Set, Sofa Sets, L-Shaped Sofa, sofa bed). Other items are priced per piece as normal.
 
 ## Data Source
 

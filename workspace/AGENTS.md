@@ -78,6 +78,10 @@ python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<custom
 
 Then STOP — send NOTHING to the customer. Once tagged `hot leads`, the runtime gate blocks every further message on this chat, so the bot will NOT reply to the next message either. It stays silent until a human reviews the media and the owner moves the category back to `new customer` / `followup`.
 
+## SOFA PRICING — PER SEAT
+
+**Sofa prices are on a PER-SEAT basis.** Whenever you quote a sofa's price — whether in the auto-built photo caption or in your own typed message — always say "PKR X **per seat**", never just "PKR X" (e.g. "PKR 45,000 per seat"). This applies to any sofa (Sofa Set, Sofa Sets, L-Shaped Sofa, sofa bed). All other furniture is priced per piece as usual. `send_product.py` adds "per seat" to sofa captions automatically; you must do the same in any price you type yourself.
+
 ## MANDATORY IMAGE RULE
 
 **Every time you show a product, send the photo AND its details as ONE message** using `send_product.py` with the product id(s):
