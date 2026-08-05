@@ -547,6 +547,25 @@ def api_set_access():
                     "message": "Saved and bot restarted." if r.get("ok") else "Saved, but bot restart is still coming up — check status."})
 
 
+@app.route("/api/resync", methods=["POST"])
+@require_auth
+def api_resync():
+    """Re-pull the live catalog from decormoments.com into products.json."""
+    script = os.path.join(REPO, "scripts", "sync_decormoments.py")
+    try:
+        r = subprocess.run(["python3", script], capture_output=True, text=True, timeout=120, cwd=REPO)
+        out = (r.stdout + r.stderr).strip()
+        m = re.search(r"wrote (\d+) products", out)
+        if r.returncode == 0 and m:
+            return jsonify({"ok": True, "count": int(m.group(1)),
+                            "message": f"Catalog re-synced — {m.group(1)} products from the website."})
+        return jsonify({"ok": False, "message": "Re-sync failed: " + (out[-300:] or "unknown error")}), 500
+    except subprocess.TimeoutExpired:
+        return jsonify({"ok": False, "message": "Re-sync timed out (website slow) — try again."}), 504
+    except Exception as e:
+        return jsonify({"ok": False, "message": "Re-sync error: " + str(e)}), 500
+
+
 @app.route("/api/customers")
 @require_auth
 def api_customers():
@@ -703,6 +722,7 @@ PAGE = r"""<!doctype html>
       <div class="grow"></div>
       <button class="start" id="startBtn" onclick="ctl('start')">▶ Start bot</button>
       <button class="stop" id="stopBtn" onclick="ctl('stop')">■ Stop bot</button>
+      <button class="ghost" id="resyncBtn" onclick="resyncCatalog()" title="Re-pull the latest products from decormoments.com">⟳ Re-sync catalog</button>
     </div>
     <div class="meta" id="meta"></div>
   </div>
@@ -1087,6 +1107,14 @@ async function applyAccess(){
   }catch(e){ toast('Network error while applying', true); }
   b.disabled=false; b.textContent='Apply & restart bot';
   setTimeout(()=>{ loadAccess(); refresh(); }, 3000);
+}
+async function resyncCatalog(){
+  const b=document.getElementById('resyncBtn'); b.disabled=true; const old=b.textContent; b.textContent='⟳ Syncing…';
+  try{
+    const j=await (await fetch('/api/resync',{method:'POST'})).json();
+    toast(j.message || (j.ok?'Catalog re-synced':'Re-sync failed'), !j.ok);
+  }catch(e){ toast('Re-sync network error', true); }
+  b.disabled=false; b.textContent=old;
 }
 async function ctl(action){
   const b=document.getElementById(action+'Btn'); b.disabled=true; b.textContent='…';
