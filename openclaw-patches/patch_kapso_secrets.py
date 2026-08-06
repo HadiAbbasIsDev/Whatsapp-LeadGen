@@ -88,12 +88,13 @@ function __scScrub(text) {
                 const lines = out.split("\n").filter((l) => !LEAK.test(l));
                 const stripped = lines.join("\n").trim();
                 if (stripped !== out.trim()) {
-                    // If the whole message was internal leakage, collapse to a
-                    // zero-width space (non-empty so the send API is happy, but
-                    // invisible to the customer) rather than sending the leak.
-                    out = stripped || "​";
+                    // If the WHOLE message was internal narration, return "" so the
+                    // caller suppresses the send entirely — an empty chat bubble is
+                    // worse for the customer than no message at all.
+                    out = stripped;
                     try { __scAppend(__scHome() + "/.openclaw/kapso-secrets.log",
-                        JSON.stringify({ ts: new Date().toISOString(), action: "stripped-internal-leak" }) + "\n"); } catch {}
+                        JSON.stringify({ ts: new Date().toISOString(),
+                                         action: stripped ? "stripped-internal-leak" : "suppressed-empty-leak" }) + "\n"); } catch {}
                 }
             }
         } catch {}
@@ -102,8 +103,22 @@ function __scScrub(text) {
 }
 '''
 
-BODY_ANCHOR = "body: params.text,"
-BODY_REPLACE = "body: __scScrub(params.text),"
+BODY_ANCHOR = """    const client = await (params.clientFactory ?? createKapsoClient)(account, params.signal);
+    const response = await client.messages.sendText({
+        phoneNumberId: account.phoneNumberId,
+        to,
+        body: params.text,"""
+BODY_REPLACE = """    const client = await (params.clientFactory ?? createKapsoClient)(account, params.signal);
+    const __scBody = __scScrub(params.text);
+    // Nothing left after scrubbing => the message was pure internal narration.
+    // Skip the send rather than deliver an empty bubble to the customer.
+    if (typeof __scBody === "string" && !__scBody.trim()) {
+        return { messageId: `${to}:suppressed:${Date.now()}`, response: null, to };
+    }
+    const response = await client.messages.sendText({
+        phoneNumberId: account.phoneNumberId,
+        to,
+        body: __scBody,"""
 
 
 def main():
