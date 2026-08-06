@@ -24,10 +24,14 @@ developers (who may change settings/files) are **+923362615506** and **+92333339
 ### Karachi (showroom)
 Vincy Mall, Clifton Block 9, Karachi
 
-### Lahore & Islamabad
-Decor Moments serves customers in Lahore and Islamabad too (delivery available).
-For an exact showroom address in Lahore or Islamabad, connect the customer with
-the team (human handoff) — do not invent an address.
+### Lahore (showroom)
+Ground Floor 41K, DHA Phase 1, Ghazi Road, Lahore
+Outlet phone: +92 305 9756149
+https://maps.app.goo.gl/2yw6CjBRJGdJbDg27
+
+### Islamabad
+No showroom in Islamabad — we deliver there. For an Islamabad showroom/visit
+request, hand off to the team (do not invent an address).
 
 ## Bot Identity
 

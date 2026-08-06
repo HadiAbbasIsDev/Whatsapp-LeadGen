@@ -485,26 +485,30 @@ not lost.
 **Trigger condition:** Client asks where the store/locations are.
 
 **Actions (all just do it):**
-1. Send an interactive quick-reply message with the Karachi option:
+1. Ask which city, offering both showrooms:
    ```
    python3 /home/it-admin/wa-lead-gen/workspace/send_quick_replies.py \
      --to "<customer_phone>" \
-     --text "Our showroom is in Karachi. Tap below for the address:" \
-     --buttons "Karachi:/karachi"
+     --text "We have showrooms in Karachi and Lahore. Which one works for you?" \
+     --buttons "Karachi:/karachi,Lahore:/lahore"
    ```
-2. When the customer taps **Karachi**, reply with the full showroom details:
+   (If they already said their city, skip this and go straight to the address.)
+2. **Karachi** →
    > "Vincy Mall, Clifton Block 9, Karachi.
-   > Phone/WhatsApp: +92 332 6189654
-   > Email: info@decormoments.com"
-3. If the customer says they are in **Lahore or Islamabad** (after tapping or in follow-up), do NOT invent a showroom address. Say the team will share showroom/visit details, and hand off via FIRST FLOW.
-4. Tag chat as **"followup"**:
+   > Phone/WhatsApp: +92 332 6189654"
+3. **Lahore** →
+   > "Ground Floor 41K, DHA Phase 1, Ghazi Road, Lahore.
+   > Phone: +92 305 9756149
+   > https://maps.app.goo.gl/2yw6CjBRJGdJbDg27"
+4. If the customer is in **Islamabad or any other city**, we have no showroom there — say so plainly and helpfully: we deliver to Karachi, Lahore and Islamabad (charges apply, 10-20 days), and they can order right here on WhatsApp. Only hand off via FIRST FLOW if they specifically want a visit/showroom arranged.
+5. Tag chat as **"followup"**:
    ```
    /usr/bin/python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<customer_phone>" --category "followup"
    ```
-5. Record `flow=store_location`, `followup_week`, and `last_followup_date` as
+6. Record `flow=store_location`, `followup_week`, and `last_followup_date` as
    `kind=cadence` structured memories.
-6. Follow up once every week, up to 3 weeks (same cadence as THIRD FLOW — sent automatically by `followup_runner.py` as the `decor_moments_interest_followup` template).
-7. Check response:
+7. Follow up once every week, up to 3 weeks (same cadence as THIRD FLOW — sent automatically by `followup_runner.py` as the `decor_moments_interest_followup` template).
+8. Check response:
    - **If client responds →** route into FIRST FLOW or SECOND FLOW.
    - **If no response after 3 weeks →** tag chat as **"junk"**:
      ```
