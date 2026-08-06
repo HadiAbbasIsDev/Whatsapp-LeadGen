@@ -74,6 +74,21 @@ def fetch_image(image, user_dir):
     return None
 
 
+def real_dimensions(value):
+    """Return the dimensions ONLY if they are an actual measurement.
+
+    The website's "Dimensions" field is often a variant label — "2 Seater",
+    "Pink", "Without mirror", "Estimate" — which is not a size. A real
+    measurement carries a unit (ft/inch/cm/m/'/") or an "A x B" pattern.
+    Returns "" when there is nothing measurable to show."""
+    s = str(value or "").strip()
+    if not s or not re.search(r"\d", s):
+        return ""
+    has_unit = re.search(r"\d\s*(?:ft|feet|foot|in\b|inch|inches|cm|mm|m\b|['\"])", s, re.I)
+    has_pattern = re.search(r"\d\s*(?:x|×|by)\s*\d", s, re.I)
+    return s if (has_unit or has_pattern) else ""
+
+
 def caption_for(p):
     price = p.get("price")
     amount = price.get("amount") if isinstance(price, dict) else price
@@ -86,12 +101,10 @@ def caption_for(p):
     lines = [f"{p.get('name', 'Product')} - PKR {amount_str}{per}"]
     if p.get("category"):
         lines.append(f"Category: {p['category']}")
-    desc = (p.get("description") or "").strip()
-    if desc:
-        lines.append(desc[:220].rsplit(" ", 1)[0] + ("…" if len(desc) > 220 else ""))
-    if p.get("dimensions"):
-        lines.append(f"Dimensions: {p['dimensions']}")
-    lines.append(f"Availability: {p.get('availability', 'In Stock')}")
+    dims = real_dimensions(p.get("dimensions"))
+    if dims:
+        lines.append(f"Dimensions: {dims}")
+    # No availability line: everything is made to order, so "In Stock" is misleading.
     if p.get("link"):
         lines.append(p["link"])
     return "\n".join(lines)

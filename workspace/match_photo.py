@@ -58,6 +58,55 @@ def categories(catalog):
     return sorted({c.get("category", "") for c in catalog if c.get("category")})
 
 
+MAX_PHOTOS = 3          # more than this in one burst -> a human should look
+
+
+def recent_image_urls(phone, burst_seconds=90, wait_seconds=2.0):
+    """Collect the photos this customer just sent, as a BURST.
+
+    People often fire off 3-4 pictures of the same thing in a row, so we pause
+    briefly (wait_seconds) to let the rest land, then take every image from the
+    last `burst_seconds`. Returns (urls, kind, note) — newest first."""
+    import time
+    if wait_seconds:
+        time.sleep(wait_seconds)
+    key = env("KAPSO_API_KEY")
+    if not key:
+        raise RuntimeError("KAPSO_API_KEY not set")
+    want = re.sub(r"\D", "", str(phone))
+    url = "https://api.kapso.ai/platform/v1/whatsapp/messages?limit=60&direction=inbound"
+    req = urllib.request.Request(url, headers={"X-API-Key": key, "User-Agent": "Mozilla/5.0 curl/8"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        data = json.load(r)
+
+    def when(m):
+        try:
+            from datetime import datetime
+            ts = str(m.get("timestamp"))
+            return float(ts) if ts.isdigit() else datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
+        except Exception:
+            return 0.0
+
+    mine = [m for m in data.get("data", [])
+            if re.sub(r"\D", "", str((m.get("kapso") or {}).get("phone_number") or "")) == want]
+    if not mine:
+        raise RuntimeError(f"no recent messages from {phone}")
+
+    newest = max((when(m) for m in mine), default=0)
+    urls = []
+    for m in mine:                                   # newest first
+        k = m.get("kapso") or {}
+        if newest - when(m) > burst_seconds:
+            break                                    # older than this burst
+        if (m.get("type") or "").lower() == "image" and k.get("media_url"):
+            urls.append(k["media_url"])
+    if urls:
+        return urls, "photo", ""
+    # no photos in the burst — fall back to the ad they clicked, if any
+    single, kind, note = latest_image_url(phone)
+    return [single], kind, note
+
+
 def latest_image_url(phone, max_age_minutes=180):
     """Find the newest image to identify for this customer, from the Kapso API.
     Two sources, whichever is most recent:
@@ -291,6 +340,8 @@ def main():
     ap.add_argument("--image", help="local image path")
     ap.add_argument("--url", help="image URL (Kapso media url ok)")
     ap.add_argument("--limit", type=int, default=6)
+    ap.add_argument("--wait", type=float, default=2.0,
+                    help="seconds to wait for more photos in the same burst (default 2)")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     args = ap.parse_args()
 
@@ -301,11 +352,19 @@ def main():
         elif args.url:
             data = fetch_image(args.url)
         elif args.phone:
-            src_url, kind, note = latest_image_url(args.phone)
+            urls, kind, note = recent_image_urls(args.phone, wait_seconds=args.wait)
             out["source"] = kind          # "photo" (they sent one) or "ad" (they clicked an ad)
+            out["photo_count"] = len(urls)
             if note:
                 out["ad_text"] = note
-            data = fetch_image(src_url)
+            if len(urls) > MAX_PHOTOS:
+                out["reason"] = (f"customer sent {len(urls)} photos at once "
+                                 f"(more than {MAX_PHOTOS}) — needs a human")
+                print(json.dumps(out) if args.json else
+                      f"HANDOFF — {out['reason']}")
+                return 1
+            data = fetch_image(urls[0])
+            out["extra_photos"] = urls[1:]   # handled after the first is described
         else:
             sys.exit("[FAIL] give --phone (preferred), --image, or --url")
 
@@ -348,6 +407,21 @@ def main():
         elif not desc.get("confident"):
             out["reason"] = "could not identify the item clearly"
         else:
+            # Burst: describe the other photos too and merge, so one joint reply
+            # covers everything they sent (they are usually the same item/room).
+            merged = dict(desc)
+            for extra in (out.get("extra_photos") or []):
+                try:
+                    d2, u2 = describe(fetch_image(extra), categories(catalog))
+                    if d2.get("is_furniture", True) and d2.get("confident"):
+                        merged["keywords"] = f"{merged.get('keywords','')} {d2.get('keywords','')}".strip()
+                        merged["item"] = f"{merged.get('item','')}; {d2.get('item','')}".strip("; ")
+                        if not merged.get("category"):
+                            merged["category"] = d2.get("category", "")
+                        out["tokens"] = (out.get("tokens") or 0) + (u2.get("total_tokens") or 0)
+                except Exception:
+                    pass                       # one bad photo must not sink the reply
+            desc, out["query"] = merged, merged.get("item", "")
             hits = find(desc, catalog, args.limit)
             if hits:
                 out.update(ok=True, decision="match",
