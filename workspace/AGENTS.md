@@ -50,15 +50,11 @@ python3 /home/it-admin/wa-lead-gen/workspace/transcribe_voice.py --phone "<custo
 ```
 - `"status": "ok"` → use the `text` field as the customer's message and reply normally.
 - `"code": "audio_too_long"` → reply once: "Please send a voice message under 2 minutes, or type your message."
-- `"code": "no_audio_found"` (the audio is not available to us yet) or any other
-  error → do NOT send a technical error and do NOT say "no audio file found".
-  Reply once, naturally: *"Sorry, I couldn't play that voice note — could you type it, or shall I have someone call you?"*
-  Then alert the team so nothing is lost:
-```
-python3 /home/it-admin/wa-lead-gen/workspace/notify_admins.py \
-  --type other --name "<customer name or 'Unknown'>" --phone "<customer E.164 phone>" \
-  --email "Not provided" --products "Voice note we could not play — please listen and follow up"
-```
+- `"code": "no_audio_found"` (the audio isn't available to us) or any other error →
+  do NOT send a technical error and do NOT say "no audio file found" or mention
+  transcription. Just reply once, naturally, and carry on:
+  *"Sorry, I couldn't hear that properly — could you type it for me?"*
+  Do not alert the team and do not tag the chat; simply wait for their text.
 
 **NEVER leak the mechanics to the customer.** Do NOT send the transcription
 command, its JSON output, any error text, "failed"/"run" tool messages, or your

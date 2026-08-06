@@ -387,16 +387,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Transcribe latest WhatsApp voice message")
     parser.add_argument("--phone", type=str, help="Customer phone number for logging")
     parser.add_argument("--audio", type=str, help="Explicit audio file path from the inbound media context")
+    parser.add_argument("--wait", type=float, default=2.0,
+                        help="seconds to wait for the voice note to become available (default 2)")
     args = parser.parse_args()
 
     # Prefer an explicit path, then the local media store (Baileys), then pull the
     # voice note straight from Kapso — on the Kapso transport nothing lands on disk.
     audio_path = args.audio or find_latest_audio()
     if not audio_path or not os.path.exists(audio_path):
-        # Kapso needs a few seconds to mirror the voice note into its storage,
-        # so poll briefly rather than giving up on the first miss.
+        # Kapso needs a moment to make the voice note available, so wait briefly
+        # first and then keep polling rather than giving up on the first miss.
         import time as _t
-        for _attempt in range(6):
+        _t.sleep(args.wait)
+        for _attempt in range(8):
             audio_path = fetch_latest_voice_from_kapso(args.phone) or audio_path
             if audio_path and os.path.exists(audio_path):
                 break
