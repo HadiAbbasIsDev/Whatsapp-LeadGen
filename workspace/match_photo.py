@@ -189,7 +189,9 @@ def describe(image_bytes, cats):
         ' "category": "<the ONE closest category from the list above, or empty if none fit>",\n'
         ' "keywords": "<3-6 words a shop would search: colour, material, shape>",\n'
         ' "multiple": <true if the photo shows several different products, else false>,\n'
-        ' "confident": <true if you can clearly see a furniture item, false if blurry/unclear/no furniture>}'
+        ' "is_furniture": <true ONLY if the main subject is a piece of furniture or home decor we could sell.'
+        ' false for people, food, documents, floor plans, screenshots of text, price lists, buildings, or anything else>,\n'
+        ' "confident": <true if you can clearly see and identify the item, false if blurry, cluttered or unclear>}'
     )
     body = {
         "model": MODEL,
@@ -264,14 +266,23 @@ def score(product, want_cat, words):
     return s
 
 
-def find(desc, catalog, limit=6):
+# We happily show SIMILAR items, not just exact ones — but the furniture TYPE must
+# line up, so a sofa photo never returns dressing tables. Category match scores 10,
+# so that is the bar; keyword hits (2 each) then rank the closest ones first.
+MIN_SCORE = 10
+
+
+def find(desc, catalog, limit=6, min_score=MIN_SCORE):
     words = re.findall(r"[a-z]{3,}", (desc.get("keywords", "") + " " + desc.get("item", "")).lower())
     stop = {"the", "and", "with", "for", "furniture", "modern", "style", "photo"}
     words = [w for w in words if w not in stop]
     want = desc.get("category", "") or ""
-    ranked = sorted(catalog, key=lambda p: -score(p, want, words))
-    best = [p for p in ranked if score(p, want, words) > 0][:limit]
-    return best
+    scored = [(score(p, want, words), p) for p in catalog]
+    scored.sort(key=lambda t: -t[0])
+    if not scored or scored[0][0] < min_score:
+        return []                     # not confidently one of ours -> hand off
+    # keep only genuinely comparable items (same ballpark score)
+    return [p for s, p in scored if s >= min_score][:limit]
 
 
 def main():
@@ -332,8 +343,10 @@ def main():
         out["multiple"] = bool(desc.get("multiple"))
         out["tokens"] = usage.get("total_tokens")
 
-        if not desc.get("confident"):
-            out["reason"] = "vision model not confident about the item"
+        if not desc.get("is_furniture", True):
+            out["reason"] = "not a furniture/decor item — nothing to offer"
+        elif not desc.get("confident"):
+            out["reason"] = "could not identify the item clearly"
         else:
             hits = find(desc, catalog, args.limit)
             if hits:

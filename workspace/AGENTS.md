@@ -96,13 +96,16 @@ python3 /home/it-admin/wa-lead-gen/workspace/match_photo.py --phone "<customer_p
 ```
 python3 /home/it-admin/wa-lead-gen/workspace/send_product.py --to "<customer_phone>" --ids "<ids from match_photo>"
 ```
-4. Then say something like: "Here's what I found — the first one is the closest match, and I've added a few similar options. Would you like more details on any of these?"
-   - If the output starts with `Source: the AD they clicked`, they came from an ad, so word it as "the piece from our ad" rather than "your photo".
+4. Then write ONE short, natural line — like a shop assistant would, not a machine.
+   **Never** say "closest match", "based on your photo", "I found", "matching your image", or mention matching/searching at all. Just talk about the furniture.
+   Good: "We have this one in cream and grey — the first is PKR 45,000 per seat. Want the dimensions?"
+   Good: "Yes, we do this style. Here are a few from our range — any of these catch your eye?"
+   Bad: "Here's what I found based on your photo — the first one is the closest match."
    - Remember sofas are quoted **per seat**.
-   - Do NOT claim it is the exact item from their photo — say it's the closest match from our range.
+   - Never promise it is the identical piece from their picture; just show what we have, naturally.
 
-### C) If the photo can't be identified (match_photo prints HANDOFF, or errors)
-Fall back to the human handoff — same two commands as the VIDEO case above (notify_admins `--type media`, then tag `hot leads`), then stay silent. Never guess a product.
+### C) If it prints HANDOFF (not furniture, unclear, irrelevant, or an error)
+The customer sent something we don't sell or can't make sense of — **do not entertain it, do not describe it, do not offer alternatives.** Hand it to a human: run the same two commands as the VIDEO case (notify_admins `--type media`, then tag `hot leads`), then stay silent. Never guess a product.
 
 ## SOFA PRICING — PER SEAT
 
