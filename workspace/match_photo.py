@@ -58,6 +58,38 @@ def categories(catalog):
     return sorted({c.get("category", "") for c in catalog if c.get("category")})
 
 
+def latest_image_url(phone, max_age_minutes=30):
+    """Find the most recent inbound IMAGE this customer sent, straight from the
+    Kapso API. The agent cannot see the message's MediaPath metadata, so it must
+    not have to pass a URL — it just gives us the phone number."""
+    import time
+    key = env("KAPSO_API_KEY")
+    if not key:
+        raise RuntimeError("KAPSO_API_KEY not set")
+    want = re.sub(r"\D", "", str(phone))
+    url = "https://api.kapso.ai/platform/v1/whatsapp/messages?limit=60&direction=inbound"
+    req = urllib.request.Request(url, headers={"X-API-Key": key, "User-Agent": "Mozilla/5.0 curl/8"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        data = json.load(r)
+    now = time.time()
+    for m in data.get("data", []):                       # newest first
+        k = m.get("kapso") or {}
+        if (m.get("type") or "").lower() != "image" or not k.get("media_url"):
+            continue
+        if re.sub(r"\D", "", str(k.get("phone_number") or "")) != want:
+            continue
+        ts = m.get("timestamp")
+        try:                                              # ignore stale photos
+            from datetime import datetime, timezone
+            when = datetime.fromisoformat(str(ts).replace("Z", "+00:00")).timestamp()
+            if now - when > max_age_minutes * 60:
+                continue
+        except Exception:
+            pass
+        return k["media_url"]
+    raise RuntimeError(f"no recent image found from {phone} (last {max_age_minutes} min)")
+
+
 def fetch_image(url):
     headers = {"User-Agent": "Mozilla/5.0"}
     if "kapso" in url:
@@ -202,6 +234,7 @@ def find(desc, catalog, limit=6):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--phone", help="customer's number — finds their latest photo automatically (preferred)")
     ap.add_argument("--image", help="local image path")
     ap.add_argument("--url", help="image URL (Kapso media url ok)")
     ap.add_argument("--limit", type=int, default=6)
@@ -214,8 +247,10 @@ def main():
             data = open(args.image, "rb").read()
         elif args.url:
             data = fetch_image(args.url)
+        elif args.phone:
+            data = fetch_image(latest_image_url(args.phone))
         else:
-            sys.exit("[FAIL] give --image or --url")
+            sys.exit("[FAIL] give --phone (preferred), --image, or --url")
 
         catalog = load_catalog()
         desc, usage = describe(data, categories(catalog))

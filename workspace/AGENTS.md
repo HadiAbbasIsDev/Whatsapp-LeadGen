@@ -76,13 +76,13 @@ python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<custom
 Then STOP — send nothing to the customer; a human takes over.
 
 ### B) PHOTO (`<media:image>`) — look at it and show the matching products
-The inbound message metadata contains **`MediaPath`** (a URL). Use it:
+**You do NOT need the image file or any URL** — the script fetches the customer's latest photo itself. Never go looking for files on disk.
 
 1. **Immediately** send ONE short holding line so they aren't left waiting (this takes ~15s):
    > "Let me take a look at that photo…"
-2. Identify the item and get matching product ids:
+2. Identify the item and get matching product ids — just pass the customer's number:
 ```
-python3 /home/it-admin/wa-lead-gen/workspace/match_photo.py --url "<MediaPath>"
+python3 /home/it-admin/wa-lead-gen/workspace/match_photo.py --phone "<customer_phone>"
 ```
    - It prints `Seen: <description>` and `IDS: id1,id2,...` — those ids are the closest catalog products (the best match first, then similar ones).
    - If it prints `HANDOFF`, treat it as case (C) below.
