@@ -104,6 +104,13 @@ def category_of(p):
     return ", ".join(tags[:3]) if tags else "Furniture"
 
 
+def _int_price(v):
+    try:
+        return int(round(float(v)))
+    except (TypeError, ValueError):
+        return None
+
+
 def price_of(p):
     variants = p.get("variants") or []
     pool = [v for v in variants if v.get("available")] or variants
@@ -142,6 +149,14 @@ def map_product(p):
     variants = p.get("variants") or []
     return {
         "id": str(p.get("id")),
+        # WhatsApp Business catalogue items are identified by VARIANT id
+        # (message.context.referred_product.product_retailer_id). Keep each
+        # variant's id, label and OWN price so that when a customer taps a
+        # catalogue card we quote the exact figure they saw, not the base price.
+        "variants": [{"id": str(v.get("id")),
+                      "title": (v.get("title") or "").strip(),
+                      "price": _int_price(v.get("price"))}
+                     for v in variants if v.get("id")],
         "name": p.get("title", "").strip(),
         "category": category,
         "price": price_of(p),

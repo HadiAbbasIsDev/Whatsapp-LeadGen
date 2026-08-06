@@ -49,7 +49,10 @@ def api_get(url):
 
 
 def quoted_id(phone):
-    """The message id this customer's most recent message was replying to."""
+    """What the customer's most recent message was replying to.
+    Returns (quoted_message_id, referred_product_retailer_id, their_text).
+    `referred_product` appears when they reply to an item in our WhatsApp
+    Business catalogue (the products shown on the business profile)."""
     want = re.sub(r"\D", "", str(phone))
     data = api_get(f"{API}?limit=40&direction=inbound")
     for m in data.get("data", []):                       # newest first
@@ -57,8 +60,23 @@ def quoted_id(phone):
         if re.sub(r"\D", "", str(k.get("phone_number") or "")) != want:
             continue
         ctx = m.get("context") or {}
-        return ctx.get("id"), str(k.get("content") or "")   # None if not a reply
-    return None, ""
+        ref = (ctx.get("referred_product") or {}).get("product_retailer_id")
+        return ctx.get("id"), ref, str(k.get("content") or "")
+    return None, None, ""
+
+
+def product_by_variant(retailer_id, catalog):
+    """WhatsApp catalogue items are keyed by Shopify VARIANT id.
+    Returns (product, variant) so we can quote the exact price/option the
+    customer saw on the catalogue card."""
+    rid = str(retailer_id)
+    for p in catalog:
+        for v in (p.get("variants") or []):
+            if str(v.get("id")) == rid:
+                return p, v
+        if rid == str(p.get("id")):
+            return p, None
+    return None, None
 
 
 def outbound_content(msg_id):
@@ -90,13 +108,26 @@ def main():
 
     out = {"ok": False}
     try:
-        qid, their_text = quoted_id(args.phone)
+        qid, referred, their_text = quoted_id(args.phone)
         out["their_message"] = their_text[:120]
-        if not qid:
+        catalog = json.load(open(CATALOG, encoding="utf-8")).get("catalog", [])
+
+        # They tapped a product on our WhatsApp Business profile/catalogue.
+        if referred:
+            p, variant = product_by_variant(referred, catalog)
+            if p:
+                # quote the variant they actually tapped, not the base price
+                price = (variant or {}).get("price") or (p.get("price") or {}).get("amount")
+                out.update(ok=True, source="whatsapp_catalog", id=str(p["id"]),
+                           name=p["name"], category=p.get("category", ""),
+                           price=price, variant=(variant or {}).get("title", ""),
+                           dimensions=p.get("dimensions", ""), link=p.get("link", ""))
+            else:
+                out["reason"] = f"replied to catalogue item {referred}, not found in products.json (re-sync?)"
+        elif not qid:
             out["reason"] = "not replying to a specific message"
         else:
             content = outbound_content(qid)
-            catalog = json.load(open(CATALOG, encoding="utf-8")).get("catalog", [])
             p = product_from_text(content, catalog)
             if p:
                 out.update(ok=True, id=str(p["id"]), name=p["name"],
@@ -114,7 +145,8 @@ def main():
         print(json.dumps(out))
     elif out["ok"]:
         price = f"PKR {out['price']:,}" if out.get("price") else ""
-        print(f"PRODUCT: {out['id']}  {out['name']} — {price} — {out['category']}")
+        variant = f" [{out['variant']}]" if out.get("variant") else ""
+        print(f"PRODUCT: {out['id']}  {out['name']}{variant} — {price} — {out['category']}")
         if out.get("dimensions"):
             print(f"  Dimensions: {out['dimensions']}")
         if out.get("link"):
