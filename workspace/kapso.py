@@ -169,6 +169,28 @@ def send_image(to, image_url, caption=None):
         payload["caption"] = str(caption)[:1024]  # Cloud API caption hard limit
     return send_message(to, "image", payload)
 
+def send_interactive(to, body_text, buttons, header_text=None, footer_text=None):
+    """Send an interactive message with up to 3 quick-reply buttons.
+    Buttons: list of {'id': str, 'title': str}.
+    Returns (ok, info) — same contract as send_message."""
+    if not buttons or len(buttons) > 3:
+        return False, "interactive requires 1-3 buttons"
+    interactive = {
+        "type": "button",
+        "body": {"text": str(body_text)[:1024]},
+        "action": {
+            "buttons": [
+                {"type": "reply", "reply": {"id": b["id"], "title": b["title"][:20]}}
+                for b in buttons
+            ]
+        }
+    }
+    if header_text:
+        interactive["header"] = {"type": "text", "text": str(header_text)[:60]}
+    if footer_text:
+        interactive["footer"] = {"text": str(footer_text)[:60]}
+    return send_message(to, "interactive", interactive)
+
 
 def set_contact_metadata(phone, metadata):
     """Push metadata (e.g. {'category': 'hot leads'}) onto the Kapso contact.
