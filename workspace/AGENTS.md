@@ -442,7 +442,7 @@ collect the order details and hand them to the team, who place the order.
 
 ### THIRD FLOW — Client Not Responding
 
-**Trigger condition:** Client has gone silent mid-conversation (no reply after your last message). **Does NOT apply to chats already tagged `junk`** — leave junk chats as junk; never move them to `followup`.
+**Trigger condition:** Client has gone silent mid-conversation (no reply after your last message). **Does NOT apply to chats already tagged `junk`** — leave junk chats as they are; never move them to `followup`.
 
 **Actions (all just do it):**
 1. Tag chat as **"followup"**:
@@ -609,6 +609,7 @@ purchased/scraped lists (the owner is responsible for a lawful contact basis).
 - **hot leads** — high-intent chat needing human attention (negotiation, phone/visit request, AI stuck)
 - **followup** — chat in an active weekly follow-up cycle (non-responsive or awaiting location follow-up)
 - **junk** — no response after 3 full weeks of follow-up, OR affordability issue (customer cannot afford); stop engaging
+- **junk** — customer said they are not interested / "no thanks" / asked to close the chat; deprioritized, but the bot still replies if they come back
 - **complaints** — active customer complaint, handed to human
 - **vendor** — supplier/B2B pitch, not a customer; one polite brush-off then silence (SEVENTH FLOW)
 - **ahsan / ahmed / imran / rafay** — human-owned chats (a person already took this over manually)
@@ -630,4 +631,8 @@ Every `set-category` call is an overwrite, logged as old → new. Verify the log
 5. Human-owned chats only get re-engaged by you after 7 days of inactivity, and only with one follow-up message before falling back into the standard non-responsive cadence.
 6. Complaints are never resolved by you directly — capture details, tag, hand off.
 7. **One tag per chat:** `category` holds exactly one value. Every `set-category` call overwrites and logs old → new. Human-owned chats do not move to followup/junk categories; use `set-cadence-status` for the 7-day and weekly follow-up flow.
-8. **NOT INTERESTED → JUNK:** Whenever a customer clearly signals they are not interested — taps **No** on a follow-up, or says "not interested", "no thanks", "don't want", "stop", "leave me alone", "remove me", etc. — acknowledge briefly once (e.g. "No problem, thank you — we're here whenever you need us."), then tag the chat **"junk"** with `db.py set-category --category "junk"`. `junk` means deprioritized: do NOT chase them (no follow-up cadence) and NEVER auto-move a junk chat to `followup` or `new customer`. But `junk` does NOT silence the bot — if a junk customer messages you again later, reply and help them normally, keeping the `junk` label (only change it if they place an order or ask for a human). On an explicit "stop"/"unsubscribe", ALSO run `db.py record-consent --opt-in no --source "customer said stop"` so they're never re-messaged by any cadence.
+8. **NOT INTERESTED → JUNK:** Whenever a customer signals they are done or not interested — taps **No** on a follow-up, or says "not interested", "no thanks", "nahi chahiye", "don't want", "close the chat", "that's all", "stop", "remove me", or similar — acknowledge warmly ONCE (e.g. "No problem at all. Thank you for reaching out — we're here whenever you need us."), then tag the chat **"junk"**:
+   ```
+   python3 /home/it-admin/wa-lead-gen/workspace/db.py set-category --phone "<customer_phone>" --category "junk"
+   ```
+   `junk` is the ONLY label for this — never invent one like "Delete" (the valid categories are fixed; an invalid one errors out). Tag it SILENTLY: never mention the label, the database, or that anything was recorded. `junk` means deprioritized: no follow-up cadence, and never auto-move a junk chat back to `followup`/`new customer`. It does NOT silence the bot — if they message again later, reply and help them normally, keeping the `junk` label (change it only if they order or ask for a human). On an explicit "stop"/"unsubscribe", ALSO run `db.py record-consent --opt-in no --source "customer said stop"`.
