@@ -58,10 +58,14 @@ def categories(catalog):
     return sorted({c.get("category", "") for c in catalog if c.get("category")})
 
 
-def latest_image_url(phone, max_age_minutes=30):
-    """Find the most recent inbound IMAGE this customer sent, straight from the
-    Kapso API. The agent cannot see the message's MediaPath metadata, so it must
-    not have to pass a URL — it just gives us the phone number."""
+def latest_image_url(phone, max_age_minutes=180):
+    """Find the newest image to identify for this customer, from the Kapso API.
+    Two sources, whichever is most recent:
+      1. a photo they sent (type=image), or
+      2. the AD they clicked — a Click-to-WhatsApp ad puts the ad creative in
+         message.referral.image_url, so we know exactly which ad they came from.
+    The agent can't see this metadata, so it only passes the phone number.
+    Returns (url, kind, note)."""
     import time
     key = env("KAPSO_API_KEY")
     if not key:
@@ -74,20 +78,23 @@ def latest_image_url(phone, max_age_minutes=30):
     now = time.time()
     for m in data.get("data", []):                       # newest first
         k = m.get("kapso") or {}
-        if (m.get("type") or "").lower() != "image" or not k.get("media_url"):
-            continue
         if re.sub(r"\D", "", str(k.get("phone_number") or "")) != want:
             continue
-        ts = m.get("timestamp")
-        try:                                              # ignore stale photos
-            from datetime import datetime, timezone
-            when = datetime.fromisoformat(str(ts).replace("Z", "+00:00")).timestamp()
+        try:                                              # ignore stale messages
+            from datetime import datetime
+            ts = str(m.get("timestamp"))
+            when = float(ts) if ts.isdigit() else datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
             if now - when > max_age_minutes * 60:
                 continue
         except Exception:
             pass
-        return k["media_url"]
-    raise RuntimeError(f"no recent image found from {phone} (last {max_age_minutes} min)")
+        if (m.get("type") or "").lower() == "image" and k.get("media_url"):
+            return k["media_url"], "photo", ""
+        ref = m.get("referral") or {}
+        if ref.get("image_url"):
+            note = " / ".join(x for x in (ref.get("headline"), ref.get("body")) if x)
+            return ref["image_url"], "ad", note
+    raise RuntimeError(f"no recent photo or ad click from {phone} (last {max_age_minutes} min)")
 
 
 def fetch_image(url):
@@ -248,7 +255,11 @@ def main():
         elif args.url:
             data = fetch_image(args.url)
         elif args.phone:
-            data = fetch_image(latest_image_url(args.phone))
+            src_url, kind, note = latest_image_url(args.phone)
+            out["source"] = kind          # "photo" (they sent one) or "ad" (they clicked an ad)
+            if note:
+                out["ad_text"] = note
+            data = fetch_image(src_url)
         else:
             sys.exit("[FAIL] give --phone (preferred), --image, or --url")
 
@@ -278,6 +289,8 @@ def main():
         print(json.dumps(out))
     else:
         if out["decision"] == "match":
+            if out.get("source") == "ad":
+                print(f"Source: the AD they clicked ({out.get('ad_text','')})")
             print(f"Seen: {out['query']}  (category: {out['category']})")
             print("IDS: " + ",".join(out["ids"]))
             for p in out["products"]:
