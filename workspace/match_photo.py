@@ -122,6 +122,41 @@ def fetch_image(url):
     raise RuntimeError(f"could not download image ({last})")
 
 
+def ocr_text(image_bytes):
+    """Read visible English text with Tesseract (tiny, local, ~0.2s, no network).
+    Catalogue/website screenshots usually show the product NAME — reading it lets
+    us match exactly and skip the slow vision call entirely. '' if unavailable."""
+    try:
+        import io
+        import pytesseract
+        from PIL import Image, ImageOps
+        im = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes)).convert("L"))
+        if max(im.size) > 1600:                     # keep it quick
+            im.thumbnail((1600, 1600))
+        return pytesseract.image_to_string(im, lang="eng") or ""
+    except Exception:
+        return ""                                    # OCR is a bonus, never a blocker
+
+
+def match_by_name(text, catalog, min_words=2):
+    """Find a catalog product whose NAME appears in the OCR text.
+    Requires a multi-word overlap so 'Sofa' alone can't trigger a false match."""
+    if not text:
+        return None
+    flat = re.sub(r"[^a-z0-9 ]+", " ", text.lower())
+    flat = re.sub(r"\s+", " ", flat)
+    best, best_len = None, 0
+    for p in catalog:
+        name = re.sub(r"[^a-z0-9 ]+", " ", str(p.get("name", "")).lower())
+        words = [w for w in name.split() if len(w) > 2]
+        if len(words) < min_words:
+            continue
+        # every significant word of the product name must appear in the text
+        if all(w in flat for w in words) and len(words) > best_len:
+            best, best_len = p, len(words)
+    return best
+
+
 def shrink(image_bytes, max_side=900):
     """Downscale before sending: fewer tokens = faster and cheaper, and a 900px
     view is plenty to identify furniture. Falls back to the original on error."""
@@ -264,7 +299,34 @@ def main():
             sys.exit("[FAIL] give --phone (preferred), --image, or --url")
 
         catalog = load_catalog()
+
+        # FAST PATH: catalogue/website screenshots usually show the product name.
+        # Local OCR (~0.2s) beats a ~15s vision call and gives an exact match.
+        named = match_by_name(ocr_text(data), catalog)
+        if named:
+            similar = [p for p in find({"category": named.get("category", ""),
+                                        "keywords": named.get("keywords", ""),
+                                        "item": named.get("name", "")}, catalog, args.limit + 1)
+                       if str(p["id"]) != str(named["id"])][: args.limit - 1]
+            hits = [named] + similar
+            out.update(ok=True, decision="match", method="ocr_name",
+                       query=named["name"], category=named.get("category", ""),
+                       ids=[str(p["id"]) for p in hits],
+                       products=[{"id": str(p["id"]), "name": p["name"],
+                                  "category": p["category"],
+                                  "price": (p.get("price") or {}).get("amount")} for p in hits])
+            if args.json:
+                print(json.dumps(out))
+            else:
+                print(f"Seen (read from the image): {named['name']}")
+                print("IDS: " + ",".join(out["ids"]))
+                for p in out["products"]:
+                    amt = f"PKR {p['price']:,}" if p.get("price") else ""
+                    print(f"  {p['id']}  {p['name']} — {amt} — {p['category']}")
+            return 0
+
         desc, usage = describe(data, categories(catalog))
+        out["method"] = "vision"
         out["query"] = desc.get("item", "")
         out["category"] = desc.get("category", "")
         out["multiple"] = bool(desc.get("multiple"))
