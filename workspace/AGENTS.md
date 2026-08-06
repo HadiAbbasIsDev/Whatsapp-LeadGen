@@ -43,15 +43,22 @@ it. DO NOT run any transcription script in that case — the transcript is alrea
 there.**
 
 Only when the message is a voice note with NO readable transcript (you see
-`<media:audio>` and no words) do you transcribe it yourself:
+`[Audio attached]` / `<media:audio>` and no words) do you transcribe it yourself.
+**Just pass the phone number — the script finds and downloads the voice note itself:**
 ```
-python3 /home/it-admin/wa-lead-gen/workspace/transcribe_voice.py --phone "<customer_phone>" --audio "<MediaPath>"
+python3 /home/it-admin/wa-lead-gen/workspace/transcribe_voice.py --phone "<customer_phone>"
 ```
-(Omit `--audio "<MediaPath>"` if no MediaPath is shown; the script retries
-transient failures on its own.)
-- If it returns `"status": "ok"`, use the `text` field as the customer's message.
-- If it returns `"code": "audio_too_long"`, reply once: "Please send a voice message under 2 minutes, or type your message."
-- If it returns any other error, reply once: "Sorry, I couldn't hear that clearly — could you type it out?"
+- `"status": "ok"` → use the `text` field as the customer's message and reply normally.
+- `"code": "audio_too_long"` → reply once: "Please send a voice message under 2 minutes, or type your message."
+- `"code": "no_audio_found"` (the audio is not available to us yet) or any other
+  error → do NOT send a technical error and do NOT say "no audio file found".
+  Reply once, naturally: *"Sorry, I couldn't play that voice note — could you type it, or shall I have someone call you?"*
+  Then alert the team so nothing is lost:
+```
+python3 /home/it-admin/wa-lead-gen/workspace/notify_admins.py \
+  --type other --name "<customer name or 'Unknown'>" --phone "<customer E.164 phone>" \
+  --email "Not provided" --products "Voice note we could not play — please listen and follow up"
+```
 
 **NEVER leak the mechanics to the customer.** Do NOT send the transcription
 command, its JSON output, any error text, "failed"/"run" tool messages, or your

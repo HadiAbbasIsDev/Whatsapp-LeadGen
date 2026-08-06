@@ -100,6 +100,70 @@ def find_latest_audio():
     return None
 
 
+def fetch_latest_voice_from_kapso(phone, max_age_minutes=180):
+    """Download this customer's most recent voice note from the Kapso API.
+
+    On the Kapso transport nothing is written to the old inbound media folder —
+    the audio lives at message.audio.url — so looking on disk always failed.
+    Returns a local file path, or None."""
+    import re
+    import time
+    import urllib.request
+    load_dotenv()                       # ensure KAPSO_API_KEY is available
+    key = os.environ.get("KAPSO_API_KEY")
+    if not key or not phone:
+        return None
+    want = re.sub(r"\D", "", str(phone))
+    try:
+        req = urllib.request.Request(
+            "https://api.kapso.ai/platform/v1/whatsapp/messages?limit=40&direction=inbound",
+            headers={"X-API-Key": key, "User-Agent": "Mozilla/5.0 curl/8"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            data = json.load(r)
+    except Exception:
+        return None
+    now = time.time()
+    for m in data.get("data", []):                       # newest first
+        k = m.get("kapso") or {}
+        if re.sub(r"\D", "", str(k.get("phone_number") or "")) != want:
+            continue
+        if (m.get("type") or "").lower() not in ("audio", "voice"):
+            continue
+        # Kapso mirrors the audio to its own storage a few seconds after the
+        # message arrives. Prefer that copy — the raw Meta lookaside URL needs
+        # Meta's token and returns 401 for us.
+        url = ((m.get("audio") or {}).get("link") or k.get("media_url"))
+        if not url:
+            return None          # not mirrored yet; caller retries
+
+        try:
+            ts = str(m.get("timestamp"))
+            if ts.isdigit() and now - float(ts) > max_age_minutes * 60:
+                continue
+        except Exception:
+            pass
+        os.makedirs(AUDIO_CACHE_DIR, exist_ok=True)
+        dest = os.path.join(AUDIO_CACHE_DIR, f"kapso_{m.get('id','voice')[-24:]}.ogg")
+        if os.path.exists(dest) and os.path.getsize(dest) > 0:
+            return dest
+        headers = {"User-Agent": "Mozilla/5.0"}
+        if "kapso" in url:
+            headers["X-API-Key"] = key
+        for attempt in range(3):                          # flaky DNS/network
+            try:
+                rq = urllib.request.Request(url, headers=headers)
+                with urllib.request.urlopen(rq, timeout=60) as resp:
+                    payload = resp.read()
+                if payload:
+                    with open(dest, "wb") as f:
+                        f.write(payload)
+                    return dest
+            except Exception:
+                time.sleep(1.5 * (attempt + 1))
+        return None
+    return None
+
+
 def print_error(message, code="transcription_failed", **extra):
     payload = {"status": "error", "code": code, "message": message}
     payload.update(extra)
@@ -325,9 +389,20 @@ if __name__ == "__main__":
     parser.add_argument("--audio", type=str, help="Explicit audio file path from the inbound media context")
     args = parser.parse_args()
 
+    # Prefer an explicit path, then the local media store (Baileys), then pull the
+    # voice note straight from Kapso — on the Kapso transport nothing lands on disk.
     audio_path = args.audio or find_latest_audio()
+    if not audio_path or not os.path.exists(audio_path):
+        # Kapso needs a few seconds to mirror the voice note into its storage,
+        # so poll briefly rather than giving up on the first miss.
+        import time as _t
+        for _attempt in range(6):
+            audio_path = fetch_latest_voice_from_kapso(args.phone) or audio_path
+            if audio_path and os.path.exists(audio_path):
+                break
+            _t.sleep(2.5)
     if not audio_path:
-        print_error("No audio file found in inbound directory", code="no_audio_found")
+        print_error("No voice note found for this customer", code="no_audio_found")
     if not os.path.exists(audio_path):
         print_error("Audio file path does not exist", code="audio_not_found", audio_path=audio_path)
 
