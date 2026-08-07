@@ -55,14 +55,19 @@ def quoted_id(phone):
     Business catalogue (the products shown on the business profile)."""
     want = re.sub(r"\D", "", str(phone))
     data = api_get(f"{API}?limit=40&direction=inbound")
-    for m in data.get("data", []):                       # newest first
-        k = m.get("kapso") or {}
-        if re.sub(r"\D", "", str(k.get("phone_number") or "")) != want:
-            continue
+    mine = [m for m in data.get("data", [])
+            if re.sub(r"\D", "", str((m.get("kapso") or {}).get("phone_number") or "")) == want]
+    if not mine:
+        return None, None, ""
+    # Customers often add a follow-up line after the reply ("...final price" then
+    # "with high quality"), so scan their few most recent messages for the one
+    # that actually carries the reply context rather than only the newest.
+    for m in mine[:5]:
         ctx = m.get("context") or {}
         ref = (ctx.get("referred_product") or {}).get("product_retailer_id")
-        return ctx.get("id"), ref, str(k.get("content") or "")
-    return None, None, ""
+        if ctx.get("id") or ref:
+            return ctx.get("id"), ref, str((m.get("kapso") or {}).get("content") or "")
+    return None, None, str((mine[0].get("kapso") or {}).get("content") or "")
 
 
 def product_by_variant(retailer_id, catalog):
@@ -79,12 +84,33 @@ def product_by_variant(retailer_id, catalog):
     return None, None
 
 
+def find_message(msg_id, direction, max_pages=6):
+    """Locate a message by id, paging back through history — the quoted message
+    can be hours old and well past the first page."""
+    after = None
+    for _ in range(max_pages):
+        url = f"{API}?limit=100&direction={direction}"
+        if after:
+            url += "&after=" + urllib.request.quote(str(after))
+        data = api_get(url)
+        for m in data.get("data", []):
+            if m.get("id") == msg_id:
+                return m
+        after = ((data.get("paging") or {}).get("cursors") or {}).get("after")
+        if not after:
+            break
+    return None
+
+
 def outbound_content(msg_id):
-    data = api_get(f"{API}?limit=100&direction=outbound")
-    for m in data.get("data", []):
-        if m.get("id") == msg_id:
-            return str((m.get("kapso") or {}).get("content") or "")
-    return ""
+    m = find_message(msg_id, "outbound")
+    return str((m.get("kapso") or {}).get("content") or "") if m else ""
+
+
+def inbound_message(msg_id):
+    """The customer's OWN message they replied to — they often send a photo and
+    then reply to it ('this two chairs final price')."""
+    return find_message(msg_id, "inbound")
 
 
 def product_from_text(text, catalog):
@@ -128,6 +154,21 @@ def main():
             out["reason"] = "not replying to a specific message"
         else:
             content = outbound_content(qid)
+            if not content:
+                # Not one of ours — they replied to their OWN message. If that was
+                # a photo, hand the exact image back so it can be re-identified.
+                own = inbound_message(qid) or {}
+                k = own.get("kapso") or {}
+                if (own.get("type") or "").lower() == "image" and k.get("media_url"):
+                    out.update(ok=True, source="customer_photo", photo_url=k["media_url"],
+                               their_message=their_text[:120])
+                    if args.json:
+                        print(json.dumps(out))
+                    else:
+                        print(f"PHOTO: {k['media_url']}")
+                        print("  (they replied to a photo THEY sent — re-identify it with:")
+                        print(f"   match_photo.py --url \"{k['media_url']}\")")
+                    return 0
             p = product_from_text(content, catalog)
             if p:
                 out.update(ok=True, id=str(p["id"]), name=p["name"],

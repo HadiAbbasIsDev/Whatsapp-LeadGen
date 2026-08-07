@@ -88,6 +88,11 @@ A customer can reply to **a product you sent** OR to **an item in our WhatsApp B
 python3 /home/it-admin/wa-lead-gen/workspace/replied_to.py --phone "<customer_phone>"
 ```
 - Prints `PRODUCT: <id> <name> [variant] — <price> — <category>` (plus dimensions/link) → that is the exact product they mean. Answer about THAT product, and **quote the price shown here** — for a catalogue item it is the specific variant's price (e.g. "3 + 2 + 1 + 1 Seater — PKR 245,000"), which is what the customer saw. Do not substitute the cheaper base price.
+- Prints `PHOTO: <url>` → they replied to **a photo they sent earlier** (e.g. "this two chairs final price"). Do NOT ask which product they mean — re-identify that exact photo:
+  ```
+  python3 /home/it-admin/wa-lead-gen/workspace/match_photo.py --url "<the URL it printed>"
+  ```
+  then send those products with `send_product.py`, exactly as in the PHOTOS section.
 - Prints `NO_REPLY_CONTEXT` → they weren't replying to a specific message. Only then fall back to the conversation, or ask which item they mean.
 
 Run this BEFORE answering any "this"-style question, and before running the photo matcher.
