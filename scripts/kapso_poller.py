@@ -127,6 +127,53 @@ def msg_ts(m):
     return to_epoch_seconds(first(m.get("timestamp"), m.get("created_at"), m.get("inserted_at"))) or 0
 
 
+_CATALOG_CACHE = None
+
+
+def _catalog():
+    global _CATALOG_CACHE
+    if _CATALOG_CACHE is None:
+        try:
+            with open(os.path.join(REPO, "workspace", "data", "products.json"), encoding="utf-8") as f:
+                _CATALOG_CACHE = json.load(f).get("catalog", [])
+        except Exception:
+            _CATALOG_CACHE = []
+    return _CATALOG_CACHE
+
+
+def order_summary_text(order):
+    """WhatsApp's native catalog checkout (type=order) carries NO readable text —
+    only a list of {product_retailer_id, item_price, quantity}. Without this, the
+    poller sends the agent nothing usable and a real order goes silently unseen.
+    Build a plain-English summary the agent can act on (SECOND FLOW)."""
+    items = order.get("product_items") if isinstance(order, dict) else None
+    if not items:
+        return None
+    catalog = _catalog()
+    by_variant = {}
+    for p in catalog:
+        for v in (p.get("variants") or []):
+            if v.get("id"):
+                by_variant[str(v["id"])] = (p, v)
+
+    lines = ["Customer placed an order via the WhatsApp catalog:"]
+    total = 0
+    for it in items:
+        rid = str(it.get("product_retailer_id") or "")
+        qty = it.get("quantity") or 1
+        price = it.get("item_price")
+        p, v = by_variant.get(rid, (None, None))
+        name = p["name"] if p else f"(unknown catalog item {rid})"
+        variant = f" [{v['title']}]" if v and v.get("title") else ""
+        price_str = f"PKR {price:,.0f}" if isinstance(price, (int, float)) else "PKR ?"
+        lines.append(f"- {name}{variant} x{qty} — {price_str}")
+        if isinstance(price, (int, float)):
+            total += price * qty
+    if total:
+        lines.append(f"Total: PKR {total:,.0f}")
+    return "\n".join(lines)
+
+
 def map_message(m):
     """Map a platform-API message object to the webhook message shape the
     kapso-whatsapp plugin's normalizeKapsoWebhook() accepts.
@@ -160,6 +207,10 @@ def map_message(m):
         (m.get("content") or {}).get("text") if isinstance(m.get("content"), dict) else None,
         m.get("body"),
     )
+    if not text and mtype == "order" and isinstance(m.get("order"), dict):
+        # Native catalog checkout has no text field at all — synthesize one so
+        # the agent actually sees what was ordered (see order_summary_text).
+        text = order_summary_text(m["order"])
     msg = {
         "id": mid,
         "type": mtype,

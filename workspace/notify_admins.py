@@ -19,7 +19,7 @@ from datetime import datetime
 
 OWNER = "+923362615506"          # always an admin; cannot be removed
 ADMINS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "admins.json")
-ALERTS_FILE = "data/admin_alerts.json"
+ALERTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "admin_alerts.json")
 
 
 def load_admins():
