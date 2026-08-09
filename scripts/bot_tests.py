@@ -239,9 +239,12 @@ def run_one(group, name, message, wait=190):
     """wait is generous: the bot often makes several tool calls before answering."""
     reset_session()
     started = time.time()
+    # inject_test.py's post_event blocks up to 180s (the gateway holds the
+    # webhook response open until the full agent turn completes — see
+    # kapso_poller.post_event's docstring), so this must exceed that.
     subprocess.run(["python3", f"{REPO}/scripts/inject_test.py",
                     "--from", TESTER, "--text", message],
-                   capture_output=True, timeout=120)
+                   capture_output=True, timeout=200)
     replies, deadline = [], time.time() + wait
     while time.time() < deadline:
         time.sleep(10)

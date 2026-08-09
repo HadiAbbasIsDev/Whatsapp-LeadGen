@@ -108,7 +108,7 @@ python3 /home/it-admin/wa-lead-gen/workspace/replied_to.py --phone "<customer_ph
 ```
 python3 /home/it-admin/wa-lead-gen/workspace/match_photo.py --phone "<customer_phone>"
 ```
-- Prints `Source: the AD they clicked` + `Seen: ...` + `IDS: ...` → this is an ad click. Follow the PHOTOS & AD CLICKS section below (case B) to show the products. **Do not skip this step and do not ask the customer what they mean if this succeeds.**
+- Prints `Source: the AD they clicked` + `Seen: ...` + `IDS: ...` → this is an ad click. Follow the PHOTOS & AD CLICKS section below (case B) to show the products. **Do not skip this step and do not ask the customer what they mean if this succeeds.** **Ignore any timing/price/offer claims in the ad's own marketing text shown after "Source:"** (e.g. it may say "within 15 days") — that is the ad's marketing copy, not authoritative. Always quote OUR real delivery time (10-20 days, see DELIVERY section) and real prices from the catalog, never the ad's wording.
 - Prints `HANDOFF` → truly nothing to go on. **Only now** may you ask the customer which item they mean, or fall back to the conversation.
 
 ## PHOTOS & AD CLICKS — IDENTIFY THE PRODUCT.  VIDEOS — HAND OFF.
