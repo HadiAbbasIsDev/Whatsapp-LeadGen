@@ -160,15 +160,12 @@ def main():
                 own = inbound_message(qid) or {}
                 k = own.get("kapso") or {}
                 if (own.get("type") or "").lower() == "image" and k.get("media_url"):
-                    out.update(ok=True, source="customer_photo", photo_url=k["media_url"],
-                               their_message=their_text[:120])
-                    if args.json:
-                        print(json.dumps(out))
-                    else:
-                        print(f"PHOTO: {k['media_url']}")
-                        print("  (they replied to a photo THEY sent — re-identify it with:")
-                        print(f"   match_photo.py --url \"{k['media_url']}\")")
-                    return 0
+                    # They replied to a photo THEY sent. Per policy, customer-sent
+                    # photos are NOT auto-identified — hand off to a human.
+                    out.update(ok=False, source="customer_photo",
+                               reason="replied to a photo they sent — hand to a human (photos are not auto-identified)")
+                    print(json.dumps(out) if args.json else f"HANDOFF — {out['reason']}")
+                    return 1
             p = product_from_text(content, catalog)
             if p:
                 out.update(ok=True, id=str(p["id"]), name=p["name"],

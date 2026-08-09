@@ -366,11 +366,12 @@ def main():
             out["photo_count"] = len(urls)
             if note:
                 out["ad_text"] = note
-            # A photo the customer sent COLD (not a reply to any chat message, not
-            # from an ad) is handed to a human — we don't try to identify it.
-            # Only replies (reply_photo) and ad clicks (ad) get auto-identified.
-            if kind == "standalone_photo" and not args.force_identify:
-                out["reason"] = "standalone photo (not a reply / not from an ad) — hand to a human"
+            # ONLY ad clicks are auto-identified. Any ACTUAL photo the customer
+            # sends into the chat — standalone, forwarded, or even a reply — is
+            # handed to a human. We do not run the 15-20s image identification on
+            # customer-sent photos.
+            if kind in ("standalone_photo", "reply_photo") and not args.force_identify:
+                out["reason"] = "customer sent a photo directly — hand to a human (only ad clicks are auto-identified)"
                 print(json.dumps(out) if args.json else f"HANDOFF — {out['reason']}")
                 return 1
             if len(urls) > MAX_PHOTOS:
