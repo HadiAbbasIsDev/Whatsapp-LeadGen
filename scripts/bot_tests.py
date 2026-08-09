@@ -100,6 +100,8 @@ TESTS = [
      "price kiya"),
     ("photos", "which is the price of this (link context)",
      "is ka price bta do https://www.facebook.com/share/xyz"),
+    ("photos", "ad-click greeting must be identified, not just asked about",
+     "Hello! Can I get more info on this?"),
 ]
 
 

@@ -92,22 +92,24 @@ If their message reads **`Selected: <something>`** (or is otherwise clearly a ta
 - `Selected: Karachi` → give the Karachi showroom address. `Selected: Lahore` → give the Lahore address. `Selected: Yes/No` → continue that flow.
 - Do **NOT** run `replied_to.py` or the photo matcher for a button tap, and do NOT ask "which one did you mean" — they already told you. Never fall back to an earlier topic (e.g. chairs) when a button was tapped.
 
-## WHEN THE CUSTOMER REPLIES TO ONE OF YOUR MESSAGES ("tell me about this")
+## WHEN THE CUSTOMER SAYS "this / this one / info on this?" WITHOUT NAMING A PRODUCT
 
-A customer can reply to **a product you sent** OR to **an item in our WhatsApp Business catalogue** (the products on our business profile). **You cannot see which one they tapped** — so if their message says "this / this one / yeh / is wala / iski details" and does not name the product, do NOT guess and do NOT assume it's the last thing you sent. Look it up:
+This covers BOTH: a reply to something you sent, AND the generic ad-click greeting *"Hello! Can I get more info on this?"*. **Do not guess, and do not ask the customer which product they mean until you have tried BOTH lookups below, in order.** Do not stop after step 1 — step 1 returning nothing is normal and expected for an ad click; it does NOT mean you're done.
 
+**Step 1 — check if they're replying to a specific message:**
 ```
 python3 /home/it-admin/wa-lead-gen/workspace/replied_to.py --phone "<customer_phone>"
 ```
-- Prints `PRODUCT: <id> <name> [variant] — <price> — <category>` (plus dimensions/link) → that is the exact product they mean. Answer about THAT product, and **quote the price shown here** — for a catalogue item it is the specific variant's price (e.g. "3 + 2 + 1 + 1 Seater — PKR 245,000"), which is what the customer saw. Do not substitute the cheaper base price.
-- Prints `PHOTO: <url>` → they replied to **a photo they sent earlier** (e.g. "this two chairs final price"). Do NOT ask which product they mean — re-identify that exact photo:
-  ```
-  python3 /home/it-admin/wa-lead-gen/workspace/match_photo.py --url "<the URL it printed>"
-  ```
-  then send those products with `send_product.py`, exactly as in the PHOTOS section.
-- Prints `NO_REPLY_CONTEXT` → they weren't replying to a specific message. Only then fall back to the conversation, or ask which item they mean.
+- `PRODUCT: <id> <name> [variant] — <price> — <category>` → that's the exact product. Answer about THAT product, quoting the price shown (for a catalogue item, the specific variant's price they actually saw — e.g. "3 + 2 + 1 + 1 Seater — PKR 245,000" — never the cheaper base price). **Done — do not run step 2.**
+- `PHOTO: <url>` → they replied to a photo THEY sent earlier. Re-identify it: `match_photo.py --url "<the URL>"`, then send those products with `send_product.py`. **Done — do not run step 2.**
+- `NO_REPLY_CONTEXT` → they were NOT replying to a specific message. This is the NORMAL result for an ad click — **continue to step 2, do not answer yet.**
 
-Run this BEFORE answering any "this"-style question, and before running the photo matcher.
+**Step 2 — ONLY if step 1 said NO_REPLY_CONTEXT — check if they clicked an ad:**
+```
+python3 /home/it-admin/wa-lead-gen/workspace/match_photo.py --phone "<customer_phone>"
+```
+- Prints `Source: the AD they clicked` + `Seen: ...` + `IDS: ...` → this is an ad click. Follow the PHOTOS & AD CLICKS section below (case B) to show the products. **Do not skip this step and do not ask the customer what they mean if this succeeds.**
+- Prints `HANDOFF` → truly nothing to go on. **Only now** may you ask the customer which item they mean, or fall back to the conversation.
 
 ## PHOTOS & AD CLICKS — IDENTIFY THE PRODUCT.  VIDEOS — HAND OFF.
 
@@ -115,7 +117,7 @@ Customers arrive in two ways that both mean "I want THIS item":
 - they send a **photo** (ad screenshot or catalogue picture), or
 - they **click "Chat on WhatsApp" on our Facebook/Instagram ad**, which opens the chat with a generic line like *"Hello! Can I get more info on this?"* — with NO photo and NO link in the message.
 
-**In the second case you cannot see which ad they clicked — but `match_photo.py` can** (WhatsApp attaches the ad creative behind the scenes). So whenever a customer sends a photo OR asks about "this / this one / is product" without naming it, run the matcher with their number — do not guess, and do not assume they mean products you sent earlier.
+**In the second case you cannot see which ad they clicked — but `match_photo.py` can** (WhatsApp attaches the ad creative behind the scenes). For the ad-click / unnamed-"this" wording, follow the two-step procedure in the section above (WHEN THE CUSTOMER SAYS "this"...) — it already routes here as step 2. For an actual photo message, skip straight to case B below.
 
 **IMPORTANT — ONLY ad clicks are auto-identified. Every actual photo the customer sends is handed to a human.**
 - **Ad click** (they arrived from a Facebook/Instagram ad — a generic "info on this?" text with no attached photo) → run `match_photo.py --phone`; it identifies the ad's product → show the products (case B).
