@@ -94,14 +94,21 @@ def recent_image_urls(phone, burst_seconds=90, wait_seconds=2.0):
 
     newest = max((when(m) for m in mine), default=0)
     urls = []
+    reply = False
     for m in mine:                                   # newest first
         k = m.get("kapso") or {}
         if newest - when(m) > burst_seconds:
             break                                    # older than this burst
         if (m.get("type") or "").lower() == "image" and k.get("media_url"):
             urls.append(k["media_url"])
+            # Is this photo a REPLY to something (a product we sent, a catalogue
+            # item, or the customer's own earlier message)? Only replies get
+            # auto-identified; a photo sent cold is handed to a human.
+            ctx = m.get("context") or {}
+            if ctx.get("id") or (ctx.get("referred_product") or {}).get("product_retailer_id"):
+                reply = True
     if urls:
-        return urls, "photo", ""
+        return urls, ("reply_photo" if reply else "standalone_photo"), ""
     # no photos in the burst — fall back to the ad they clicked, if any
     single, kind, note = latest_image_url(phone)
     return [single], kind, note
@@ -342,6 +349,8 @@ def main():
     ap.add_argument("--limit", type=int, default=6)
     ap.add_argument("--wait", type=float, default=2.0,
                     help="seconds to wait for more photos in the same burst (default 2)")
+    ap.add_argument("--force-identify", action="store_true",
+                    help="identify even a standalone photo (used by replied_to.py for reply-to-own-photo)")
     ap.add_argument("--json", action="store_true", help="machine-readable output")
     args = ap.parse_args()
 
@@ -353,10 +362,17 @@ def main():
             data = fetch_image(args.url)
         elif args.phone:
             urls, kind, note = recent_image_urls(args.phone, wait_seconds=args.wait)
-            out["source"] = kind          # "photo" (they sent one) or "ad" (they clicked an ad)
+            out["source"] = kind
             out["photo_count"] = len(urls)
             if note:
                 out["ad_text"] = note
+            # A photo the customer sent COLD (not a reply to any chat message, not
+            # from an ad) is handed to a human — we don't try to identify it.
+            # Only replies (reply_photo) and ad clicks (ad) get auto-identified.
+            if kind == "standalone_photo" and not args.force_identify:
+                out["reason"] = "standalone photo (not a reply / not from an ad) — hand to a human"
+                print(json.dumps(out) if args.json else f"HANDOFF — {out['reason']}")
+                return 1
             if len(urls) > MAX_PHOTOS:
                 out["reason"] = (f"customer sent {len(urls)} photos at once "
                                  f"(more than {MAX_PHOTOS}) — needs a human")

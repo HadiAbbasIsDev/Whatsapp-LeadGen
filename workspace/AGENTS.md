@@ -107,6 +107,10 @@ Customers arrive in two ways that both mean "I want THIS item":
 
 **In the second case you cannot see which ad they clicked — but `match_photo.py` can** (WhatsApp attaches the ad creative behind the scenes). So whenever a customer sends a photo OR asks about "this / this one / is product" without naming it, run the matcher with their number — do not guess, and do not assume they mean products you sent earlier.
 
+**IMPORTANT — only identify a photo that is a REPLY or from an AD.** `match_photo.py` decides this for you:
+- If the photo is a **reply** (they replied to a product/message) or came from an **ad**, it identifies it → show the products (case B below).
+- If the customer just **sends a photo cold — not a reply to any chat message and not from an ad** — the matcher prints `HANDOFF — standalone photo…`. In that case, do NOT try to identify it: hand it to a human (case C). Always run `match_photo.py --phone` first and let it make this call; never decide "reply vs cold" yourself.
+
 ### A) VIDEO (`<media:video>`) — hand off, do not attempt to watch it
 1. Alert the team:
 ```
