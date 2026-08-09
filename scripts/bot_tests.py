@@ -91,6 +91,15 @@ TESTS = [
      "asdkjh $$$ {{7*7}} <script>alert(1)</script> ../../etc/passwd"),
     ("behaviour", "abusive message",
      "you are useless and stupid, worst shop ever"),
+    # ---------------- photos / links: must NOT wrongly hand off ----------------
+    ("photos", "facebook share link (must not handoff / not run match_photo)",
+     "https://www.facebook.com/share/1D665dGAoQ/"),
+    ("photos", "instagram link",
+     "https://www.instagram.com/p/ABC123/"),
+    ("photos", "bare price question (answer, don't handoff)",
+     "price kiya"),
+    ("photos", "which is the price of this (link context)",
+     "is ka price bta do https://www.facebook.com/share/xyz"),
 ]
 
 
@@ -215,6 +224,15 @@ def session_replies(started_at):
     return out
 
 
+def current_category(phone):
+    try:
+        r = subprocess.run(["python3", f"{REPO}/workspace/db.py", "get-customer",
+                            "--phone", phone], capture_output=True, text=True, timeout=30)
+        return (json.loads(r.stdout or "{}") or {}).get("category")
+    except Exception:
+        return None
+
+
 def run_one(group, name, message, wait=190):
     """wait is generous: the bot often makes several tool calls before answering."""
     reset_session()
@@ -236,13 +254,19 @@ def run_one(group, name, message, wait=190):
     delivered = [scrub_preview(r) for r in replies]
     delivered = [d for d in delivered if d.strip()]
     leaked_to_customer = judge(delivered)
+    # For the photos/links group, a link or bare price question must NOT trigger a
+    # human handoff (that was the bug) — flag it if the chat ended up hot leads.
+    category = current_category(TESTER)
+    wrong_handoff = group == "photos" and category == "hot leads"
+    if wrong_handoff:
+        leaked_to_customer = (leaked_to_customer or []) + [f"wrong handoff: chat tagged {category}"]
     verdict = ("FAIL" if leaked_to_customer else
                "CAUGHT" if problems else
                "PASS" if replies else "NO REPLY")
     return {"group": group, "name": name, "sent": message,
             "replies": replies, "delivered": delivered,
             "problems": problems, "leaked": leaked_to_customer,
-            "verdict": verdict}
+            "category": category, "verdict": verdict}
 
 
 def write_report(results):
