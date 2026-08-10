@@ -111,16 +111,64 @@ def _int_price(v):
         return None
 
 
+SEAT_COUNT_RE = re.compile(r"^\s*(\d+(?:\s*\+\s*\d+)*)\s*seaters?\s*$", re.I)
+
+
+def seat_count(value):
+    """Parse a 'Number of Seats' option value into a total seat count, but ONLY
+    for genuine continuous-sofa configurations ('2 seater', '3 + 2 Seater',
+    '3 + 2 + 1 + 1 Seater'). Deliberately excludes 'Single Seater' and 'Pair of
+    Single Seaters' — those are a separate standalone-armchair SKU bundled onto
+    the same product page, priced on different economics, and mixing them in
+    would corrupt the per-seat rate (verified on real data: they break the
+    otherwise-perfectly-linear PKR/seat pattern of the true sofa configs)."""
+    m = SEAT_COUNT_RE.match((value or "").strip())
+    if not m:
+        return None
+    return sum(int(x) for x in m.group(1).split("+"))
+
+
+def per_seat_price(p, variants):
+    """If this product has a genuine seat-count option (e.g. Shopify option
+    named 'Number of Seats' with values like '2 seater' / '3 + 2 Seater'),
+    return (rate_per_seat, True). Each seat-count config is priced separately
+    on the site, but they're normally linear (PKR/seat is constant) — take the
+    most common ratio (mode), so one-off pricing typos don't skew it; on a
+    genuine tie, use the smallest ratio found (favours the customer). Returns
+    (None, False) when no such option exists — the product should then be
+    quoted as a flat, whole-set price, never 'per seat' (e.g. a sectional with
+    a single 'Default Title' variant has ONE price for the entire set)."""
+    ratios = []
+    for v in variants:
+        for opt in ("option1", "option2", "option3"):
+            n = seat_count(v.get(opt))
+            if n:
+                amt = _int_price(v.get("price"))
+                if amt:
+                    ratios.append(amt / n)
+                break
+    if not ratios:
+        return None, False
+    counts = {}
+    for r in ratios:
+        counts[r] = counts.get(r, 0) + 1
+    best = max(counts.values())
+    candidates = sorted(r for r, c in counts.items() if c == best)
+    return int(round(candidates[0])), True
+
+
 def price_of(p):
     variants = p.get("variants") or []
     pool = [v for v in variants if v.get("available")] or variants
+    rate, is_per_seat = per_seat_price(p, pool)
+    if is_per_seat:
+        return {"amount": rate, "currency": "PKR"}, True
     amounts = []
     for v in pool:
-        try:
-            amounts.append(int(round(float(v.get("price")))))
-        except (TypeError, ValueError):
-            pass
-    return {"amount": min(amounts) if amounts else None, "currency": "PKR"}
+        amt = _int_price(v.get("price"))
+        if amt is not None:
+            amounts.append(amt)
+    return {"amount": min(amounts) if amounts else None, "currency": "PKR"}, False
 
 
 def keywords_of(p, specs, feats, category):
@@ -147,6 +195,7 @@ def map_product(p):
     category = category_of(p)
     imgs = p.get("images") or []
     variants = p.get("variants") or []
+    price, is_per_seat = price_of(p)
     return {
         "id": str(p.get("id")),
         # WhatsApp Business catalogue items are identified by VARIANT id
@@ -159,7 +208,11 @@ def map_product(p):
                      for v in variants if v.get("id")],
         "name": p.get("title", "").strip(),
         "category": category,
-        "price": price_of(p),
+        "price": price,
+        # True only when the product genuinely has a 'Number of Seats'-style
+        # option (see per_seat_price) — determines whether send_product.py
+        # quotes 'PKR X per seat' or the flat whole-set price.
+        "per_seat": is_per_seat,
         "dimensions": dimensions_of(p, specs),
         "description": short_description(body),
         "key_features": feats,

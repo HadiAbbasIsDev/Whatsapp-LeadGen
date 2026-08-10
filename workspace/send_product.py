@@ -96,8 +96,10 @@ def caption_for(p):
         amount_str = f"{int(amount):,}"
     except (TypeError, ValueError):
         amount_str = str(amount)
-    # Sofas are priced PER SEAT — always say so on the price line to avoid confusion.
-    per = " per seat" if "sofa" in str(p.get("category", "")).lower() else ""
+    # Only products with a genuine 'Number of Seats' option are priced per seat
+    # (set by sync_decormoments.py's per_seat_price) — some sofas/sectionals have
+    # a single whole-set price with no seat-count option and must NOT say "per seat".
+    per = " per seat" if p.get("per_seat") else ""
     lines = [f"{p.get('name', 'Product')} - PKR {amount_str}{per}"]
     if p.get("category"):
         lines.append(f"Category: {p['category']}")

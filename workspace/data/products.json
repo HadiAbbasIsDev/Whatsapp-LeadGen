@@ -17,6 +17,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Modern Minimalist Sophistication Infuse your home with a sense of architectural calm with the Luna Lounge Chair . This piece masterfully balances negative space with bold, geometric forms to create a seating experience that is as much a work of art as it is a place to unwind.…",
       "key_features": [
@@ -52,6 +53,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Oversized, low-profile lounge seating",
       "description": "Sculptural Comfort and Timeless Design Redefine your living space with the Aura Chair , a perfect harmony of organic curves and structured elegance. This accent piece is designed to bring a serene, high-end feel to any modern home. Product Overview The Aura Chair features a…",
       "key_features": [
@@ -87,6 +89,7 @@
         "amount": 54000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Mid-Century Elegance Meets Modern Comfort Bring a refined, architectural edge to your living space with the Nova Accent Chair . Combining a striking geometric silhouette with warm natural textures, this piece is a masterclass in modern interior design. Product Overview The Nova…",
       "key_features": [
@@ -122,6 +125,7 @@
         "amount": 54000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "(Refer to Bunny Teeth Chair.jpg for visual scale)",
       "description": "The Ultimate Statement Piece Elevate your space with a touch of whimsical luxury. The Bunny Teeth Chair is a playful yet sophisticated addition to any modern interior, blending plush comfort with a unique, sculptural silhouette. Product Overview Inspired by the charming features…",
       "key_features": [
@@ -157,6 +161,7 @@
         "amount": 56000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "A Sanctuary of Softness Transform your living space into a haven of relaxation with the Cuddle Chair . As featured in Cuddle Chair.jpg , this piece is designed with an emphasis on organic curves and plush textures to provide the ultimate lounging experience. Why You'll Love the…",
       "key_features": [
@@ -193,6 +198,7 @@
         "amount": 52000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Timeless Mid-Century Elegance The Aria Lounge Chair is a sophisticated blend of organic warmth and clean, modern lines. As seen in Aria Lounge Chair.jpg , this piece combines a masterfully crafted wooden base with plush, textured upholstery to create a standout accent for any…",
       "key_features": [
@@ -228,6 +234,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Architectural Comfort Experience the perfect marriage of bold structural design and inviting texture with the Orbit Hug Chair . As seen in Soft Hug Chair.png , this piece serves as a sophisticated focal point, blending the clean lines of modern minimalism with the cozy warmth of…",
       "key_features": [
@@ -264,6 +271,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Epitome of Organic Comfort Embrace a new standard of relaxation with the Soft Hug Chair . As showcased in Soft Hug Chair.jpg , this piece combines a gentle, cocooning silhouette with sophisticated modern textures, making it a perfect addition to any curated interior.…",
       "key_features": [
@@ -298,6 +306,7 @@
         "amount": 62000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Ultimate Statement of Softness Transform any corner into a cozy retreat with the Marshmallow Chair . As captured in Marshmallow Chair.jpg , this piece is a playful yet sophisticated take on modern lounging, designed to be the softest focal point in your home. Highlights of…",
       "key_features": [
@@ -333,6 +342,7 @@
         "amount": 56000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "A Cocoon of Modern Serenity The Snow Puff Chair is the ultimate expression of cozy, minimalist luxury. As seen in Snow Puff Chair.jpg , this piece features a fluid, rounded silhouette designed to envelop you in comfort while maintaining a clean, contemporary edge. Highlights of…",
       "key_features": [
@@ -368,6 +378,7 @@
         "amount": 72000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Ultimate Statement in Modern Comfort Discover the perfect blend of organic design and mid-century sophistication with the Cloud Nest Chair . As showcased in Cloud Nest Chair.jpg , this piece reimagines relaxation through its unique channeled silhouette and high-contrast…",
       "key_features": [
@@ -402,6 +413,7 @@
         "amount": 75000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Where Organic Form Meets Architectural Precision The Komē Chair , as seen in Kome Chair.png , is a stunning exploration of texture and balance. Designed for those who appreciate the intersection of Japandi warmth and modern minimalism, this piece acts as both a functional seat…",
       "key_features": [
@@ -437,6 +449,7 @@
         "amount": 45000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Sculptural Comfort Defined Elevate your living space with the Halo Chair , a masterclass in modern minimalist design. As seen in Halo Chair.png , this piece effortlessly blends bold, architectural geometry with the inviting softness of premium upholstery. Why You'll Love It…",
       "key_features": [
@@ -475,9 +488,10 @@
       "name": "Sleevo BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 66000,
+        "amount": 32000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Sleevo BedSofa | 2 & 3 Seater Options The Sleevo is the perfect blend of structural elegance and relaxed comfort. Featuring a unique vertical-channeled armrest design and a crisp, tailored silhouette, this BedSofa brings a sophisticated, boutique feel to any modern living room.…",
       "key_features": [
@@ -519,9 +533,10 @@
       "name": "Veloura BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 66000,
+        "amount": 32000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Veloura BedSofa | 2 & 3 Seater Options The Veloura is a bold statement in luxury and deep-seated comfort. Draped in a rich, midnight navy velvet-touch fabric, this BedSofa is designed to be the sophisticated focal point of any modern living room. It combines a clean, rectilinear…",
       "key_features": [
@@ -561,6 +576,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "NovaSleeper BedSofa | 3-Seater Convertible The NovaSleeper is a masterclass in sculptural design and modern comfort. Featuring a unique, wave-inspired silhouette with a high-arching backrest, this 3-seater acts as a functional work of art in any contemporary living space. It is…",
       "key_features": [
@@ -600,6 +616,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Comfort Cove BedSofa | 3-Seater Convertible The Comfort Cove is the pinnacle of inviting, modern design. With its soft, sweeping curves and generous proportions, this 3-seater is engineered to turn any corner of your home into a serene sanctuary. It perfectly balances a high-end…",
       "key_features": [
@@ -639,6 +656,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Harmony Sleeper BedSofa | 3-Seater Convertible The Harmony Sleeper is the embodiment of modern tranquility. Featuring a fluid, \"pebble\" inspired silhouette with soft rounded edges, this sofa is designed to bring a sense of calm and flow to your living space. It is the perfect…",
       "key_features": [
@@ -680,9 +698,10 @@
       "name": "CloudNest BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 75000,
+        "amount": 32000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 Seater",
       "description": "CloudNest BedSofa | 2 & 3 Seater Options The CloudNest is engineered for the ultimate \"sink-in\" experience. True to its name, this BedSofa features high-volume, biscuit-tufted cushioning that creates a plush, cloud-like surface whether you are watching a movie or settling in for…",
       "key_features": [
@@ -722,6 +741,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "SnugSpace BedSofa | 3-Seater Convertible The SnugSpace is the ultimate expression of cozy, cloud-like comfort. Designed with a soft, rounded silhouette and deep-tufted cushioning, this 3-seater is perfect for creating a warm, inviting \"Japandi\" or bohemian atmosphere in your…",
       "key_features": [
@@ -763,9 +783,10 @@
       "name": "Elite Comforter BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 84000,
+        "amount": 40000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 Seater",
       "description": "Elite Comforter BedSofa | 2 & 3 Seater Options Experience the perfect blend of bold texture and plush relaxation with the Elite Comforter . Defined by its distinctive deep-channeled upholstery and charcoal palette, this BedSofa is designed for those who want their furniture to…",
       "key_features": [
@@ -807,9 +828,10 @@
       "name": "Convertix BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 68000,
+        "amount": 32000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 Seater",
       "description": "Convertix BedSofa | 2 & 3 Seater Options The Convertix is the essential choice for the smart, modern homeowner. Stripping away the excess to focus on pure utility and clean lines, this model offers a high-performance sleeping solution without the high-end price tag. Its…",
       "key_features": [
@@ -849,6 +871,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Majestic Fold BedSofa | 3-Seater Elevate your living room with the Majestic Fold , a masterpiece of understated luxury. Designed for those who appreciate clean silhouettes and expansive comfort, this 3-seater sofa transitions effortlessly into a large, sturdy bed, making it the…",
       "key_features": [
@@ -890,9 +913,10 @@
       "name": "CasaFlex BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 84000,
+        "amount": 40000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "3 Seater",
       "description": "CasaFlex BedSofa | 2 & 3 Seater Options The CasaFlex is the perfect blend of organic warmth and modern versatility. Featuring unique wooden accents and a soft, rounded silhouette, this model is designed for cozy living rooms and \"Japandi\" inspired interiors. It offers a…",
       "key_features": [
@@ -932,6 +956,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "DreamFold Sofacumbed | 3 Seater Convertible The DreamFold BedSofa is the perfect marriage of Japandi aesthetics and practical engineering. Designed for those who refuse to sacrifice style for utility, this 3-seater provides a plush lounging experience by day and a spacious…",
       "key_features": [
@@ -971,6 +996,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "LuxeNest BedSofa | 3 Seater Convertible Transform your living space into a guest suite in seconds. The LuxeNest BedSofa is the ultimate hybrid of high-end lounge comfort and practical sleeping solutions. Designed for the modern home, it bridges the gap between a sophisticated…",
       "key_features": [
@@ -1010,6 +1036,7 @@
         "amount": 70000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Details & Overview Elevate your entertainment area with the Artisan Media Collection—a perfect fusion of Mid-Century Modern architecture and Bohemian organic textures. This curated series of consoles features rich walnut wood grains paired with hand-woven natural rattan inlays,…",
       "key_features": [
@@ -1043,6 +1070,7 @@
         "amount": 70000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Santiago Arched Console Details & Overview The Aurelia Arched Cane Media Console is the perfect marriage of Mid-Century Modern architecture and Bohemian organic textures. Defined by its signature arched door panels featuring hand-woven natural rattan, this console serves as…",
       "key_features": [
@@ -1076,6 +1104,7 @@
         "amount": 70000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Santiago Arched Console Details & Overview The Aurelia Arched Cane Media Console is the perfect marriage of Mid-Century Modern architecture and Bohemian organic textures. Defined by its signature arched door panels featuring hand-woven natural rattan, this console serves as…",
       "key_features": [
@@ -1109,6 +1138,7 @@
         "amount": 72000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Artisan Media Collection Details & Overview Elevate your home entertainment with our Artisan Media Collection—a curated series of consoles that masterfully blend Mid-Century Modern architecture with Bohemian organic textures. Crafted with rich walnut veneers and featuring…",
       "key_features": [
@@ -1142,6 +1172,7 @@
         "amount": 72000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Artisan Rattan & Walnut Media Collection Details & Overview Elevate your home entertainment with our Artisan Rattan & Walnut Media Collection—a series of statement pieces that masterfully blend Mid-Century Modern silhouettes with Bohemian organic textures. Crafted with rich…",
       "key_features": [
@@ -1175,6 +1206,7 @@
         "amount": 72000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Artisan Rattan Media Collection Details & Overview Infuse your living space with the warm, organic textures of our Artisan Rattan Media Collection . This curated series of consoles masterfully blends Mid-Century Modern silhouettes with hand-woven cane artistry , creating a…",
       "key_features": [
@@ -1208,6 +1240,7 @@
         "amount": 72000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Boho-Chic Rattan Media Console Collection Details & Overview Elevate your home entertainment experience with our Rattan Media Console Collection—a curated selection of pieces that masterfully blend Mid-Century Modern structure with Bohemian textures. These consoles feature rich…",
       "key_features": [
@@ -1241,6 +1274,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Bohemian Rattan Media Console Product Overview Infuse your living space with a perfect blend of Mid-Century Modern architecture and Bohemian warmth. This stunning media console serves as more than just a TV stand; it is a statement piece crafted with rich walnut veneers and…",
       "key_features": [
@@ -1274,6 +1308,7 @@
         "amount": 76000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Arched Rattan Media Console Details & Overview Bring a touch of organic warmth and vintage-inspired charm to your living space with this Mid-Century Modern Media Console. Featuring a unique blend of natural textures and refined woodwork, this piece serves as a sophisticated…",
       "key_features": [
@@ -1509,9 +1544,10 @@
       "name": "The Elysian Cloud Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Modern Plush Luxury • Sculpted Comfort • Soothing Minimalism Redefine comfort and elegance with the Elysian Cloud Sofa , a beautifully curved masterpiece designed for modern living. With its soft, pillowy silhouette and smooth, rounded edges, this sofa delivers the perfect…",
       "key_features": [
@@ -1746,9 +1782,10 @@
       "name": "The Ivory Haven Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Soft Curves • Modern Elegance • Sculptural Serenity Introduce a touch of artistic calm to your home with the Muse Lounger Sofa , a masterpiece of smooth, flowing curves and refined minimalism. Designed with a seamless, cloud-like form and upholstered in creamy textured fabric,…",
       "key_features": [
@@ -1984,9 +2021,10 @@
       "name": "The Muse Lounger Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Soft Curves • Modern Elegance • Sculptural Serenity Introduce a touch of artistic calm to your home with the Muse Lounger Sofa , a masterpiece of smooth, flowing curves and refined minimalism. Designed with a seamless, cloud-like form and upholstered in creamy textured fabric,…",
       "key_features": [
@@ -2222,9 +2260,10 @@
       "name": "The Sculptura Lounge Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Modern Curves • Refined Minimalism • Sculpted Elegance Introducing the Sculptura Lounge Sofa , a stunning blend of sculpted form and understated luxury. Designed with smooth, continuous curves and a harmonious low-profile silhouette, this piece brings contemporary sophistication…",
       "key_features": [
@@ -2460,9 +2499,10 @@
       "name": "The Cloud Luxe Curve Sofa V1",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Playful Comfort • Organic Curves • Modern Soft Luxury Meet the Cloud Haven Sofa – Olive Edition , a refreshing blend of soft sculptural design and warm, inviting color. Wrapped in a rich olive-green upholstery, this sofa brings a touch of nature indoors while maintaining a…",
       "key_features": [
@@ -2698,9 +2738,10 @@
       "name": "The Cloud Luxe Curve Sofa V4",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Soft Curves • Cozy Luxury • Modern Organic Design The Cloud Haven Sofa is where comfort meets contemporary elegance. Designed with oversized pillowy curves and a low, inviting silhouette, this sofa instantly transforms any space into a cozy, stylish retreat. The smooth,…",
       "key_features": [
@@ -2936,9 +2977,10 @@
       "name": "The Cloud Luxe Curve Sofa V3",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Plush Curves • Airy Comfort • Modern Sculptural Design Introduce soft luxury into your home with the Cloud Luxe Curve Sofa , a beautifully sculpted piece designed to offer cloud-like comfort and contemporary elegance. Its rounded, pillowy form and deep vertical tufting create a…",
       "key_features": [
@@ -3174,9 +3216,10 @@
       "name": "The Cloud Luxe Sofa V2",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Plush Comfort • Sculptural Design • Modern Elegance Transform your living space with the Cloud Luxe Sofa , a statement piece defined by its soft, cloud-like silhouette and luxurious textured upholstery. Designed with deep vertical tufting and rounded contours, this sofa brings…",
       "key_features": [
@@ -3412,9 +3455,10 @@
       "name": "The Curve Luxe Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Soft Minimalism • Modern Elegance • Sculpted Comfort Elevate your living space with the Curve Luxe Sofa , a masterpiece of smooth contours and calming modern aesthetics. Its sculpted, rounded silhouette creates a soft, inviting presence—perfect for contemporary, Japandi, and…",
       "key_features": [
@@ -3448,6 +3492,7 @@
         "amount": 40000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Warm Tones and Classic Mid-Century Appeal The Oakridge Writing Desk is a beautiful example of Mid-Century Modern design, characterized by its warm wood finish, clean rectangular geometry, and signature tapered legs. It provides a focused and elegant workspace with a surprising…",
       "key_features": [
@@ -3487,6 +3532,7 @@
         "amount": 46000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Dedicated Storage and Traditional Warmth The Timberline Work Desk is a highly functional piece designed for organized efficiency. Featuring a deep, rich reddish-brown finish, this desk provides a dedicated work area complemented by an elevated hutch and an integrated file…",
       "key_features": [
@@ -3526,6 +3572,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Natural Light Wood System with Integrated Bookshelf The Artisan Wood Desk is the epitome of Scandinavian and Japanese-inspired design, prioritizing natural materials, lightness, and open organization. Crafted entirely from light-toned wood, this system pairs a minimalist writing…",
       "key_features": [
@@ -3565,6 +3612,7 @@
         "amount": 56000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Compact Functionality with Timeless, Traditional Style The Grand Heritage Study Table is a beautifully functional piece that brings the warmth and classic appeal of traditional craftsmanship into a modern study space. Featuring a rich, dark wood finish and an iconic curved…",
       "key_features": [
@@ -3604,6 +3652,7 @@
         "amount": 52000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Natural Simplicity with Thoughtful, Sculpted Storage The Colonial Charm Study Table embodies light, organic design with a focus on simplicity and beautiful craftsmanship. Crafted from light-toned natural wood, it provides a warm and inviting workspace, perfect for creative…",
       "key_features": [
@@ -3643,6 +3692,7 @@
         "amount": 54000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Refined Craftsmanship Meets Traditional Utility The Legacy Executive Desk is a masterpiece of modern Craftsman design, blending rich, dark wood with clean, architecturally striking lines. This desk focuses on premium materials and enduring utility, offering extensive desktop…",
       "key_features": [
@@ -3682,6 +3732,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Clean Lines and Natural Organization The Heritage Wood Study Desk is the epitome of clean, functional design. Emphasizing a beautiful, uniform light wood tone, this desk features a simple, rectangular silhouette supported by straight legs. With its full-size integrated pedestal,…",
       "key_features": [
@@ -3721,6 +3772,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Scandinavian Serenity for Your Workspace Discover the quiet elegance of the Nordic Light Wood Writing Desk . This charming desk embodies the best of Scandinavian design: natural beauty, clean lines, and intelligent functionality. Crafted from light-toned wood, it offers a…",
       "key_features": [
@@ -3760,6 +3812,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Compact Efficiency Meets Warm Transitional Style The MetroEdge Study Table offers the perfect blend of minimalist design and practical functionality. Featuring a rich, medium-brown wood finish and a clean, open silhouette, this desk is ideal for smaller spaces—from apartments…",
       "key_features": [
@@ -3799,6 +3852,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Classic American Craftsmanship for the Home Office Embrace the enduring elegance of the Arts and Crafts movement with the Vintage Mission Desk . This piece is a celebration of honest construction, rich wood tones, and distinctive geometric detailing. Its robust, solid build and…",
       "key_features": [
@@ -3838,6 +3892,7 @@
         "amount": 56000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Timeless Woodcraft Meets Streamlined Design The Craftsman Executive Desk is an investment in refined productivity. Inspired by classic Mid-Century Modern aesthetics, this desk showcases the rich, deep tones of natural wood and clean, architectural lines. It provides generous…",
       "key_features": [
@@ -3877,6 +3932,7 @@
         "amount": 64000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimate",
       "description": "Sleek Functionality Meets Nordic-Inspired Design The Urban Smart Desk is engineered for the modern worker or student who values organization and clean aesthetics. Merging a bright, airy aesthetic with smart, integrated storage solutions, this desk provides the perfect footprint…",
       "key_features": [
@@ -3916,6 +3972,7 @@
         "amount": 54000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Industrial Sophistication Meets Modern Utility Command your workspace with The Moderno Walnut & Iron Desk — a statement of craftsmanship and functionality. Blending warm walnut wood tones with a bold black metal frame, this desk strikes the perfect balance between industrial…",
       "key_features": [
@@ -3945,6 +4002,7 @@
         "amount": 170000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Industrial Elegance with Modern Function Sophisticated and bold, The Urban Slate Media Wall blends raw textures with refined design — perfect for spaces that embrace modern luxury with an industrial edge. The contrast of warm wood slats, matte finishes, and ambient lighting…",
       "key_features": [
@@ -3981,6 +4039,7 @@
         "amount": 170000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Modern Warmth Meets Marble Elegance Refined, balanced, and beautifully detailed — The Marquina Harmony Media Wall is a seamless fusion of marble grandeur and natural wood warmth. Designed for contemporary interiors, this wall brings together texture, lighting, and symmetry to…",
       "key_features": [
@@ -4016,6 +4075,7 @@
         "amount": 175000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Art Deco Grandeur A statement in symmetry, shine, and sophistication — The Imperial Luxe Media Wall embodies timeless elegance with its glossy surfaces, golden trims, and flawless proportions. Designed to elevate luxurious living spaces, this wall combines modern refinement with…",
       "key_features": [
@@ -4051,6 +4111,7 @@
         "amount": 175000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Modern Elegance with Warm Fire Glow Minimalist luxury meets everyday comfort in The Marble Serenity Media Wall — a sleek, contemporary design that transforms your living space into a warm and sophisticated retreat. Its seamless marble finish, integrated fireplace, and floating…",
       "key_features": [
@@ -4086,6 +4147,7 @@
         "amount": 175000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Modern Elegance with Warm Ambience Refined, radiant, and luxuriously balanced — The Luminous Fluted Media Wall combines minimalist design with soft lighting and a built-in fireplace to create the perfect harmony of function and atmosphere. Designed to be both a visual…",
       "key_features": [
@@ -4121,6 +4183,7 @@
         "amount": 150000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Calm, Contemporary Living Effortlessly elegant and grounded in natural simplicity — The Nordic Fluted Media Wall celebrates modern minimalism through warm tones, soft lighting, and organic textures. Designed to bring tranquility and style to your living space, it’s the perfect…",
       "key_features": [
@@ -4156,6 +4219,7 @@
         "amount": 175000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Minimal Perfection A masterpiece of modern simplicity, The Linear Luxe Media Wall redefines elegance with precision lines, balanced lighting, and a sleek floating console. Designed for interiors that celebrate minimalism and refinement, this wall becomes the visual anchor of any…",
       "key_features": [
@@ -4191,6 +4255,7 @@
         "amount": 165000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Understated Sophistication Warm, grounded, and beautifully composed — The Walnut Harmony Media Wall brings timeless craftsmanship into modern interiors. Its rich wooden tones, clean geometry, and natural symmetry create an effortlessly elegant focal point that enhances the…",
       "key_features": [
@@ -4226,6 +4291,7 @@
         "amount": 165000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Warm Modern Minimalism Elegant simplicity meets natural warmth in The Scandinavian Floating Media Wall , a refined piece designed for modern living. Combining light oak tones, soft lighting, and functional form, this wall unit transforms your TV area into a serene focal point of…",
       "key_features": [
@@ -4261,6 +4327,7 @@
         "amount": 165000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Modern Elegance in Motion Bold, sophisticated, and impeccably balanced — The Noir Fluted Media Wall embodies the essence of contemporary luxury. Its deep tones, refined lighting, and precise detailing make it the perfect focal point for modern interiors that demand both drama…",
       "key_features": [
@@ -4296,6 +4363,7 @@
         "amount": 165000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Modern Comfort in Marble Sophisticated, serene, and striking — The Warm Luxe Media Wall is designed to bring a touch of refined modernity to your living space. Blending marble textures, fluted panels, and soft amber lighting, this design creates an atmosphere of cozy grandeur…",
       "key_features": [
@@ -4331,6 +4399,7 @@
         "amount": 165000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Timeless Elegance A statement of modern grandeur, The Luxe Marble & Gold Media Wall redefines luxury through balance, simplicity, and precision. Designed for discerning interiors, it merges polished marble textures with golden metallic accents — transforming your living room…",
       "key_features": [
@@ -4366,6 +4435,7 @@
         "amount": 160000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Modern Serenity A refined fusion of warm wood tones and soft stone textures, The Contemporary Wood & Stone Media Wall brings calm sophistication to your living space. Designed with minimalist lines and natural finishes, it effortlessly combines function and style — creating a…",
       "key_features": [
@@ -4401,6 +4471,7 @@
         "amount": 160000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Minimal Luxe Design A perfect harmony of modern elegance and subtle grandeur. The Modern Marble Media Wall transforms any living room into a sophisticated focal point — blending clean geometry, balanced lighting, and premium textures for a refined contemporary feel. Marble Core:…",
       "key_features": [
@@ -4437,6 +4508,7 @@
         "amount": 170000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimated Size (Imperial Range)",
       "description": "Curated Luxury This design is the pinnacle of sophistication, blending classic symmetry with modern function. It creates a formal, yet inviting, centerpiece perfect for high-end living rooms. Marbled Core: Features a dramatic slab of white marble with bold, prominent grey/gold…",
       "key_features": [
@@ -4475,6 +4547,7 @@
         "amount": 175000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimated Size (Imperial Range)",
       "description": "Symmetrical Grandeur A perfect blend of classic opulence and modern structure, this design brings immediate glamour and sophistication to any living space through balanced design and luxurious materials. Bright Marble Core: An expansive central area is clad in bright, white…",
       "key_features": [
@@ -4513,6 +4586,7 @@
         "amount": 175000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimated Size (Imperial Range)",
       "description": "Timeless Glamour Elevate your room with a custom design that marries classic luxury with contemporary function. This style is built for visual balance and features high-end accents that define a truly opulent living space. Marbled Focal Point: Features an expansive slab of white…",
       "key_features": [
@@ -4551,6 +4625,7 @@
         "amount": 175000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimated Size (Imperial Range)",
       "description": "Flawless Floating Design Achieve the ultimate in contemporary calm with a system defined by clean lines and weightless structure. This design is focused on tranquility and the flawless integration of technology. Seamless Finish: The wall is clad in large, continuous light-toned…",
       "key_features": [
@@ -4589,6 +4664,7 @@
         "amount": 175000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimated Size (Imperial Range)",
       "description": "Floating Console Media Wall Achieve architectural elegance with this ultra-modern, light-focused media system. This design emphasizes clean lines, uninterrupted surfaces, and atmospheric lighting, making it the perfect choice for a sophisticated, contemporary home. Weightless…",
       "key_features": [
@@ -4627,6 +4703,7 @@
         "amount": 165000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimated Size (Imperial Range)",
       "description": "Illuminated Architectural Media Wall A design built for high-end residential towers, this media wall serves as a sophisticated frame for both the entertainment system and your stunning sunset view. It’s an architectural centerpiece that defines a luxury lifestyle. Dramatic…",
       "key_features": [
@@ -4665,6 +4742,7 @@
         "amount": 165000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimated Size (Imperial Range)",
       "description": "Timeless Glamour Media Center Introduce a layer of bright sophistication and timeless elegance into your home. This exquisite media wall blends classic luxurious finishes with a clean, contemporary structure, creating a space that feels both welcoming and grand. Bright Marble…",
       "key_features": [
@@ -4703,6 +4781,7 @@
         "amount": 150000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimated Size (Imperial Range)",
       "description": "Textured Contrast Media Center Make an uncompromising statement with this bold, gallery-inspired media wall. This design combines rich textures and contrasting materials to create a truly bespoke and memorable entertainment center. Dramatic Centerpiece: The focal point is a…",
       "key_features": [
@@ -4741,6 +4820,7 @@
         "amount": 150000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Estimated Size (Imperial)",
       "description": "Modern Media Wall The focal point is the expansive, custom-designed media wall, clad in polished light marble or high-gloss paneling . It perfectly frames the sleek, wide-format television above a mesmerizing linear fireplace. This setup isn't just functional; it's a piece of…",
       "key_features": [
@@ -4779,6 +4859,7 @@
         "amount": 54000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Scandinavian Charm Meets Modern Functionality Infuse your workspace with the serene elegance of The Oslo Rattan & Oak Desk . This stunning piece beautifully combines the warmth of natural oak wood with the airy texture of woven rattan, creating a desk that is both a statement of…",
       "key_features": [
@@ -4812,6 +4893,7 @@
         "amount": 52000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Cultivate Focus & Elegance in Your Workspace Transform your home office into a sanctuary of style and productivity with The Serenity Home Office Desk . Crafted from rich, natural wood, this desk isn't just furniture—it's an experience, blending timeless design with thoughtful…",
       "key_features": [
@@ -4845,6 +4927,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "A Timeless Piece for the Modern Home Office Bring warmth, texture, and refined style to your workspace with the Heritage Cane Desk . This stunning piece seamlessly blends classic mid-century lines with a touch of organic, contemporary flair, creating an inspiring environment for…",
       "key_features": [
@@ -4878,6 +4961,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Organic Curve – Sculptural Serenity for Modern Spaces The The Organic Curve is a statement of elegance and fluid design, inspired by the harmony of curves and contemporary minimalism. With its smooth silhouette, plush texture, and neutral palette, it creates an atmosphere of…",
       "key_features": [
@@ -4909,6 +4993,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Aurora Sofa – Contemporary Comfort in Minimal Form Elevate your living space with the The Aurora Sofa , a refined blend of luxury and modern design. Its smooth, rounded silhouette and neutral palette create a calming, elegant atmosphere perfect for both modern and classic…",
       "key_features": [
@@ -4941,6 +5026,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Sphere Lounge – Contemporary Luxury Redefined The Sphere Lounge blends elegance, comfort, and modern sophistication into one beautifully balanced design. Its sleek silhouette, plush cushions, and graceful curves make it a centerpiece for any refined living space. Key Features:…",
       "key_features": [
@@ -4972,6 +5058,7 @@
         "amount": 200000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Serenity Curve Sectional – Contemporary Minimalism with Soft Elegance The Serenity Curve Sectional embodies the essence of modern comfort and understated luxury. With its rounded edges, smooth contours, and plush fabric, this design transforms any corner into a cozy yet…",
       "key_features": [
@@ -5003,6 +5090,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Serenity Curve Sofa – Sculptural Elegance in Soft Form The Serenity Curve Sofa redefines modern living with its fluid lines, organic silhouette, and luxurious comfort. Designed to be both a statement piece and a cozy retreat, this sofa embodies the perfect fusion of artistry and…",
       "key_features": [
@@ -5035,6 +5123,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Oslo Modern Lounge Sofa – Sculptural Comfort Meets Modern Design The Oslo Modern Lounge Sofa is a modern masterpiece that blends bold design with soft, inviting comfort. Its rounded silhouette, smooth contours, and cloud-like form make it a perfect focal point for any…",
       "key_features": [
@@ -5067,6 +5156,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Nova Sofa – Modern Organic Design Redefine comfort and sophistication with the Nova Sofa , a contemporary centerpiece inspired by soft organic forms and minimalist luxury. With its smooth contours, plush upholstery, and inviting silhouette, this sofa adds an effortlessly elegant…",
       "key_features": [
@@ -5100,6 +5190,7 @@
         "amount": 200000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Monarch Sofa – Modern Plush Comfort Immerse yourself in the luxury of soft minimalism with the Monarch Sofa — a statement of modern design and ultimate relaxation. With its oversized silhouette, deep channel tufting, and cloud-like cushions, this sofa transforms any living space…",
       "key_features": [
@@ -5132,6 +5223,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Lumière Sectional – Modern Luxury Redefined Experience elevated comfort and contemporary design with the Lumière Sectional Sofa , a statement piece that blends soft curves with plush upholstery. Its channel-tufted backrest and low-slung silhouette create a modern, inviting…",
       "key_features": [
@@ -5164,6 +5256,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Horizon Sofa – Minimalist Elegance Meets Comfort Bring sophistication and warmth to your space with the Luna Curve Modular Sofa , designed with soft edges and organic curves that create a calm, inviting atmosphere. Upholstered in premium textured beige fabric, this piece…",
       "key_features": [
@@ -5196,6 +5289,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Eclipse Sectional Modern Modular Sofa – Ultra-Contemporary Statement Piece Redefine modern luxury with the Eclipse Sectional Modular Sofa , a sculptural masterpiece designed for comfort and minimal elegance. Its smooth, cloud-like contours and seamless upholstery bring a…",
       "key_features": [
@@ -5228,6 +5322,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Cloudline Sofa – Contemporary Comfort Collection Bring modern elegance and ultimate comfort to your living space with the Cloudline Sofa . Crafted with soft textured upholstery and plush cushioning, this sofa offers the perfect blend of style and relaxation. Its rounded edges…",
       "key_features": [
@@ -5259,6 +5354,7 @@
         "amount": 180000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Cloud Bubble Sectional Sofa – Modern Sculptural Comfort Transform your living space with the Cloud Bubble Sectional Sofa , a statement piece that blends playful design with luxurious comfort. With its unique rounded bubble-like form and plush channel tufting, this sofa offers…",
       "key_features": [
@@ -5286,6 +5382,7 @@
         "amount": 160000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Cascade Sofa – Sculptural Comfort & Modern Luxury Elevate your living room with the Cascade Sofa , a masterpiece of modern design that combines sculptural elegance with everyday comfort. Upholstered in a plush, soft-touch fabric, its layered base and flowing curves create a bold…",
       "key_features": [
@@ -5312,6 +5409,7 @@
         "amount": 200000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Acro Curved Boucle Sectional Sofa Bring timeless elegance and cozy sophistication into your living space with this modern curved sectional sofa. Upholstered in a soft, textured fabric, its organic curves and low-profile silhouette create a warm, inviting atmosphere perfect for…",
       "key_features": [
@@ -5338,6 +5436,7 @@
         "amount": 46000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Obsidian Drops Console Table – Sculptural Modern Masterpiece A true work of art, the Obsidian Drops Console Table transforms functional furniture into sculptural beauty. Crafted in a rich walnut finish, its striking design features elongated, droplet-shaped legs that taper…",
       "key_features": [
@@ -5371,6 +5470,7 @@
         "amount": 46000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Noir Arc Console Table – Modern Elegance with Classic Detail A bold statement in refined design, the Noir Arc Console Table combines timeless architectural detailing with sleek modern finishes. Featuring an arched apron design, turned legs, and gold-capped feet, this console…",
       "key_features": [
@@ -5404,6 +5504,7 @@
         "amount": 44000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Midnight Arches Console Table – Timeless Vintage Charm Bring an air of sophistication to your home with the Midnight Arches Console Table, a piece that beautifully fuses traditional craftsmanship with classic architectural detail. Featuring an arched apron design and finely…",
       "key_features": [
@@ -5437,6 +5538,7 @@
         "amount": 44000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Lancaster Console Table – Minimalist Modern Design Sleek, simple, and elegant, the Lancaster Console Table embodies minimalist design with a touch of natural warmth. Featuring a smooth, rounded-edge tabletop in a light oak finish paired with bold walnut-toned slab legs, this…",
       "key_features": [
@@ -5470,6 +5572,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Heirloom Classic Credenza – Timeless Vintage Sideboard Bring a touch of tradition and elegance into your home with the Heirloom Classic Credenza , a refined piece that embodies timeless design and meticulous craftsmanship. Crafted in a rich mahogany finish, this sideboard…",
       "key_features": [
@@ -5503,6 +5606,7 @@
         "amount": 40000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Arteforma Console Table – Arched Classic Design Elevate your interiors with the Arteforma Console Table , a striking blend of architectural charm and refined craftsmanship. Crafted in a warm walnut finish, this console features arched cut-out detailing across the apron and…",
       "key_features": [
@@ -5536,6 +5640,7 @@
         "amount": 40000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Arteforma Console Table – Vintage Elegance Bring timeless sophistication into your home with the Arteforma Console Table , a perfect blend of classic craftsmanship and elegant detailing. Designed in a rich walnut finish, this console features a scalloped apron with vertical…",
       "key_features": [
@@ -5569,6 +5674,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Arco Wave Cabinet – Modern Scalloped Sideboard A true fusion of art and function, the Arco Wave Cabinet is designed to be the centerpiece of any contemporary space. Its striking front showcases a wave-inspired scalloped pattern crafted with precision grooves, creating a rhythmic…",
       "key_features": [
@@ -5602,6 +5708,7 @@
         "amount": 74000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Windsor Chest – Classic Wooden Sideboard Refined, elegant, and functional, the Windsor Chest is a timeless piece that brings sophistication to any living or dining space. Crafted in rich walnut-toned wood, it features slatted side panels , curved edges , and a signature central…",
       "key_features": [
@@ -5635,6 +5742,7 @@
         "amount": 74000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "WoodFusion Chest – Two-Tone Modern Dresser Redefine modern rustic elegance with the WoodFusion Chest , a statement storage piece that combines natural wood warmth with bold black accents. Designed with clean lines and refined detailing, this dresser showcases a two-tone finish :…",
       "key_features": [
@@ -5668,6 +5776,7 @@
         "amount": 74000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Vintage Luxe Console Table Make a bold statement in your home with this Vintage Luxe Console , a piece that blends timeless craftsmanship with modern sophistication. Featuring a deep black finish with rich wooden accents, this console table is detailed with ornate paneling and…",
       "key_features": [
@@ -5701,6 +5810,7 @@
         "amount": 74000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Vintage Garden Cabinet – Elegant Floral Design Bring timeless elegance and artistry into your home with this Vintage Garden Cabinet . Designed with a refined silhouette, it features intricate floral artwork across its paneled doors, blending natural charm with sophisticated…",
       "key_features": [
@@ -5734,6 +5844,7 @@
         "amount": 74000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Burgundy Floral Sideboard Infuse your living space with artistic charm and contemporary elegance with this burgundy floral sideboard . The cabinet features a rich wine-red finish, adorned with hand-painted botanical motifs that create the effect of a blooming meadow along its…",
       "key_features": [
@@ -5767,6 +5878,7 @@
         "amount": 74000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Royal Blue & Gold Vintage Cabinet Elevate your interiors with this statement vintage-inspired cabinet , designed in a luxurious deep blue finish with ornate gold detailing. The intricate floral patterns on its four paneled doors showcase timeless craftsmanship, blending regal…",
       "key_features": [
@@ -5800,6 +5912,7 @@
         "amount": 66000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Vintage Garden Cabinet Bring timeless charm and functional elegance into your home with this beautifully crafted cabinet. Designed in a warm ivory finish, it features three central drawers and two side cabinets adorned with floral botanical panels — a true statement piece that…",
       "key_features": [
@@ -5833,6 +5946,7 @@
         "amount": 76000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Timber & Tone Chest Bold, modern, and sophisticated — the Timber & Tone Chest brings a refined balance of natural wood beauty and sleek contemporary style. The upper row showcases a striking walnut wood grain finish, while the lower drawers are painted in a rich espresso brown,…",
       "key_features": [],
@@ -5857,6 +5971,7 @@
         "amount": 72000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Harmony Unit Bring timeless elegance into your home with The Harmony Unit , a stunning dresser that blends traditional artistry with modern refinement. Finished in a deep sage green, it features beautifully carved floral motifs across the top row, paired with bold, paneled…",
       "key_features": [
@@ -5883,6 +5998,7 @@
         "amount": 66000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Harmony Unit Elevate your space with The Harmony Unit , a statement cabinet that combines bold design with timeless elegance. Finished in a deep sage green, it features intricate embossed patterns across its three-panel doors, framed by sculpted molding that adds depth and…",
       "key_features": [
@@ -5909,6 +6025,7 @@
         "amount": 66000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Scandi Wood Chest Modern sophistication meets timeless Scandinavian style in the Scandi Wood Chest . Featuring a bold two-tone design, this piece combines sleek matte black cabinet doors with arched ribbed-glass panels and a warm walnut wood frame. Vertical fluted side detailing…",
       "key_features": [
@@ -5935,6 +6052,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Scandi Wood Chest Redefine your storage with the Scandi Wood Chest , a perfect balance of Scandinavian simplicity and timeless craftsmanship. Built in a deep walnut finish, this chest features two arched ribbed-glass doors that create a sleek display area, combined with a side…",
       "key_features": [
@@ -5961,6 +6079,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Scandi Wood Chest Bring a touch of Scandinavian charm to your interiors with the Scandi Wood Chest . Crafted in a rich walnut finish, this piece blends mid-century design with modern practicality. The ribbed detailing on the top drawers, paired with arched…",
       "key_features": [
@@ -5988,6 +6107,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Regal Oak Sideboard The Regal Oak Sideboard is a perfect blend of modern elegance and timeless craftsmanship. Made from rich oak wood, it features clean, geometric lines with arched detailing on the cabinet doors, giving it a sophisticated yet contemporary…",
       "key_features": [
@@ -6015,6 +6135,7 @@
         "amount": 66000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Regal Oak Sideboard The Regal Oak Sideboard brings refined craftsmanship and modern elegance into your home. Made from rich oak wood, it features a beautifully arranged chevron-patterned facade that adds texture and visual depth, making it a standout…",
       "key_features": [
@@ -6042,6 +6163,7 @@
         "amount": 62000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Regal Oak Sideboard Infuse your home with sophistication and warmth with the Regal Oak Sideboard . Crafted from premium oak wood, this sideboard features a striking chevron-patterned facade that adds depth and texture to any space. Its clean, contemporary…",
       "key_features": [
@@ -6069,6 +6191,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Nature Blend Dresser Elevate your interiors with the Nature Blend Dresser , a perfect fusion of modern design and timeless craftsmanship. Featuring a sleek black matte finish contrasted with a natural wood top, this dresser brings warmth and sophistication…",
       "key_features": [
@@ -6096,6 +6219,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Nordic Charm Dresser Add a touch of elegance and natural warmth to your interiors with the Nordic Charm Dresser . Crafted with a soothing cream base and natural wood accents, this dresser blends modern simplicity with timeless appeal. The ribbed upper…",
       "key_features": [
@@ -6123,6 +6247,7 @@
         "amount": 64000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Majestic Panel Cabinet Refined elegance meets modern craftsmanship in this Majestic Panel Cabinet . Featuring a striking two-tone design, it combines rich walnut chevron panels with sleek black ribbed side doors for a bold and sophisticated look. The golden…",
       "key_features": [
@@ -6149,6 +6274,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Heritage Wood Chest with Cane Bring timeless charm into your home with this beautifully crafted Heritage Wood Chest . Designed in a soothing forest green finish, it features three arched cane-front doors that highlight natural textures while adding an airy,…",
       "key_features": [
@@ -6176,6 +6302,7 @@
         "amount": 75000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Modern Blackwood Sideboard Bring refined sophistication into your home with this beautifully crafted blackwood sideboard. Designed with clean vertical grooves and a contrasting natural wood base, this piece combines sleek modern aesthetics with timeless…",
       "key_features": [
@@ -6207,6 +6334,7 @@
         "amount": 78000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Heritage Cane & Wood Sideboard Elevate your interiors with this exquisite cane-and-wood sideboard that beautifully balances classic craftsmanship with modern elegance. Featuring a rich dark wood finish paired with handwoven cane panels, this piece brings…",
       "key_features": [
@@ -6238,6 +6366,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Bring timeless charm and functional storage to your home with this beautifully crafted cabinet. Designed in a warm wood finish, its block-front detailing creates the illusion of multiple drawers while offering spacious compartments inside for effortless…",
       "key_features": [
@@ -6268,6 +6397,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Add timeless sophistication to your home with this heritage-inspired wooden cabinet. Designed with elegant paneled detailing on its eight drawers, this piece brings a touch of classic craftsmanship to modern living spaces. The deep, rich wood finish…",
       "key_features": [
@@ -6298,6 +6428,7 @@
         "amount": 75000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Showcase your finest dinnerware, glassware, or collectibles with this elegant wooden display cabinet. Crafted with rich wood tones and framed glass-paneled doors, it combines timeless craftsmanship with modern functionality. The arched window design adds a…",
       "key_features": [
@@ -6328,6 +6459,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Bring timeless charm into your home with this beautifully reimagined dresser that blends classic craftsmanship with modern sophistication. The rich wooden top and upper drawers contrast elegantly with deep green lower drawers, creating a bold yet balanced…",
       "key_features": [
@@ -6358,6 +6490,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Elevate your interior with this stunning two-tone dresser that blends timeless charm with modern functionality. The upper section showcases a natural oak finish, while the lower drawers feature a soft neutral tone, creating a sophisticated contrast that suits…",
       "key_features": [
@@ -6388,6 +6521,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "​Introduce a touch of modern sophistication and organic elegance to your living space with the Horizon Coffee Table. This unique piece is a perfect blend of natural textures and fluid design, making it a stunning centerpiece for any contemporary home. ​Key Features : ​Sculptural…",
       "key_features": [
@@ -6420,6 +6554,7 @@
         "amount": 75000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Description Elevate your living room with our Sculptural Oval Coffee Table , a masterpiece of modern design and natural elegance. This exquisite table features a beautifully oval-shaped top crafted from genuine natural stone (e.g., travertine, marble, or a similar stone, you'd…",
       "key_features": [
@@ -6451,6 +6586,7 @@
         "amount": 75000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Description Elevate your living room with this stunning two-tiered coffee table , a perfect blend of natural materials and artistic design. The table features an organic, curved top crafted from rich walnut wood , which rests over a lower, rectangular surface of elegant white…",
       "key_features": [
@@ -6481,6 +6617,7 @@
         "amount": 75000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Description Elevate your living room with this stunning set of two nesting coffee tables . Designed with a sophisticated blend of natural textures and modern form, this set is both a functional and artistic addition to your home. ​The textured, ribbed wood base adds a warm,…",
       "key_features": [
@@ -6513,6 +6650,7 @@
         "amount": 80000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Elevate your living space with this unique two-piece coffee table set, featuring a blend of modern design and organic forms. This set includes a large main coffee table and a smaller, nesting side table, offering both style and versatile functionality. ​ Key Features: ​ Organic…",
       "key_features": [
@@ -6546,6 +6684,7 @@
         "amount": 80000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "This modern, two-piece coffee table set features a sleek, two-tiered design with a smaller, elevated table that overlaps the larger one. The tables have a unique combination of materials: a dark, polished glass top and a walnut-veneer base . The larger table has a solid, rounded…",
       "key_features": [
@@ -6579,6 +6718,7 @@
         "amount": 80000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Description A masterpiece of contemporary design. The Arc Coffee Table features a stunning, thick solid wood tabletop that appears to float effortlessly on a gracefully curved, sculptural base. Perfect for a modern living space seeking a touch of organic warmth. Key Features: ​…",
       "key_features": [
@@ -6610,6 +6750,7 @@
         "amount": 56000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Elevate your living space with the sleek and sophisticated Orbit Coffee Table. Crafted from high-quality, solid wood with a rich walnut veneer, this table features a unique, sculptural base that adds a touch of artistic flair. The smooth, rounded edges and expansive surface…",
       "key_features": [
@@ -6643,6 +6784,7 @@
         "amount": 46000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Information Make a bold design statement with the Morgan Square Center Table . Featuring a dramatic marbled finish super gloss sheet as per your choice, this table brings natural texture and luxury to your living space. Its solid cube silhouette offers modern simplicity,…",
       "key_features": [
@@ -6669,6 +6811,7 @@
         "amount": 42000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Information Discover the bold elegance of the Rolex Center Table , where minimalist form meets timeless wood grain warmth. With its sleek floating-layer design and gently rounded edges, this table creates a sophisticated focal point in any modern living room. Crafted for…",
       "key_features": [
@@ -6735,6 +6878,7 @@
         "amount": 30000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview The Carlina Bench is a perfect fusion of industrial chic and modern comfort. Featuring a tufted faux leather seat and backrest, supported by a unique X-frame metal base, this bench brings character and practicality to any space. Ideal for kitchen…",
       "key_features": [
@@ -6807,6 +6951,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview Add a touch of elegance to your space with the Garneth Velvet Bench. Upholstered in velvet with deep channel tufting, this bench is a perfect mix of comfort and sophistication. The slender metal legs offer sturdy support and a refined silhouette,…",
       "key_features": [
@@ -6838,6 +6983,7 @@
         "amount": 20000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview The Floyd Bench strikes the perfect balance between comfort and contemporary style. Featuring a cream textured fabric seat accented with tan faux leather bands, this bench offers a clean, structured silhouette supported by sleek black metal legs. Ideal…",
       "key_features": [
@@ -6909,6 +7055,7 @@
         "amount": 18000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview The Frida Bench blends Scandinavian simplicity with everyday functionality. With a lightly textured upholstered seat and tapered wooden legs in a natural finish, this bench brings warmth and minimalism to entryways, bedrooms, or dining spaces. Its…",
       "key_features": [
@@ -6980,6 +7127,7 @@
         "amount": 26000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview Sleek and streamlined, the Marley Bench offers a modern take on minimalistic design. Upholstered in a textured fabric of your color choice, its pill-shaped silhouette brings softness and sophistication to entryways, bedrooms, or the foot of a bed. Its…",
       "key_features": [
@@ -7051,6 +7199,7 @@
         "amount": 8000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview Bring playful elegance to your interior with this uniquely designed pouf. Its sculptural form features a rounded cushioned seat atop a creatively shaped base, all wrapped in a soft beige fabric that blends effortlessly with any décor. Perfect as a…",
       "key_features": [
@@ -7121,6 +7270,7 @@
         "amount": 12000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview Add understated luxury to your living space with this sophisticated pouf. Upholstered in a rich dark brown fabric, it rests on sleek black metal legs that give it a modern and airy look. Its spacious design makes it perfect as a footrest, additional…",
       "key_features": [
@@ -7192,6 +7342,7 @@
         "amount": 16000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview Elevate your living area with this sleek rectangular pouf, designed for contemporary comfort and understated style. Upholstered in a soft Jaguar fabric, it sits on minimalist metal legs that give it a modern edge. Its generous size makes it perfect as…",
       "key_features": [
@@ -7223,6 +7374,7 @@
         "amount": 14000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview Brighten up your space with this playful and artistic round pouf. Upholstered in a colorful geometric patterned fabric, it rests on a sturdy wooden frame that gives it a modern, elevated look. Perfect as a statement accent, extra seat, or cozy…",
       "key_features": [
@@ -7293,6 +7445,7 @@
         "amount": 12000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview Complete your living space with this stylish mid-century inspired pouf. Featuring clean lines and tapered wooden legs, this piece effortlessly combines form and function. The soft cream upholstery adds a warm, inviting feel, making it perfect as a…",
       "key_features": [
@@ -7324,6 +7477,7 @@
         "amount": 12000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview Add a touch of casual elegance to your home with this versatile square pouf. Upholstered in a soft cream fabric complemented by tan faux leather accents, it effortlessly blends style and functionality. The built-in handle makes it easy to move, while…",
       "key_features": [
@@ -7395,6 +7549,7 @@
         "amount": 12000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Details & Overview Bring a touch of modern elegance to your living space with this beautifully upholstered round pouf. Featuring a soft, plush velvet fabric in a warm blush tone, it combines style and functionality effortlessly. The vertical tufting adds a chic texture,…",
       "key_features": [
@@ -7425,6 +7580,7 @@
         "amount": 44000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Detail Elevate your living space with this modern two-tier coffee table, designed to balance sleek style with everyday functionality. Featuring a spacious matte dark gray tabletop paired with a raised natural oak shelf, it creates a stunning layered look that’s perfect…",
       "key_features": [
@@ -7451,6 +7607,7 @@
         "amount": 56000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Details & Overview Elevate your entertainment area with the Arcos TV Stand — a perfect fusion of modern design and functional storage. Its sleek silhouette, bold contrasting finishes, and minimalist metal legs make it a standout piece for contemporary living spaces. Overall…",
       "key_features": [],
@@ -7475,6 +7632,7 @@
         "amount": 48000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Details & Overview Refresh your living space with this beautifully crafted TV Stand—where warm natural wood meets sleek contemporary design. Perfect for modern and Scandinavian-inspired interiors, it balances style with practical everyday storage. Overall Dimensions: 65\"W x 18\"D…",
       "key_features": [],
@@ -7499,6 +7657,7 @@
         "amount": 45000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Add a sophisticated edge to your living or dining space with this modern console, designed to captivate with its sleek contrast of materials and minimalist lines. Featuring a stylish two-tone look, this sideboard pairs rich black panels with warm wood grain…",
       "key_features": [
@@ -7532,6 +7691,7 @@
         "amount": 45000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Infuse your home with timeless mid-century charm through this beautifully crafted console. Designed with clean lines and a warm natural wood finish, this piece highlights elegant wood grain patterns that bring organic texture to your space. Featuring two…",
       "key_features": [
@@ -7565,6 +7725,7 @@
         "amount": 45000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Description Bring natural elegance and modern simplicity into your home with this beautifully designed console. Crafted with a warm wood grain finish, this piece highlights organic textures that effortlessly complement any interior style. The minimalist design features…",
       "key_features": [
@@ -7603,6 +7764,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Linda Sideboard Add a touch of contemporary warmth to your home with this beautifully crafted console. Featuring a balanced combination of sleek matte surfaces and natural wood accents, this piece effortlessly merges modern minimalism with inviting charm. Designed with three…",
       "key_features": [
@@ -7661,6 +7823,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Linda Dining Set for 4 to 8 person Create a warm and inviting atmosphere in your home with this elegant dining set, designed to blend natural charm with contemporary simplicity. The rectangular dining table features a clean-lined silhouette and a soft, light wood finish that…",
       "key_features": [
@@ -7695,6 +7858,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Raven Sideboard Elevate your living or dining area with this bold, contemporary sideboard. Designed with a captivating mix of materials and textures, this piece features high-gloss black cabinet doors, vertical ribbed panels, and a unique stone-look accent section, all…",
       "key_features": [
@@ -7753,6 +7917,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Raven Dining Set for 4 to 8 person Make a bold statement in your dining area with this striking modern dining set. Featuring a sophisticated black rectangular table with a beautifully textured surface, this piece effortlessly blends contemporary elegance with a touch of drama.…",
       "key_features": [
@@ -7787,6 +7952,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Metropol Sideboard Enhance your dining or living space with this striking modern sideboard, designed to blend functionality with elegant style. Featuring a sophisticated two-tone look, the piece combines natural wood drawer fronts with a sleek dark frame and smoked glass doors,…",
       "key_features": [
@@ -7845,6 +8011,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Metropol Dining Set for 4 to 8 person Infuse your dining space with contemporary charm and warm elegance with this modern dining set. The centerpiece is a beautifully crafted rectangular table featuring a natural wood-look top that highlights organic textures, paired with sleek…",
       "key_features": [
@@ -7879,6 +8046,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Sepia Modern Sideboard Introduce a touch of refined elegance to your living or dining space with this contemporary sideboard. Designed with sleek lines and a balanced mix of textures, this piece effortlessly combines natural wood grain with modern minimalist elements. The…",
       "key_features": [
@@ -7937,6 +8105,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Sepia Dining Set for 4 to 8 person Transform your dining space with this stunning modern dining set, designed to bring understated luxury and comfort to your home. The centerpiece is a rectangular dining table featuring a sophisticated marble-look top that exudes elegance,…",
       "key_features": [
@@ -7971,6 +8140,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Narva Modern Sideboard Bring a touch of modern elegance to your home with this sophisticated sideboard. Designed with clean lines and a minimalist aesthetic, this piece features a sleek combination of soft matte cabinetry and warm wood accents, effortlessly blending contemporary…",
       "key_features": [
@@ -8029,6 +8199,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Narva Dining Set for 4 to 8 person Elevate your dining experience with this elegant modern dining set. Featuring a sleek rectangular table with a smooth, minimalist surface and gracefully rounded edges, it brings a sense of sophistication and calm to your home. The sturdy wooden…",
       "key_features": [
@@ -8058,6 +8229,7 @@
         "amount": 38000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Product Information Bring calm elegance into your home with Patrizia, designed to maximize peace through its soft, flowing lines. Paired with the Bonz Mirror table crafted from melamine faced particleboard, this ensemble radiates harmony and adds a sense of spaciousness to any…",
       "key_features": [
@@ -8085,6 +8257,7 @@
         "amount": 64000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Details & Overview Discover the perfect blend of style and functionality with the Mirante TV Stand. Designed to elevate your living space, this sleek piece combines modern aesthetics with sturdy craftsmanship, offering a reliable and elegant platform for your television and…",
       "key_features": [],
@@ -8109,6 +8282,7 @@
         "amount": 68000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Details & Overview Redefine your living space with the Montego TV Stand—where classic charm meets contemporary convenience. Part of the Montego Concept, this piece effortlessly balances sophistication with everyday functionality Overall Dimension : 79\"W x 18\"D x 24.5\"H Product…",
       "key_features": [],
@@ -8138,6 +8312,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Olivia Modern Sideboard – Grey with Black Accents Sleek, structured, and distinctly modern — the Olivia Modern Sideboard is a functional art piece designed for today’s minimalist interiors. With its cool grey matte finish, bold black linear detailing, and elevated metal base,…",
       "key_features": [
@@ -8176,6 +8351,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Nora Sideboard with Dual Mirrors Function meets bold simplicity in the Nora Sideboard , a contemporary storage unit designed for modern interiors. With its two-tone color scheme, matte black handles, and clean symmetry, this piece brings both visual contrast and everyday…",
       "key_features": [
@@ -8214,6 +8390,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Isable Sideboard – Champagne Finish with Gold Accents Introduce refined luxury to your home with the Isable Sideboard , a flawless fusion of minimalist design and elegant detailing. Its smooth champagne-toned finish, accented by brushed gold hardware and slender legs, makes it a…",
       "key_features": [
@@ -8252,6 +8429,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Estella Sideboard with Gold Accents Add a touch of refined elegance to your home with the Estella Sideboard , designed to elevate both function and style. Featuring a sleek silhouette, matte finish, and striking gold hardware, this sideboard is a sophisticated storage solution…",
       "key_features": [
@@ -8290,6 +8468,7 @@
         "amount": 58000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Caprice Sideboard with Mirror Elevate your living or dining space with the Caprice Sideboard , a perfect blend of modern minimalism and natural warmth. This multifunctional console offers ample storage with a sleek design that complements a variety of interior styles. Key…",
       "key_features": [
@@ -8348,6 +8527,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Olivia Dining Set for 4 to 8 person Bring harmony to your dining space with the Urban Elegance Dining Set , designed for both modern aesthetics and everyday comfort. Featuring a soft neutral palette and clean architectural lines, this dining set makes a sophisticated statement…",
       "key_features": [
@@ -8406,6 +8586,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Nora Dining Set for 4 to 8 person Upgrade your dining area with the sleek and stylish Modern Contrast Dining Set , crafted to suit modern spaces with a minimalist aesthetic. Combining comfort with a clean design, this 4 to 8-seater set brings timeless elegance to any home. Key…",
       "key_features": [
@@ -8464,6 +8645,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Isabel Dining Set for 4 to 8 person Transform your dining space with the ultimate expression of sophistication – the Isabel Dining Set. Designed for grand gatherings and refined interiors, this dining set pairs a sleek high-gloss rectangular table with plush velvet chairs in a…",
       "key_features": [
@@ -8522,6 +8704,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Estela 4 to 8 Seater Dining Set Elevate your dining experience with our Estela Dining Set, a perfect blend of elegance and comfort. This dining set features a sleek high-gloss tabletop resting on stylish gold metal legs that add a touch of luxury to your space. The accompanying…",
       "key_features": [
@@ -8580,6 +8763,7 @@
         "amount": 100000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "4 seater - 2.5ft by 5ft",
       "description": "Modern Minimalist 4 to 8-Seater Dining Set Elevate your dining experience with this beautifully crafted dining set that blends modern minimalism with natural warmth. Featuring a sleek white tabletop paired with solid wood legs, this set creates a clean and contemporary look that…",
       "key_features": [
@@ -8620,6 +8804,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "The Truva Vanity Table Set brings contemporary charm and functional luxury to your space. With its elegant curves, soft neutral tones, and premium storage features, this vanity is designed to elevate your beauty routine. ✨LED Round Mirror A large, illuminated circular mirror…",
       "key_features": [
@@ -8658,6 +8843,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Refined, serene, and effortlessly modern — the Sun Dressing Table is designed to enhance your space with quiet elegance and practical functionality. Ideal for those who value simplicity with a designer edge. 💡 Split-Circle Modern Mirror A unique artistic mirror design that…",
       "key_features": [
@@ -8697,6 +8883,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Bring timeless elegance into your space with the Regnum Walnut Vanity Table Set — a perfect blend of rich wood textures, luxurious gold detailing, and refined craftsmanship. Designed to enhance both your style and your space, this set is ideal for modern and classic interiors…",
       "key_features": [
@@ -8735,6 +8922,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Sleek, modern, and highly functional — the Petron Dressing Table is the ultimate blend of luxury and utility. With its clean design and spacious storage, it's crafted to elevate your daily routine in style. 💡 Minimalist Rectangular Mirror A refined, wall-mounted mirror with soft…",
       "key_features": [
@@ -8771,6 +8959,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Brighten your space with modern elegance through the Pera Vanity Table Set — a refined combination of contemporary design and everyday function. Perfect for stylish bedrooms or dressing corners, this piece brings form and practicality together beautifully. 💡 Rectangular LED…",
       "key_features": [
@@ -8812,6 +9001,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Step into the future of interior design with the Pablo High-Gloss Sideboard & Mirror a luxurious fusion of minimalism and high-impact modern art. This set is more than furniture; it's a statement piece for refined spaces. 🖤 Asymmetrical circular LED mirror that doubles as modern…",
       "key_features": [
@@ -8853,6 +9043,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Add a bold touch of contemporary elegance with the Pablo Designer Vanity Set — a masterfully crafted piece that turns any room into a luxurious styling station. 💡 Statement split-circle mirror with geometric accents for a modern edge 🪑 plush upholstered ottoman for chic,…",
       "key_features": [
@@ -8894,6 +9085,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Redefine your space with the elegance and calm of the Mocha Minimalist Vanity Table Set . Featuring clean lines and soft textures, this vanity adds a touch of contemporary luxury to your bedroom or dressing area. 💡 Round modern mirror with a sleek frame for a refined look 🪑 M…",
       "key_features": [
@@ -8936,6 +9128,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Transform your daily routine with the Latte Corner Dressing Table , a perfect fusion of sophistication and smart functionality. Designed for modern interiors, this elegant piece enhances both your space and your self-care experience. 💡 Rectangular LED mirror with soft backlight…",
       "key_features": [
@@ -8975,6 +9168,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Dallas Modern Vanity Table Bring elegance and practicality into your space with the Dallas Modern Vanity Table Set . Featuring a minimalist aesthetic with clean lines, this vanity is perfect for contemporary interiors. 💡 Large round mirror for clear, full-face reflection 🗄️…",
       "key_features": [
@@ -9017,6 +9211,7 @@
         "amount": 65000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Elevate your bedroom or dressing space with this sleek and contemporary Basement Corner Dressing Table . Crafted in a soft ivory finish with elegant gold accents, this piece combines style and functionality. It features: 💡 A circular LED mirror perfect lighting. 🗄️ Multiple…",
       "key_features": [
@@ -9059,6 +9254,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Truva Glass-Door Wardrobe – Modern Display with Practical Storage Redefine your room with the Truva Wardrobe , where contemporary design meets versatile functionality. Featuring a combination of frosted glass doors and matte-finish side cabinets, this wardrobe offers both…",
       "key_features": [
@@ -9106,6 +9302,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Sun Wardrobe – Sleek Simplicity, Timeless Appeal Discover the perfect balance of form and function with the Sun Wardrobe . Featuring a soft matte beige finish and centrally positioned full-length mirrors, this wardrobe offers a minimalist design with practical everyday use in…",
       "key_features": [
@@ -9152,6 +9349,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Regnum Walnut Mirror Wardrobe – Natural Warmth Meets Modern Luxury Introduce timeless character and elevated storage to your bedroom with the Regnum Walnut Mirror Wardrobe . Designed with rich walnut-toned wood panels, gold-trimmed mirrors, and sleek vertical handles, this…",
       "key_features": [
@@ -9198,6 +9396,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Petron High-Gloss Mirror Wardrobe – Sleek Symmetry with Modern Minimalism Upgrade your space with the Petron Mirror Wardrobe , where high-gloss perfection meets seamless functionality. Designed to reflect elegance and clarity, this wardrobe features a striking combination of…",
       "key_features": [
@@ -9246,6 +9445,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Pera Wardrobe – Soft Beige with Timeless Utility The Pera Wardrobe brings understated elegance and smart storage together in a minimalist design. With its soft matte beige finish and central bronze-tinted mirrors, it seamlessly blends into modern interiors while enhancing space…",
       "key_features": [
@@ -9294,6 +9494,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Pablo Black Wardrobe – Bold Geometry, Timeless Class Make a statement with the Pablo Black Wardrobe , a sophisticated fusion of high-gloss panels and clean geometric design. Featuring symmetrical grid-like paneling and a central mirrored section, this wardrobe brings…",
       "key_features": [
@@ -9342,6 +9543,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Pablo White & Gold Wardrobe – Modern Elegance with Ambient Glow Transform your space with the Pablo White & Gold Wardrobe , a stunning blend of sleek design, soft lighting, and functional storage. With its glossy white body, vertical gold-trimmed mirror panels, and subtle…",
       "key_features": [
@@ -9390,6 +9592,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Mocha Mirror Wardrobe – Soft Luxury, Seamless Function Bring effortless elegance into your space with the Mocha Mirror Wardrobe , a harmonious blend of refined design and functional storage. With its sleek champagne-tinted mirrored doors and clean matte frame, this wardrobe adds…",
       "key_features": [
@@ -9438,6 +9641,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Latte Corner Wardrobe – Bold, Luxurious & Illuminated Add a touch of opulence to your bedroom with the Latte Corner Wardrobe — a striking piece that perfectly blends luxury with smart storage. Featuring sleek bronze-tinted glass doors and integrated LED lighting, this wardrobe…",
       "key_features": [
@@ -9486,6 +9690,7 @@
         "amount": 85000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Dallas Wardrobe – Sleek & Spacious Elegance Elevate your bedroom’s aesthetic and functionality with the Dallas Wardrobe , a modern storage masterpiece designed to blend elegance with everyday practicality. Crafted with a high-gloss white finish and smoked glass sliding doors,…",
       "key_features": [
@@ -9533,6 +9738,7 @@
         "amount": 80000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Basement Corner Wardrobe Maximize your space with our Basement Corner Wardrobe, designed for both functionality and elegance. Crafted with a sleek beige matte finish, this L-shaped wardrobe system fits seamlessly into any corner, making it ideal for bedrooms, dressing areas, or…",
       "key_features": [
@@ -9741,6 +9947,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Truva Bedroom Set – Sleek Design, Sophisticated Comfort Bring contemporary charm into your bedroom with the Truva Bedroom Set , a flawless fusion of soft cream tones, premium materials, and sleek design. With its tall upholstered headboard, glass wardrobe, and functional side…",
       "key_features": [
@@ -9949,6 +10156,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Sun Bedroom – Subtle Luxury, Sleek Function Refined elegance meets modern minimalism in the Sun Bedroom Set . Designed with a calm, neutral palette and clean geometric lines, this bedroom collection is ideal for those who seek tranquility and sophistication in their personal…",
       "key_features": [
@@ -10157,6 +10365,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Regnum Modern Walnut Bedroom Set – Sophistication in Every Grain Elevate your bedroom with the Regnum Bedroom Set , a striking fusion of warm walnut tones, plush textures, and gold accents. Designed for those who value both elegance and comfort, this set brings an upscale,…",
       "key_features": [
@@ -10365,6 +10574,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Petron Modern Bedroom Set – Timeless Minimalism with a Soft Touch Transform your space into a sanctuary of luxury with the Petron Bedroom Set – where elegant simplicity meets modern comfort. This contemporary ensemble is perfect for those who appreciate clean design, soft tones,…",
       "key_features": [
@@ -10573,6 +10783,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Pera Bedroom Set – Soft Sophistication with Natural Warmth Immerse yourself in the gentle elegance of the Pera Bedroom Set , a beautifully balanced blend of plush textures, ambient lighting, and architectural charm. Designed for those who appreciate understated luxury, this set…",
       "key_features": [
@@ -10781,6 +10992,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Pablo Black Edition Bedroom Set – Bold Geometry Meets Modern Luxury Make a statement with the Pablo Black Edition Bedroom Set , designed for those who appreciate sharp aesthetics and luxurious comfort. This set redefines contemporary style with its geometric wardrobe design,…",
       "key_features": [
@@ -10989,6 +11201,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Pablo Bedroom Set – Sculpted Elegance with Ambient Charm Introduce a new level of luxury to your home with the Pablo Bedroom Set , where soft curves meet artistic detailing. With its sculpted bed frame, ambient underglow lighting, and sophisticated mirrored wardrobe, this set is…",
       "key_features": [
@@ -11197,6 +11410,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Mocha Bedroom Set – Light Luxury, Effortlessly Modern Infuse your space with calm sophistication using the Mocha Bedroom Set – a blend of minimalist design and refined finishes tailored for the modern lifestyle. Featuring a low-profile platform bed, mirrored wardrobe, and sleek…",
       "key_features": [
@@ -11405,6 +11619,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Latte Bedroom Set – Chic Simplicity, Refined Comfort Indulge in the serene sophistication of the Latte Bedroom Set , a minimalist design crafted to bring elegance and warmth to modern spaces. This set is the perfect harmony of functionality, comfort, and style — highlighted by a…",
       "key_features": [
@@ -11613,6 +11828,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Dallas Bedroom Set – Soft Modern Elegance Transform your bedroom into a haven of style and serenity with the Dallas Bedroom Set , where contemporary aesthetics meet ultimate comfort. Featuring a unique, cloud-like tufted bed, sleek modern storage, and a minimalist vanity, this…",
       "key_features": [
@@ -11820,6 +12036,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Basement Corner Bedroom Set – Modern Luxury Redefined Elevate your space with the Basement Corner Bedroom Set , a seamless blend of contemporary elegance and smart design. Crafted for comfort and style, this set includes a plush upholstered bed with tufted headboard, sleek side…",
       "key_features": [
@@ -11862,6 +12079,7 @@
         "amount": 45000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "",
       "description": "Contemporary Wooden Dressing Table Add a touch of elegance to your bedroom with this modern dressing table featuring a sleek mirror and minimalist shelving. Crafted from high-quality wood with a warm natural finish, it combines fluted drawer detailing with smooth, clean lines.…",
       "key_features": [
@@ -11905,6 +12123,7 @@
         "amount": 80000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Modern Aluminum Door Wardrobe with dark tinted glass Elevate your bedroom with this sleek, contemporary wardrobe featuring a stylish combination of soft matte and warm wood finishes. Designed with functionality and elegance in mind, it includes spacious interior compartments and…",
       "key_features": [
@@ -11942,6 +12161,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This vibrant oil painting , characteristic of Leonid Afremov's impasto style, depicts a…",
       "key_features": [
@@ -11980,6 +12200,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This watercolor painting , likely titled \"Old Street, Prague, Czech Republic,\" depicts a…",
       "key_features": [
@@ -12018,6 +12239,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a charming watercolor painting of a Parisian cafe, likely titled \"Small Cafe in…",
       "key_features": [
@@ -12054,6 +12276,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This vibrant painting depicts a charmin g, narrow street at night, bathed in the dramatic…",
       "key_features": [
@@ -12092,6 +12315,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "Every element is carefully rendered—the glowing windows, the wrought-iron streetlamps, the subtle reflections on rain-soaked pavement—all working together to evoke a moment suspended in time. A few figures wander the street below, adding life and scale to this otherwise serene…",
       "key_features": [
@@ -12128,6 +12352,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. A rainy London street glows with reflections as Big Ben rises in the misty background. A…",
       "key_features": [
@@ -12164,6 +12389,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Landscape 24\" by 20\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This series of four vertical, abstract paintings presents a dynamic and vibrant…",
       "key_features": [
@@ -12200,6 +12426,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Square 24\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is an atmospheric painting, likely in oil or acrylic, dominated by a monochromatic…",
       "key_features": [
@@ -12237,6 +12464,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a captivating watercolor painting depicting a winding city street, rendered with…",
       "key_features": [
@@ -12273,6 +12501,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a watercolor painting depicting a charming old city street scene in the autumn.…",
       "key_features": [
@@ -12309,6 +12538,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Square 22\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This evocative painting captures a serene yet atmospheric landscape, likely at dawn or…",
       "key_features": [
@@ -12345,6 +12575,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This v ibrant and expressive painting , characteristic of Leonid Afremov's style, depicts…",
       "key_features": [
@@ -12383,6 +12614,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This evocative painting captures a serene yet atmospheric night scene, likely in a park…",
       "key_features": [
@@ -12419,6 +12651,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a captivating watercolor painting depicting a charming Mediterranean-style…",
       "key_features": [
@@ -12456,6 +12689,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This evocative painting captures a moody street scene in what appears to be an old…",
       "key_features": [
@@ -12494,6 +12728,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This striking artwork depicts a dramatic landscape dominated by a massive , vibrant…",
       "key_features": [
@@ -12532,6 +12767,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This vibrant and whimsical illustration depicts a charming storefront, likely a cafe or…",
       "key_features": [
@@ -12570,6 +12806,7 @@
         "amount": 26000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This vibrant watercolor painting depicts a charming, narrow alleyway reminiscent of a…",
       "key_features": [
@@ -12606,6 +12843,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This evocative image depicts a classic London street scene infused with warm, autumnal…",
       "key_features": [
@@ -12643,6 +12881,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a vibrant and detailed illustration depicting the exterior of a charming,…",
       "key_features": [
@@ -12679,6 +12918,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This oil painting, likely titled \"Paris Street\" by Guymick Cormic, depicts a charming and…",
       "key_features": [
@@ -12907,9 +13147,10 @@
       "name": "Vera Sofa Set",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Timeless charm and earthy sophistication Bring timeless charm and earthy sophistication into your home with the Vera Wood-Framed Sofa . Featuring a beautifully exposed wooden base and legs, this sofa blends classic craftsmanship with contemporary elegance. The soft beige…",
       "key_features": [
@@ -13139,9 +13380,10 @@
       "name": "Mocha Sofa Set",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "A masterclass in minimalist luxury and comfort Elevate your living space with the Mocha Modern Bouclé Sofa — a masterclass in minimalist luxury and comfort. Upholstered in soft, textured bouclé fabric, this statement piece features plush rounded arms, deep seating, and a neutral…",
       "key_features": [],
@@ -13368,9 +13610,10 @@
       "name": "Lisbon Sofa Set",
       "category": "Sofa Sets",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Understated Elegance with Modern Precision Introduce timeless charm to your living room with the Lizbon Sofa Set – where sleek geometry meets soft comfort. Designed with a minimalist vision, this set’s clean lines, cozy boucle-textured upholstery, and neutral tones make it the…",
       "key_features": [],
@@ -13597,9 +13840,10 @@
       "name": "Astor Sofa Set",
       "category": "Sofa Set",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Curved Comfort Meets Contemporary Class Transform your living space with the Astor Sofa Set , where modern design meets luxurious comfort. Featuring rounded silhouettes, plush textures, and elegant earthy tones, this statement set adds warmth and sophistication to any interior.…",
       "key_features": [
@@ -13636,6 +13880,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "The image is a striking painting depicting a solitary figure walking with an umbrella in what appears to be a rainy, autumnal setting. The top part of the painting is vibrant with trees adorned with bright orange and yellow leaves against a lighter, possibly overcast, sky. This…",
       "key_features": [
@@ -13672,6 +13917,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This beautiful image captures a serene and atmospheric urban scene on a rainy autumn day,…",
       "key_features": [
@@ -13709,6 +13955,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. The individual houses are rendered in a somewhat minimalist and rustic style, with…",
       "key_features": [
@@ -13746,6 +13993,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. In the midground, the elegant stone bridge curves gracefully over the water. Beyond the…",
       "key_features": [
@@ -13783,6 +14031,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. A watercolor and ink architectural painting on canvas , capturing the intricate beauty of…",
       "key_features": [
@@ -13820,6 +14069,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. A watercolor and ink architectural painting on canvas , set in a charming European…",
       "key_features": [
@@ -13857,6 +14107,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This painting depicts a romantic and serene scene of a couple walking together in the…",
       "key_features": [
@@ -13893,6 +14144,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Large - Portrait 30\" by 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. The image portrays a hauntingly beautiful forest scene rendered in a surreal, painterly…",
       "key_features": [
@@ -13929,6 +14181,7 @@
         "amount": 24000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "Small - Portrait 20\" by 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. Ethnic Heritage is a hand-drawn canvas that pays homage to the timeless beauty of South…",
       "key_features": [
@@ -14157,9 +14410,10 @@
       "name": "Stella Sofa Set",
       "category": "Sofa Set",
       "price": {
-        "amount": 45000,
+        "amount": 35000,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "A Definition of Modern Elegance Blending minimalism with comfort, the Stella Sofa Set brings contemporary sophistication to your living space. With its soft-textured upholstery, elegant lines, and gold-accented frame design, it is the perfect complement to any modern interior.…",
       "key_features": [
@@ -14389,9 +14643,10 @@
       "name": "Anka Sofa Set",
       "category": "Sofa Set",
       "price": {
-        "amount": 35000,
+        "amount": 6429,
         "currency": "PKR"
       },
+      "per_seat": true,
       "dimensions": "2 seater",
       "description": "Timeless Comfort Meets Modern Minimalism Elevate your living space with the Anka Sofa Set , a perfect blend of contemporary design and natural elegance. Upholstered in a soft, off-white boucle fabric and accented with warm oak wood detailing, this set brings calm, minimalist…",
       "key_features": [
@@ -14593,6 +14848,7 @@
         "amount": 120000,
         "currency": "PKR"
       },
+      "per_seat": false,
       "dimensions": "2 Door - 4' by 6.5'",
       "description": "Modern Elegance Bedroom Set Transform your space with the timeless sophistication of our Aegean Bedroom Set , a perfect fusion of modern design and warm wood tones. This ensemble offers a harmonious balance of comfort, functionality, and luxury. Set Includes: Upholstered Bed…",
       "key_features": [
