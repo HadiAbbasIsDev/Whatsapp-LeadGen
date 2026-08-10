@@ -48,6 +48,15 @@ def api_get(url):
         return json.load(r)
 
 
+def _ts(m):
+    from datetime import datetime
+    t = str(m.get("timestamp") or "")
+    try:
+        return float(t) if t.isdigit() else datetime.fromisoformat(t.replace("Z", "+00:00")).timestamp()
+    except Exception:
+        return 0.0
+
+
 def quoted_id(phone):
     """What the customer's most recent message was replying to.
     Returns (quoted_message_id, referred_product_retailer_id, their_text).
@@ -59,15 +68,29 @@ def quoted_id(phone):
             if re.sub(r"\D", "", str((m.get("kapso") or {}).get("phone_number") or "")) == want]
     if not mine:
         return None, None, ""
-    # Customers often add a follow-up line after the reply ("...final price" then
-    # "with high quality"), so scan their few most recent messages for the one
-    # that actually carries the reply context rather than only the newest.
+    newest = mine[0]
+    newest_text = str((newest.get("kapso") or {}).get("content") or "")
+
+    # An ad click carries a `referral`, NOT a reply — it must be identified from
+    # the ad itself (match_photo), never resolved to some product replied to
+    # earlier in the chat. Return no-reply so the flow proceeds to the ad path.
+    if newest.get("referral"):
+        return None, None, newest_text
+
+    # Customers sometimes add a follow-up line right after a reply ("...final
+    # price" then "with high quality"), so we scan a few recent messages for the
+    # reply context — BUT only within the same short burst (~90s of the newest
+    # message). Without that time bound, a reply-context from MINUTES earlier in
+    # the conversation gets wrongly picked up for a fresh, unrelated message.
+    newest_ts = _ts(newest)
     for m in mine[:5]:
+        if newest_ts and abs(newest_ts - _ts(m)) > 90:
+            break
         ctx = m.get("context") or {}
         ref = (ctx.get("referred_product") or {}).get("product_retailer_id")
         if ctx.get("id") or ref:
             return ctx.get("id"), ref, str((m.get("kapso") or {}).get("content") or "")
-    return None, None, str((mine[0].get("kapso") or {}).get("content") or "")
+    return None, None, newest_text
 
 
 def product_by_variant(retailer_id, catalog):
