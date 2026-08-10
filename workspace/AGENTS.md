@@ -172,12 +172,13 @@ In every one of these cases, do the SAME thing — a silent human handoff:
 
 **Never** tell the customer "I couldn't process that message", "it looks like a sticker", "unsupported media", or that you can't see/open the image. Do NOT describe it, guess a product, or offer alternatives. A human will open the chat, see the image, and reply.
 
-## SOFA PRICING — PER SEAT (only when the product HAS a seat-count option)
+## SOFA PRICING — PER SEAT ONLY WHEN A SINGLE SEAT IS ACTUALLY BUYABLE
 
-**Not all sofas are priced per seat — check the product's own `per_seat` field, never assume from the category name.** Some sofas/sectionals on the website offer a "Number of Seats" choice (Single Seater, 2 seater, 3 seater, 3+2, 3+2+1+1 — each its own price); for those, `products.json` stores `per_seat: true` and the price is the per-seat rate. Other sofas/sectionals have ONE fixed variant (no seat-count choice) — a single flat price for the whole set — and `per_seat` is `false`.
-- `per_seat: true` → always say "PKR X **per seat**" (e.g. "PKR 35,000 per seat"), never just "PKR X".
-- `per_seat: false` → quote the flat price with **no** "per seat" wording (e.g. "PKR 180,000" for the whole set) — saying "per seat" here would be wrong and could badly overstate what the customer pays for a multi-seat set.
-`send_product.py` already gets this right automatically from the `per_seat` field. If you ever type a sofa price yourself instead of using the auto-caption, check `per_seat` in `products.json` first — do not guess from the category name (e.g. "L Shaped Sofa" and "Sofa Set" categories both contain products of BOTH kinds).
+**Never say "per seat" unless the product genuinely sells a standalone single seat — check `per_seat` in `products.json`, never assume from the category name or from "it has a seat-count option."** Three cases:
+- **`per_seat: true`** — a real "Single Seater" purchase exists. Always say "PKR X **per seat**" (e.g. "PKR 45,000 per seat").
+- **`per_seat: false` with a `price_config` field** (e.g. `"2 seater"`) — the product has seat-count options, but the SMALLEST one needs 2+ seats (no standalone chair — e.g. Sleevo/Veloura/Elite Comforter BedSofa only offer 2 or 3 seater). Quote the flat price WITH the configuration, e.g. "PKR 66,000 (2 seater)" — **never** say "per seat" here, that would wrongly imply a single seat can be bought alone.
+- **`per_seat: false` with no `price_config`** — no seat-count option at all (one fixed variant, e.g. a sectional). Quote the flat whole-set price plainly, e.g. "PKR 180,000" — no suffix at all.
+`send_product.py` already gets all three right automatically. If you ever type a sofa price yourself instead of using the auto-caption, check both `per_seat` AND `price_config` in `products.json` first — do not guess from the category name (e.g. "L Shaped Sofa" and "Sofa Set" categories each contain all three kinds).
 
 ## MANDATORY IMAGE RULE
 

@@ -132,45 +132,62 @@ def seat_count(value):
 
 
 def per_seat_price(p, variants):
-    """If this product has a genuine seat-count option (e.g. Shopify option
-    named 'Number of Seats'), return (rate_per_seat, True): the headline price
-    must match something a customer can ACTUALLY buy, so use the CHEAPEST
-    listed configuration's own price, divided by its own seat count — not a
-    marginal/bulk rate computed across the larger configs, which doesn't
-    correspond to any real purchase (verified: for a family priced Single
-    Seater 45k / 2 seater 70k / 3 seater 105k / 3+2 175k / 3+2+1+1 245k, the
-    linear 2-seater-and-up rate is 35k/seat, but nothing is actually sold at
-    35k — the cheapest real purchase is the 45k Single Seater, so THAT is the
-    correct 'per seat' headline). Returns (None, False) when no seat-count
-    option exists at all — quote a flat whole-set price instead (e.g. a
-    sectional with a single 'Default Title' variant)."""
-    priced = []
+    """Figure out how to price a product that has a seat-count option.
+
+    Three cases:
+    1. A genuine 1-seat purchase exists ('Single Seater' variant, in stock) —
+       that IS something a customer can actually buy standalone, so quote its
+       own price 'per seat'. Uses the CHEAPEST such 1-seat variant's own price
+       (not a bulk/marginal rate computed from larger configs — verified: for
+       Single Seater 45k / 2 seater 70k / 3 seater 105k / 3+2 175k / 3+2+1+1
+       245k, the 2-seater-and-up rate is a clean 35k/seat, but nothing is
+       actually SOLD at 35k, so quoting that would advertise an unbuyable
+       price; 45k is the real minimum purchase).
+    2. A seat-count option exists but the SMALLEST configuration needs 2+
+       seats (e.g. only '2 seater' / '3 seater', no standalone chair) —
+       calling this 'PKR X per seat' would imply a single seat is buyable
+       when it is not (confirmed real case: Sleevo/Veloura/Convertix BedSofa,
+       2 Seater is the minimum purchase). Quote the FLAT price of the
+       cheapest configuration instead, labelled with which configuration it
+       is, so the customer knows the starting price is for that whole unit.
+    3. No seat-count option at all — handled by the caller (price_of), not
+       here: quote the flat single-variant price, no seat/config label.
+
+    Returns (amount, per_seat: bool, config_label: str|None).
+    """
+    priced = []          # (price, seat_count) for every seat-labelled variant
     for v in variants:
         for opt in ("option1", "option2", "option3"):
             n = seat_count(v.get(opt))
             if n:
                 amt = _int_price(v.get("price"))
                 if amt:
-                    priced.append((amt, n))
+                    priced.append((amt, n, (v.get(opt) or "").strip()))
                 break
     if not priced:
-        return None, False
-    cheapest_amt, cheapest_seats = min(priced, key=lambda t: t[0])
-    return int(round(cheapest_amt / cheapest_seats)), True
+        return None, False, None
+
+    singles = [t for t in priced if t[1] == 1]
+    if singles:
+        amt, n, _ = min(singles, key=lambda t: t[0])
+        return int(round(amt / n)), True, None
+
+    amt, n, label = min(priced, key=lambda t: t[0])
+    return amt, False, label
 
 
 def price_of(p):
     variants = p.get("variants") or []
     pool = [v for v in variants if v.get("available")] or variants
-    rate, is_per_seat = per_seat_price(p, pool)
-    if is_per_seat:
-        return {"amount": rate, "currency": "PKR"}, True
+    amount, is_per_seat, config_label = per_seat_price(p, pool)
+    if amount is not None:
+        return {"amount": amount, "currency": "PKR"}, is_per_seat, config_label
     amounts = []
     for v in pool:
         amt = _int_price(v.get("price"))
         if amt is not None:
             amounts.append(amt)
-    return {"amount": min(amounts) if amounts else None, "currency": "PKR"}, False
+    return {"amount": min(amounts) if amounts else None, "currency": "PKR"}, False, None
 
 
 def keywords_of(p, specs, feats, category):
@@ -197,7 +214,7 @@ def map_product(p):
     category = category_of(p)
     imgs = p.get("images") or []
     variants = p.get("variants") or []
-    price, is_per_seat = price_of(p)
+    price, is_per_seat, config_label = price_of(p)
     return {
         "id": str(p.get("id")),
         # WhatsApp Business catalogue items are identified by VARIANT id
@@ -211,10 +228,17 @@ def map_product(p):
         "name": p.get("title", "").strip(),
         "category": category,
         "price": price,
-        # True only when the product genuinely has a 'Number of Seats'-style
-        # option (see per_seat_price) — determines whether send_product.py
-        # quotes 'PKR X per seat' or the flat whole-set price.
+        # True only when a genuine standalone 1-seat purchase exists (see
+        # per_seat_price) — determines whether send_product.py quotes
+        # 'PKR X per seat' or the flat starting price.
         "per_seat": is_per_seat,
+        # Set when the product has a seat-count option but the CHEAPEST
+        # buyable configuration needs 2+ seats (e.g. 'Sleevo BedSofa' only
+        # offers 2/3 seater, no standalone chair) — the flat price shown is
+        # for THIS configuration, not a single seat, so send_product.py
+        # labels it (e.g. "PKR 66,000 (2 seater)") instead of implying a
+        # smaller unit is purchasable.
+        "price_config": config_label,
         "dimensions": dimensions_of(p, specs),
         "description": short_description(body),
         "key_features": feats,

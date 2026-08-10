@@ -11,7 +11,7 @@ description: Display furniture products from ./data/products.json ONLY. Always u
 2. **Always use `send_product.py`** to send each product — it delivers the photo AND details together as one WhatsApp message. Never use `send_image.py` directly.
 3. Never mention CRM, software, or anything unrelated to furniture.
 4. **Always show at least 10 products when the customer's request matches that many.** Send up to **10** per `send_product.py` call (use `search_products.py`'s default, don't pass a smaller `--limit`). If fewer than 10 items match, send every matching one — never fewer than what actually matches, up to 10.
-5. **SOFA PRICING: check `per_seat`, don't assume from the category.** Some sofas offer a seat-count choice (Single/2/3/3+2/3+2+1+1 seater, each its own price) and are genuinely priced per seat; others (e.g. some sectionals) have one fixed variant — a flat whole-set price. `products.json` tells you which: `per_seat: true` → say "PKR X **per seat**"; `per_seat: false` → quote the flat price with no "per seat" wording. `send_product.py`'s auto-caption already gets this right — only worry about it if you type a price yourself.
+5. **SOFA PRICING: check `per_seat` AND `price_config`, don't assume from the category.** Only say "per seat" when `per_seat: true` (a real standalone Single Seater exists, e.g. "PKR 45,000 per seat"). If `per_seat: false` but `price_config` is set (e.g. "2 seater"), the product's cheapest option still needs 2+ seats — quote the flat price WITH that configuration, e.g. "PKR 66,000 (2 seater)", never "per seat". If both are absent, it's a flat whole-set price with no label, e.g. "PKR 180,000". `send_product.py`'s auto-caption already gets this right — only worry about it if you type a price yourself.
 
 ## Data Source
 
