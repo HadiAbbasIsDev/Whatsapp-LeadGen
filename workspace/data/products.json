@@ -56,7 +56,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Oversized, low-profile lounge seating",
+      "dimensions": "",
       "description": "Sculptural Comfort and Timeless Design Redefine your living space with the Aura Chair , a perfect harmony of organic curves and structured elegance. This accent piece is designed to bring a serene, high-end feel to any modern home. Product Overview The Aura Chair features a…",
       "key_features": [
         "Enveloping Design",
@@ -130,7 +130,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "(Refer to Bunny Teeth Chair.jpg for visual scale)",
+      "dimensions": "",
       "description": "The Ultimate Statement Piece Elevate your space with a touch of whimsical luxury. The Bunny Teeth Chair is a playful yet sophisticated addition to any modern interior, blending plush comfort with a unique, sculptural silhouette. Product Overview Inspired by the charming features…",
       "key_features": [
         "Whimsical Design",
@@ -506,7 +506,7 @@
       },
       "per_seat": false,
       "price_config": "2 seater",
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Sleevo BedSofa | 2 & 3 Seater Options The Sleevo is the perfect blend of structural elegance and relaxed comfort. Featuring a unique vertical-channeled armrest design and a crisp, tailored silhouette, this BedSofa brings a sophisticated, boutique feel to any modern living room.…",
       "key_features": [
         "Sleevo BedSofa | 2 & 3 Seater Options",
@@ -552,7 +552,7 @@
       },
       "per_seat": false,
       "price_config": "2 seater",
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Veloura BedSofa | 2 & 3 Seater Options The Veloura is a bold statement in luxury and deep-seated comfort. Draped in a rich, midnight navy velvet-touch fabric, this BedSofa is designed to be the sophisticated focal point of any modern living room. It combines a clean, rectilinear…",
       "key_features": [
         "Veloura BedSofa | 2 & 3 Seater Options",
@@ -721,7 +721,7 @@
       },
       "per_seat": false,
       "price_config": "2 Seater",
-      "dimensions": "2 Seater",
+      "dimensions": "",
       "description": "CloudNest BedSofa | 2 & 3 Seater Options The CloudNest is engineered for the ultimate \"sink-in\" experience. True to its name, this BedSofa features high-volume, biscuit-tufted cushioning that creates a plush, cloud-like surface whether you are watching a movie or settling in for…",
       "key_features": [
         "CloudNest BedSofa | 2 & 3 Seater Options",
@@ -808,7 +808,7 @@
       },
       "per_seat": false,
       "price_config": "2 Seater",
-      "dimensions": "2 Seater",
+      "dimensions": "",
       "description": "Elite Comforter BedSofa | 2 & 3 Seater Options Experience the perfect blend of bold texture and plush relaxation with the Elite Comforter . Defined by its distinctive deep-channeled upholstery and charcoal palette, this BedSofa is designed for those who want their furniture to…",
       "key_features": [
         "Elite Comforter",
@@ -854,7 +854,7 @@
       },
       "per_seat": false,
       "price_config": "2 Seater",
-      "dimensions": "2 Seater",
+      "dimensions": "",
       "description": "Convertix BedSofa | 2 & 3 Seater Options The Convertix is the essential choice for the smart, modern homeowner. Stripping away the excess to focus on pure utility and clean lines, this model offers a high-performance sleeping solution without the high-end price tag. Its…",
       "key_features": [
         "Convertix BedSofa | 2 & 3 Seater Options",
@@ -941,7 +941,7 @@
       },
       "per_seat": false,
       "price_config": "2 Seater",
-      "dimensions": "3 Seater",
+      "dimensions": "",
       "description": "CasaFlex BedSofa | 2 & 3 Seater Options The CasaFlex is the perfect blend of organic warmth and modern versatility. Featuring unique wooden accents and a soft, rounded silhouette, this model is designed for cozy living rooms and \"Japandi\" inspired interiors. It offers a…",
       "key_features": [
         "CasaFlex BedSofa | 2 & 3 Seater Options",
@@ -1584,7 +1584,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Modern Plush Luxury • Sculpted Comfort • Soothing Minimalism Redefine comfort and elegance with the Elysian Cloud Sofa , a beautifully curved masterpiece designed for modern living. With its soft, pillowy silhouette and smooth, rounded edges, this sofa delivers the perfect…",
       "key_features": [
         "Elysian Cloud Sofa",
@@ -1823,7 +1823,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Soft Curves • Modern Elegance • Sculptural Serenity Introduce a touch of artistic calm to your home with the Muse Lounger Sofa , a masterpiece of smooth, flowing curves and refined minimalism. Designed with a seamless, cloud-like form and upholstered in creamy textured fabric,…",
       "key_features": [
         "Muse Lounger Sofa",
@@ -2063,7 +2063,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Soft Curves • Modern Elegance • Sculptural Serenity Introduce a touch of artistic calm to your home with the Muse Lounger Sofa , a masterpiece of smooth, flowing curves and refined minimalism. Designed with a seamless, cloud-like form and upholstered in creamy textured fabric,…",
       "key_features": [
         "Muse Lounger Sofa",
@@ -2303,7 +2303,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Modern Curves • Refined Minimalism • Sculpted Elegance Introducing the Sculptura Lounge Sofa , a stunning blend of sculpted form and understated luxury. Designed with smooth, continuous curves and a harmonious low-profile silhouette, this piece brings contemporary sophistication…",
       "key_features": [
         "Sculptura Lounge Sofa",
@@ -2543,7 +2543,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Playful Comfort • Organic Curves • Modern Soft Luxury Meet the Cloud Haven Sofa – Olive Edition , a refreshing blend of soft sculptural design and warm, inviting color. Wrapped in a rich olive-green upholstery, this sofa brings a touch of nature indoors while maintaining a…",
       "key_features": [
         "Cloud Haven Sofa – Olive Edition",
@@ -2783,7 +2783,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Soft Curves • Cozy Luxury • Modern Organic Design The Cloud Haven Sofa is where comfort meets contemporary elegance. Designed with oversized pillowy curves and a low, inviting silhouette, this sofa instantly transforms any space into a cozy, stylish retreat. The smooth,…",
       "key_features": [
         "Cloud Haven Sofa",
@@ -3023,7 +3023,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Plush Curves • Airy Comfort • Modern Sculptural Design Introduce soft luxury into your home with the Cloud Luxe Curve Sofa , a beautifully sculpted piece designed to offer cloud-like comfort and contemporary elegance. Its rounded, pillowy form and deep vertical tufting create a…",
       "key_features": [
         "Cloud Luxe Curve Sofa",
@@ -3263,7 +3263,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Plush Comfort • Sculptural Design • Modern Elegance Transform your living space with the Cloud Luxe Sofa , a statement piece defined by its soft, cloud-like silhouette and luxurious textured upholstery. Designed with deep vertical tufting and rounded contours, this sofa brings…",
       "key_features": [
         "Cloud Luxe Sofa",
@@ -3503,7 +3503,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Soft Minimalism • Modern Elegance • Sculpted Comfort Elevate your living space with the Curve Luxe Sofa , a masterpiece of smooth contours and calming modern aesthetics. Its sculpted, rounded silhouette creates a soft, inviting presence—perfect for contemporary, Japandi, and…",
       "key_features": [
         "Curve Luxe Sofa",
@@ -3538,7 +3538,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 52 in (132 cm), Depth: 24 in (61 cm), Height: 30 in (76 cm)",
       "description": "Warm Tones and Classic Mid-Century Appeal The Oakridge Writing Desk is a beautiful example of Mid-Century Modern design, characterized by its warm wood finish, clean rectangular geometry, and signature tapered legs. It provides a focused and elegant workspace with a surprising…",
       "key_features": [
         "Oakridge Writing Desk",
@@ -3579,7 +3579,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 42 in (107 cm), Depth: 22 in (56 cm), Height: 40 in (102 cm)",
       "description": "Dedicated Storage and Traditional Warmth The Timberline Work Desk is a highly functional piece designed for organized efficiency. Featuring a deep, rich reddish-brown finish, this desk provides a dedicated work area complemented by an elevated hutch and an integrated file…",
       "key_features": [
         "Dedicated Storage and Traditional Warmth",
@@ -3620,7 +3620,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Desk Width: 45 in (114 cm), Shelf Width: 32 in (81 cm), Height: 65 in (165 cm)",
       "description": "Natural Light Wood System with Integrated Bookshelf The Artisan Wood Desk is the epitome of Scandinavian and Japanese-inspired design, prioritizing natural materials, lightness, and open organization. Crafted entirely from light-toned wood, this system pairs a minimalist writing…",
       "key_features": [
         "Artisan Wood Desk",
@@ -3661,7 +3661,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 40 in (102 cm), Depth: 20 in (51 cm), Height: 48 in (122 cm)",
       "description": "Compact Functionality with Timeless, Traditional Style The Grand Heritage Study Table is a beautifully functional piece that brings the warmth and classic appeal of traditional craftsmanship into a modern study space. Featuring a rich, dark wood finish and an iconic curved…",
       "key_features": [
         "Grand Heritage Study Table",
@@ -3702,7 +3702,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 48 in (122 cm), Depth: 22 in (56 cm), Height: 30 in (76 cm)",
       "description": "Natural Simplicity with Thoughtful, Sculpted Storage The Colonial Charm Study Table embodies light, organic design with a focus on simplicity and beautiful craftsmanship. Crafted from light-toned natural wood, it provides a warm and inviting workspace, perfect for creative…",
       "key_features": [
         "Colonial Charm Study Table",
@@ -3743,7 +3743,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 60 in (152 cm), Depth: 30 in (76 cm), Height: 30 in (76 cm)",
       "description": "Refined Craftsmanship Meets Traditional Utility The Legacy Executive Desk is a masterpiece of modern Craftsman design, blending rich, dark wood with clean, architecturally striking lines. This desk focuses on premium materials and enduring utility, offering extensive desktop…",
       "key_features": [
         "Legacy Executive Desk",
@@ -3784,7 +3784,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 52 in (132 cm), Depth: 24 in (61 cm), Height: 30 in (76 cm)",
       "description": "Clean Lines and Natural Organization The Heritage Wood Study Desk is the epitome of clean, functional design. Emphasizing a beautiful, uniform light wood tone, this desk features a simple, rectangular silhouette supported by straight legs. With its full-size integrated pedestal,…",
       "key_features": [
         "Clean Lines and Natural Organization",
@@ -3825,7 +3825,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 48 in (122 cm), Depth: 22 in (56 cm), Height: 30 in (76 cm)",
       "description": "Scandinavian Serenity for Your Workspace Discover the quiet elegance of the Nordic Light Wood Writing Desk . This charming desk embodies the best of Scandinavian design: natural beauty, clean lines, and intelligent functionality. Crafted from light-toned wood, it offers a…",
       "key_features": [
         "Scandinavian Serenity for Your Workspace",
@@ -3866,7 +3866,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 48 in (122 cm), Depth: 24 in (61 cm), Height: 30 in (76 cm)",
       "description": "Compact Efficiency Meets Warm Transitional Style The MetroEdge Study Table offers the perfect blend of minimalist design and practical functionality. Featuring a rich, medium-brown wood finish and a clean, open silhouette, this desk is ideal for smaller spaces—from apartments…",
       "key_features": [
         "MetroEdge Study Table",
@@ -3907,7 +3907,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 54 in (137 cm), Depth: 24 in (61 cm), Height: 30 in (76 cm)",
       "description": "Classic American Craftsmanship for the Home Office Embrace the enduring elegance of the Arts and Crafts movement with the Vintage Mission Desk . This piece is a celebration of honest construction, rich wood tones, and distinctive geometric detailing. Its robust, solid build and…",
       "key_features": [
         "Arts and Crafts movement",
@@ -3948,7 +3948,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 55 in (140 cm), Depth: 28 in (71 cm), Height: 30 in (76 cm)",
       "description": "Timeless Woodcraft Meets Streamlined Design The Craftsman Executive Desk is an investment in refined productivity. Inspired by classic Mid-Century Modern aesthetics, this desk showcases the rich, deep tones of natural wood and clean, architectural lines. It provides generous…",
       "key_features": [
         "Craftsman Executive Desk",
@@ -3989,7 +3989,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimate",
+      "dimensions": "Width: 47 in (120 cm), Depth: 22 in (56 cm), Height: 30 in (75 cm), Height: 48 in (122 cm)",
       "description": "Sleek Functionality Meets Nordic-Inspired Design The Urban Smart Desk is engineered for the modern worker or student who values organization and clean aesthetics. Merging a bright, airy aesthetic with smart, integrated storage solutions, this desk provides the perfect footprint…",
       "key_features": [
         "Urban Smart Desk",
@@ -4061,7 +4061,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 10 ft, Total Height: 8 ft, Total Depth: 10 in",
       "description": "Industrial Elegance with Modern Function Sophisticated and bold, The Urban Slate Media Wall blends raw textures with refined design — perfect for spaces that embrace modern luxury with an industrial edge. The contrast of warm wood slats, matte finishes, and ambient lighting…",
       "key_features": [
         "Concrete-Inspired Backdrop",
@@ -4099,7 +4099,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 10 ft, Total Height: 8 ft, Total Depth: 10 in",
       "description": "Modern Warmth Meets Marble Elegance Refined, balanced, and beautifully detailed — The Marquina Harmony Media Wall is a seamless fusion of marble grandeur and natural wood warmth. Designed for contemporary interiors, this wall brings together texture, lighting, and symmetry to…",
       "key_features": [
         "Marble-Inspired Centerpiece",
@@ -4136,7 +4136,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 12 ft, Total Height: 9 ft, Total Depth: 12 in",
       "description": "Art Deco Grandeur A statement in symmetry, shine, and sophistication — The Imperial Luxe Media Wall embodies timeless elegance with its glossy surfaces, golden trims, and flawless proportions. Designed to elevate luxurious living spaces, this wall combines modern refinement with…",
       "key_features": [
         "High-Gloss Perfection",
@@ -4173,7 +4173,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 12 ft, Total Height: 8 ft, Total Depth: 12 in",
       "description": "Modern Elegance with Warm Fire Glow Minimalist luxury meets everyday comfort in The Marble Serenity Media Wall — a sleek, contemporary design that transforms your living space into a warm and sophisticated retreat. Its seamless marble finish, integrated fireplace, and floating…",
       "key_features": [
         "Seamless Marble Finish",
@@ -4210,7 +4210,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 12 ft, Total Height: 8 ft, Total Depth: 12 in",
       "description": "Modern Elegance with Warm Ambience Refined, radiant, and luxuriously balanced — The Luminous Fluted Media Wall combines minimalist design with soft lighting and a built-in fireplace to create the perfect harmony of function and atmosphere. Designed to be both a visual…",
       "key_features": [
         "Illuminated Fluted Panels",
@@ -4247,7 +4247,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 10 ft, Total Height: 8 ft, Total Depth: 10 in",
       "description": "Calm, Contemporary Living Effortlessly elegant and grounded in natural simplicity — The Nordic Fluted Media Wall celebrates modern minimalism through warm tones, soft lighting, and organic textures. Designed to bring tranquility and style to your living space, it’s the perfect…",
       "key_features": [
         "Natural Fluted Backdrop",
@@ -4284,7 +4284,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 10 ft, Total Height: 8 ft, Total Depth: 10 in",
       "description": "Minimal Perfection A masterpiece of modern simplicity, The Linear Luxe Media Wall redefines elegance with precision lines, balanced lighting, and a sleek floating console. Designed for interiors that celebrate minimalism and refinement, this wall becomes the visual anchor of any…",
       "key_features": [
         "Geometric Precision",
@@ -4321,7 +4321,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 10 ft, Total Height: 8 ft, Total Depth: 10 in",
       "description": "Understated Sophistication Warm, grounded, and beautifully composed — The Walnut Harmony Media Wall brings timeless craftsmanship into modern interiors. Its rich wooden tones, clean geometry, and natural symmetry create an effortlessly elegant focal point that enhances the…",
       "key_features": [
         "Rich Walnut Finish",
@@ -4358,7 +4358,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 8 ft, Total Height: 8 ft, Total Depth: 10 in",
       "description": "Warm Modern Minimalism Elegant simplicity meets natural warmth in The Scandinavian Floating Media Wall , a refined piece designed for modern living. Combining light oak tones, soft lighting, and functional form, this wall unit transforms your TV area into a serene focal point of…",
       "key_features": [
         "Natural Oak Finish",
@@ -4395,7 +4395,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 10–12 ft, Total Height: 8–9 ft, Total Depth: 10–12 in",
       "description": "Modern Elegance in Motion Bold, sophisticated, and impeccably balanced — The Noir Fluted Media Wall embodies the essence of contemporary luxury. Its deep tones, refined lighting, and precise detailing make it the perfect focal point for modern interiors that demand both drama…",
       "key_features": [
         "Sculpted Fluted Panels",
@@ -4432,7 +4432,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 10 ft, Total Height: 8 ft, Total Depth: 10 in",
       "description": "Modern Comfort in Marble Sophisticated, serene, and striking — The Warm Luxe Media Wall is designed to bring a touch of refined modernity to your living space. Blending marble textures, fluted panels, and soft amber lighting, this design creates an atmosphere of cozy grandeur…",
       "key_features": [
         "Marble Centerpiece",
@@ -4469,7 +4469,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 12 ft, Total Height: 9 ft, Total Depth: 12 in",
       "description": "Timeless Elegance A statement of modern grandeur, The Luxe Marble & Gold Media Wall redefines luxury through balance, simplicity, and precision. Designed for discerning interiors, it merges polished marble textures with golden metallic accents — transforming your living room…",
       "key_features": [
         "Marble Grandeur",
@@ -4506,7 +4506,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 10 ft, Total Height: 8 ft, Total Depth: 10 in",
       "description": "Modern Serenity A refined fusion of warm wood tones and soft stone textures, The Contemporary Wood & Stone Media Wall brings calm sophistication to your living space. Designed with minimalist lines and natural finishes, it effortlessly combines function and style — creating a…",
       "key_features": [
         "Natural Stone Backdrop",
@@ -4543,7 +4543,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "",
+      "dimensions": "Total Width: 10ft, Total Height: 8 ft, Total Depth: 10 in",
       "description": "Minimal Luxe Design A perfect harmony of modern elegance and subtle grandeur. The Modern Marble Media Wall transforms any living room into a sophisticated focal point — blending clean geometry, balanced lighting, and premium textures for a refined contemporary feel. Marble Core:…",
       "key_features": [
         "The Modern Marble Media Wall",
@@ -4581,7 +4581,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimated Size (Imperial Range)",
+      "dimensions": "Total Width: 14 feet, Total Height: 9 feet, Total Depth: 12 inches",
       "description": "Curated Luxury This design is the pinnacle of sophistication, blending classic symmetry with modern function. It creates a formal, yet inviting, centerpiece perfect for high-end living rooms. Marbled Core: Features a dramatic slab of white marble with bold, prominent grey/gold…",
       "key_features": [
         "Marbled Core",
@@ -4621,7 +4621,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimated Size (Imperial Range)",
+      "dimensions": "Total Width: 14 feet, Total Height: 9 feet, Total Depth: 12 inches",
       "description": "Symmetrical Grandeur A perfect blend of classic opulence and modern structure, this design brings immediate glamour and sophistication to any living space through balanced design and luxurious materials. Bright Marble Core: An expansive central area is clad in bright, white…",
       "key_features": [
         "Bright Marble Core",
@@ -4661,7 +4661,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimated Size (Imperial Range)",
+      "dimensions": "Total Width: 14 feet, Total Height: 9 feet, Total Depth: 12 inches",
       "description": "Timeless Glamour Elevate your room with a custom design that marries classic luxury with contemporary function. This style is built for visual balance and features high-end accents that define a truly opulent living space. Marbled Focal Point: Features an expansive slab of white…",
       "key_features": [
         "Marbled Focal Point",
@@ -4701,7 +4701,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimated Size (Imperial Range)",
+      "dimensions": "Total Width: 14 feet, Total Height: 9 feet, Total Depth: 12 inches",
       "description": "Flawless Floating Design Achieve the ultimate in contemporary calm with a system defined by clean lines and weightless structure. This design is focused on tranquility and the flawless integration of technology. Seamless Finish: The wall is clad in large, continuous light-toned…",
       "key_features": [
         "Seamless Finish",
@@ -4741,7 +4741,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimated Size (Imperial Range)",
+      "dimensions": "Total Width: 12 feet, Total Height: 9 feet, Total Depth: 12 inches",
       "description": "Floating Console Media Wall Achieve architectural elegance with this ultra-modern, light-focused media system. This design emphasizes clean lines, uninterrupted surfaces, and atmospheric lighting, making it the perfect choice for a sophisticated, contemporary home. Weightless…",
       "key_features": [
         "Weightless Design",
@@ -4781,7 +4781,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimated Size (Imperial Range)",
+      "dimensions": "Total Width: 12 feet, Total Height: 9 feet, Total Depth: 12 inches",
       "description": "Illuminated Architectural Media Wall A design built for high-end residential towers, this media wall serves as a sophisticated frame for both the entertainment system and your stunning sunset view. It’s an architectural centerpiece that defines a luxury lifestyle. Dramatic…",
       "key_features": [
         "Dramatic Symmetry",
@@ -4821,7 +4821,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimated Size (Imperial Range)",
+      "dimensions": "Total Width: 12 feet, Total Height: 9 feet, Total Depth: 12 inches",
       "description": "Timeless Glamour Media Center Introduce a layer of bright sophistication and timeless elegance into your home. This exquisite media wall blends classic luxurious finishes with a clean, contemporary structure, creating a space that feels both welcoming and grand. Bright Marble…",
       "key_features": [
         "Bright Marble Focal Point",
@@ -4861,7 +4861,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimated Size (Imperial Range)",
+      "dimensions": "Total Width: 12 feet, Total Height: 9 feet, Total Depth: 12 inches",
       "description": "Textured Contrast Media Center Make an uncompromising statement with this bold, gallery-inspired media wall. This design combines rich textures and contrasting materials to create a truly bespoke and memorable entertainment center. Dramatic Centerpiece: The focal point is a…",
       "key_features": [
         "Dramatic Centerpiece",
@@ -4901,7 +4901,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Estimated Size (Imperial)",
+      "dimensions": "Width: 10 feet, Height: 9 feet, Depth: 12 inches",
       "description": "Modern Media Wall The focal point is the expansive, custom-designed media wall, clad in polished light marble or high-gloss paneling . It perfectly frames the sleek, wide-format television above a mesmerizing linear fireplace. This setup isn't just functional; it's a piece of…",
       "key_features": [
         "light marble or high-gloss paneling",
@@ -7987,7 +7987,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Linda Dining Set for 4 to 8 person Create a warm and inviting atmosphere in your home with this elegant dining set, designed to blend natural charm with contemporary simplicity. The rectangular dining table features a clean-lined silhouette and a soft, light wood finish that…",
       "key_features": [
         "Linda Dining Set for 4 to 8 person",
@@ -8083,7 +8083,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Raven Dining Set for 4 to 8 person Make a bold statement in your dining area with this striking modern dining set. Featuring a sophisticated black rectangular table with a beautifully textured surface, this piece effortlessly blends contemporary elegance with a touch of drama.…",
       "key_features": [
         "Raven Dining Set for 4 to 8 person",
@@ -8179,7 +8179,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Metropol Dining Set for 4 to 8 person Infuse your dining space with contemporary charm and warm elegance with this modern dining set. The centerpiece is a beautifully crafted rectangular table featuring a natural wood-look top that highlights organic textures, paired with sleek…",
       "key_features": [
         "Metropol Dining Set for 4 to 8 person",
@@ -8275,7 +8275,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Sepia Dining Set for 4 to 8 person Transform your dining space with this stunning modern dining set, designed to bring understated luxury and comfort to your home. The centerpiece is a rectangular dining table featuring a sophisticated marble-look top that exudes elegance,…",
       "key_features": [
         "Sepia Dining Set for 4 to 8 person",
@@ -8371,7 +8371,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Narva Dining Set for 4 to 8 person Elevate your dining experience with this elegant modern dining set. Featuring a sleek rectangular table with a smooth, minimalist surface and gracefully rounded edges, it brings a sense of sophistication and calm to your home. The sturdy wooden…",
       "key_features": [
         "Narva Dining Set for 4 to 8 person",
@@ -8708,7 +8708,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Olivia Dining Set for 4 to 8 person Bring harmony to your dining space with the Urban Elegance Dining Set , designed for both modern aesthetics and everyday comfort. Featuring a soft neutral palette and clean architectural lines, this dining set makes a sophisticated statement…",
       "key_features": [
         "Olivia Dining Set for 4 to 8 person",
@@ -8768,7 +8768,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Nora Dining Set for 4 to 8 person Upgrade your dining area with the sleek and stylish Modern Contrast Dining Set , crafted to suit modern spaces with a minimalist aesthetic. Combining comfort with a clean design, this 4 to 8-seater set brings timeless elegance to any home. Key…",
       "key_features": [
         "Nora Dining Set for 4 to 8 person",
@@ -8828,7 +8828,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Isabel Dining Set for 4 to 8 person Transform your dining space with the ultimate expression of sophistication – the Isabel Dining Set. Designed for grand gatherings and refined interiors, this dining set pairs a sleek high-gloss rectangular table with plush velvet chairs in a…",
       "key_features": [
         "Isabel Dining Set for 4 to 8 person",
@@ -8888,7 +8888,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Estela 4 to 8 Seater Dining Set Elevate your dining experience with our Estela Dining Set, a perfect blend of elegance and comfort. This dining set features a sleek high-gloss tabletop resting on stylish gold metal legs that add a touch of luxury to your space. The accompanying…",
       "key_features": [
         "Estela 4 to 8 Seater Dining Set",
@@ -8948,7 +8948,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "4 seater - 2.5ft by 5ft",
+      "dimensions": "4 seater: 2.5ft x 5ft; 6 seater: 3.5ft x 6ft; 8 seater: 4ft x 8ft",
       "description": "Modern Minimalist 4 to 8-Seater Dining Set Elevate your dining experience with this beautifully crafted dining set that blends modern minimalism with natural warmth. Featuring a sleek white tabletop paired with solid wood legs, this set creates a clean and contemporary look that…",
       "key_features": [
         "Features",
@@ -9451,7 +9451,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Truva Glass-Door Wardrobe – Modern Display with Practical Storage Redefine your room with the Truva Wardrobe , where contemporary design meets versatile functionality. Featuring a combination of frosted glass doors and matte-finish side cabinets, this wardrobe offers both…",
       "key_features": [
         "Smoked Glass Panels",
@@ -9500,7 +9500,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Sun Wardrobe – Sleek Simplicity, Timeless Appeal Discover the perfect balance of form and function with the Sun Wardrobe . Featuring a soft matte beige finish and centrally positioned full-length mirrors, this wardrobe offers a minimalist design with practical everyday use in…",
       "key_features": [
         "Central Mirror Panels",
@@ -9548,7 +9548,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Regnum Walnut Mirror Wardrobe – Natural Warmth Meets Modern Luxury Introduce timeless character and elevated storage to your bedroom with the Regnum Walnut Mirror Wardrobe . Designed with rich walnut-toned wood panels, gold-trimmed mirrors, and sleek vertical handles, this…",
       "key_features": [
         "Regnum Walnut Mirror Wardrobe",
@@ -9596,7 +9596,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Petron High-Gloss Mirror Wardrobe – Sleek Symmetry with Modern Minimalism Upgrade your space with the Petron Mirror Wardrobe , where high-gloss perfection meets seamless functionality. Designed to reflect elegance and clarity, this wardrobe features a striking combination of…",
       "key_features": [
         "Petron Mirror Wardrobe",
@@ -9646,7 +9646,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Pera Wardrobe – Soft Beige with Timeless Utility The Pera Wardrobe brings understated elegance and smart storage together in a minimalist design. With its soft matte beige finish and central bronze-tinted mirrors, it seamlessly blends into modern interiors while enhancing space…",
       "key_features": [
         "Pera",
@@ -9696,7 +9696,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Pablo Black Wardrobe – Bold Geometry, Timeless Class Make a statement with the Pablo Black Wardrobe , a sophisticated fusion of high-gloss panels and clean geometric design. Featuring symmetrical grid-like paneling and a central mirrored section, this wardrobe brings…",
       "key_features": [
         "Pablo",
@@ -9746,7 +9746,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Pablo White & Gold Wardrobe – Modern Elegance with Ambient Glow Transform your space with the Pablo White & Gold Wardrobe , a stunning blend of sleek design, soft lighting, and functional storage. With its glossy white body, vertical gold-trimmed mirror panels, and subtle…",
       "key_features": [
         "Pablo",
@@ -9796,7 +9796,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Mocha Mirror Wardrobe – Soft Luxury, Seamless Function Bring effortless elegance into your space with the Mocha Mirror Wardrobe , a harmonious blend of refined design and functional storage. With its sleek champagne-tinted mirrored doors and clean matte frame, this wardrobe adds…",
       "key_features": [
         "Mocha Mirror Wardrobe",
@@ -9846,7 +9846,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Latte Corner Wardrobe – Bold, Luxurious & Illuminated Add a touch of opulence to your bedroom with the Latte Corner Wardrobe — a striking piece that perfectly blends luxury with smart storage. Featuring sleek bronze-tinted glass doors and integrated LED lighting, this wardrobe…",
       "key_features": [
         "Latte Corner",
@@ -9896,7 +9896,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Dallas Wardrobe – Sleek & Spacious Elegance Elevate your bedroom’s aesthetic and functionality with the Dallas Wardrobe , a modern storage masterpiece designed to blend elegance with everyday practicality. Crafted with a high-gloss white finish and smoked glass sliding doors,…",
       "key_features": [
         "Minimalist Exterior, Maximum Storage",
@@ -9945,7 +9945,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Basement Corner Wardrobe Maximize your space with our Basement Corner Wardrobe, designed for both functionality and elegance. Crafted with a sleek beige matte finish, this L-shaped wardrobe system fits seamlessly into any corner, making it ideal for bedrooms, dressing areas, or…",
       "key_features": [
         "Basement Corner Wardrobe,",
@@ -10155,7 +10155,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Truva Bedroom Set – Sleek Design, Sophisticated Comfort Bring contemporary charm into your bedroom with the Truva Bedroom Set , a flawless fusion of soft cream tones, premium materials, and sleek design. With its tall upholstered headboard, glass wardrobe, and functional side…",
       "key_features": [
         "Truva Bedroom Set",
@@ -10365,7 +10365,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Sun Bedroom – Subtle Luxury, Sleek Function Refined elegance meets modern minimalism in the Sun Bedroom Set . Designed with a calm, neutral palette and clean geometric lines, this bedroom collection is ideal for those who seek tranquility and sophistication in their personal…",
       "key_features": [
         "Sun",
@@ -10575,7 +10575,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Regnum Modern Walnut Bedroom Set – Sophistication in Every Grain Elevate your bedroom with the Regnum Bedroom Set , a striking fusion of warm walnut tones, plush textures, and gold accents. Designed for those who value both elegance and comfort, this set brings an upscale,…",
       "key_features": [
         "Regnum Bedroom Set",
@@ -10785,7 +10785,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Petron Modern Bedroom Set – Timeless Minimalism with a Soft Touch Transform your space into a sanctuary of luxury with the Petron Bedroom Set – where elegant simplicity meets modern comfort. This contemporary ensemble is perfect for those who appreciate clean design, soft tones,…",
       "key_features": [
         "Petron Bedroom Set",
@@ -10995,7 +10995,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Pera Bedroom Set – Soft Sophistication with Natural Warmth Immerse yourself in the gentle elegance of the Pera Bedroom Set , a beautifully balanced blend of plush textures, ambient lighting, and architectural charm. Designed for those who appreciate understated luxury, this set…",
       "key_features": [
         "Pera Bedroom Set",
@@ -11205,7 +11205,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Pablo Black Edition Bedroom Set – Bold Geometry Meets Modern Luxury Make a statement with the Pablo Black Edition Bedroom Set , designed for those who appreciate sharp aesthetics and luxurious comfort. This set redefines contemporary style with its geometric wardrobe design,…",
       "key_features": [
         "Pablo Black Edition Bedroom Set",
@@ -11415,7 +11415,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Pablo Bedroom Set – Sculpted Elegance with Ambient Charm Introduce a new level of luxury to your home with the Pablo Bedroom Set , where soft curves meet artistic detailing. With its sculpted bed frame, ambient underglow lighting, and sophisticated mirrored wardrobe, this set is…",
       "key_features": [
         "Pablo Bedroom Set",
@@ -11625,7 +11625,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Mocha Bedroom Set – Light Luxury, Effortlessly Modern Infuse your space with calm sophistication using the Mocha Bedroom Set – a blend of minimalist design and refined finishes tailored for the modern lifestyle. Featuring a low-profile platform bed, mirrored wardrobe, and sleek…",
       "key_features": [
         "Mocha Bedroom Set",
@@ -11835,7 +11835,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Latte Bedroom Set – Chic Simplicity, Refined Comfort Indulge in the serene sophistication of the Latte Bedroom Set , a minimalist design crafted to bring elegance and warmth to modern spaces. This set is the perfect harmony of functionality, comfort, and style — highlighted by a…",
       "key_features": [
         "Latte Bedroom Set",
@@ -12045,7 +12045,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Dallas Bedroom Set – Soft Modern Elegance Transform your bedroom into a haven of style and serenity with the Dallas Bedroom Set , where contemporary aesthetics meet ultimate comfort. Featuring a unique, cloud-like tufted bed, sleek modern storage, and a minimalist vanity, this…",
       "key_features": [
         "Dallas Bedroom Set",
@@ -12254,7 +12254,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Basement Corner Bedroom Set – Modern Luxury Redefined Elevate your space with the Basement Corner Bedroom Set , a seamless blend of contemporary elegance and smart design. Crafted for comfort and style, this set includes a plush upholstered bed with tufted headboard, sleek side…",
       "key_features": [
         "Basement Corner Bedroom Set",
@@ -12343,7 +12343,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'; 6 Door: 10' x 6.5'",
       "description": "Modern Aluminum Door Wardrobe with dark tinted glass Elevate your bedroom with this sleek, contemporary wardrobe featuring a stylish combination of soft matte and warm wood finishes. Designed with functionality and elegance in mind, it includes spacious interior compartments and…",
       "key_features": [
         "Available in",
@@ -12382,7 +12382,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This vibrant oil painting , characteristic of Leonid Afremov's impasto style, depicts a…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -12422,7 +12422,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This watercolor painting , likely titled \"Old Street, Prague, Czech Republic,\" depicts a…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -12462,7 +12462,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a charming watercolor painting of a Parisian cafe, likely titled \"Small Cafe in…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -12500,7 +12500,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This vibrant painting depicts a charmin g, narrow street at night, bathed in the dramatic…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -12540,7 +12540,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "Every element is carefully rendered—the glowing windows, the wrought-iron streetlamps, the subtle reflections on rain-soaked pavement—all working together to evoke a moment suspended in time. A few figures wander the street below, adding life and scale to this otherwise serene…",
       "key_features": [
         "Theme & Experience"
@@ -12578,7 +12578,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. A rainy London street glows with reflections as Big Ben rises in the misty background. A…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -12616,7 +12616,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Landscape 24\" by 20\"",
+      "dimensions": "Small: Landscape 24\" x 20\"; Medium: Landscape 30\" x 24\"; Large: Landscape 40\" x 30\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This series of four vertical, abstract paintings presents a dynamic and vibrant…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -12654,7 +12654,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Square 24\" by 24\"",
+      "dimensions": "Small: Square 24\" x 24\"; Medium: Square 28\" x 28\"; Large: Square 36\" x 36\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is an atmospheric painting, likely in oil or acrylic, dominated by a monochromatic…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -12693,7 +12693,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a captivating watercolor painting depicting a winding city street, rendered with…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -12731,7 +12731,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a watercolor painting depicting a charming old city street scene in the autumn.…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -12769,7 +12769,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Square 22\" by 24\"",
+      "dimensions": "Small: Square 22\" x 24\"; Medium: Square 28\" x 28\"; Large: Square 36\" x 36\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This evocative painting captures a serene yet atmospheric landscape, likely at dawn or…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -12807,7 +12807,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This v ibrant and expressive painting , characteristic of Leonid Afremov's style, depicts…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -12847,7 +12847,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This evocative painting captures a serene yet atmospheric night scene, likely in a park…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -12885,7 +12885,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a captivating watercolor painting depicting a charming Mediterranean-style…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -12924,7 +12924,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This evocative painting captures a moody street scene in what appears to be an old…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -12964,7 +12964,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This striking artwork depicts a dramatic landscape dominated by a massive , vibrant…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -13004,7 +13004,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This vibrant and whimsical illustration depicts a charming storefront, likely a cafe or…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -13044,7 +13044,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This vibrant watercolor painting depicts a charming, narrow alleyway reminiscent of a…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -13082,7 +13082,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This evocative image depicts a classic London street scene infused with warm, autumnal…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -13121,7 +13121,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This is a vibrant and detailed illustration depicting the exterior of a charming,…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -13159,7 +13159,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This oil painting, likely titled \"Paris Street\" by Guymick Cormic, depicts a charming and…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -13392,7 +13392,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Timeless charm and earthy sophistication Bring timeless charm and earthy sophistication into your home with the Vera Wood-Framed Sofa . Featuring a beautifully exposed wooden base and legs, this sofa blends classic craftsmanship with contemporary elegance. The soft beige…",
       "key_features": [
         "Timeless charm and earthy sophistication",
@@ -13626,7 +13626,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "A masterclass in minimalist luxury and comfort Elevate your living space with the Mocha Modern Bouclé Sofa — a masterclass in minimalist luxury and comfort. Upholstered in soft, textured bouclé fabric, this statement piece features plush rounded arms, deep seating, and a neutral…",
       "key_features": [],
       "specifications": {},
@@ -13857,7 +13857,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Understated Elegance with Modern Precision Introduce timeless charm to your living room with the Lizbon Sofa Set – where sleek geometry meets soft comfort. Designed with a minimalist vision, this set’s clean lines, cozy boucle-textured upholstery, and neutral tones make it the…",
       "key_features": [],
       "specifications": {},
@@ -14088,7 +14088,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Curved Comfort Meets Contemporary Class Transform your living space with the Astor Sofa Set , where modern design meets luxurious comfort. Featuring rounded silhouettes, plush textures, and elegant earthy tones, this statement set adds warmth and sophistication to any interior.…",
       "key_features": [
         "Curved Comfort Meets Contemporary Class"
@@ -14126,7 +14126,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "The image is a striking painting depicting a solitary figure walking with an umbrella in what appears to be a rainy, autumnal setting. The top part of the painting is vibrant with trees adorned with bright orange and yellow leaves against a lighter, possibly overcast, sky. This…",
       "key_features": [
         "Theme & Experience"
@@ -14164,7 +14164,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This beautiful image captures a serene and atmospheric urban scene on a rainy autumn day,…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -14203,7 +14203,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. The individual houses are rendered in a somewhat minimalist and rustic style, with…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -14242,7 +14242,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. In the midground, the elegant stone bridge curves gracefully over the water. Beyond the…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -14281,7 +14281,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. A watercolor and ink architectural painting on canvas , capturing the intricate beauty of…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -14320,7 +14320,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. A watercolor and ink architectural painting on canvas , set in a charming European…",
       "key_features": [
         "frameless, handcrafted bespoke painting",
@@ -14359,7 +14359,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. This painting depicts a romantic and serene scene of a couple walking together in the…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -14397,7 +14397,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Large - Portrait 30\" by 40\"",
+      "dimensions": "Large: Portrait 30\" x 40\"; Medium: Portrait 24\" x 30\"; Small: Portrait 20\" x 24\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. The image portrays a hauntingly beautiful forest scene rendered in a surreal, painterly…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -14435,7 +14435,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "Small - Portrait 20\" by 24\"",
+      "dimensions": "Small: Portrait 20\" x 24\"; Medium: Portrait 24\" x 30\"; Large: Portrait 30\" x 40\"",
       "description": "A frameless, handcrafted bespoke painting created by our local artist. Beautifully painted on raw canvas using a blend of water and oil paints , tailored to the artwork’s texture and depth. Ethnic Heritage is a hand-drawn canvas that pays homage to the timeless beauty of South…",
       "key_features": [
         "frameless, handcrafted bespoke painting"
@@ -14668,7 +14668,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "A Definition of Modern Elegance Blending minimalism with comfort, the Stella Sofa Set brings contemporary sophistication to your living space. With its soft-textured upholstery, elegant lines, and gold-accented frame design, it is the perfect complement to any modern interior.…",
       "key_features": [
         "A Definition of Modern Elegance",
@@ -14902,7 +14902,7 @@
       },
       "per_seat": true,
       "price_config": null,
-      "dimensions": "2 seater",
+      "dimensions": "",
       "description": "Timeless Comfort Meets Modern Minimalism Elevate your living space with the Anka Sofa Set , a perfect blend of contemporary design and natural elegance. Upholstered in a soft, off-white boucle fabric and accented with warm oak wood detailing, this set brings calm, minimalist…",
       "key_features": [
         "Timeless Comfort Meets Modern Minimalism"
@@ -15105,7 +15105,7 @@
       },
       "per_seat": false,
       "price_config": null,
-      "dimensions": "2 Door - 4' by 6.5'",
+      "dimensions": "2 Door: 4' x 6.5'; 3 Door: 6' x 6.5'; 4 Door: 8' x 6.5'",
       "description": "Modern Elegance Bedroom Set Transform your space with the timeless sophistication of our Aegean Bedroom Set , a perfect fusion of modern design and warm wood tones. This ensemble offers a harmonious balance of comfort, functionality, and luxury. Set Includes: Upholstered Bed…",
       "key_features": [
         "Modern Elegance Bedroom Set",

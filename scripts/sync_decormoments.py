@@ -81,19 +81,99 @@ def short_description(body):
     return text[:280].rsplit(" ", 1)[0] + ("…" if len(text) > 280 else "")
 
 
-def dimensions_of(p, specs):
+DIM_JUNK = {"", "estimate", "estimated", "n/a", "na", "-", "tbd",
+            "estimated size", "estimated size (imperial range)"}
+# a real measurement: a number followed by a unit, OR an "A x B" / "A by B" pair
+MEASUREMENT_RE = re.compile(
+    r"\d\s*(?:ft|feet|foot|in\b|inch|inches|cm|mm|\bm\b|['\"”′″])"
+    r"|\d\s*(?:x|×|by)\s*\d", re.I)
+DIM_AXIS_RE = re.compile(r"\b(width|depth|height|length|diameter)\b", re.I)
+DIM_LETTER_RE = re.compile(r"^\s*([WDHL])\b", re.I)
+LETTER_AXIS = {"W": "Width", "D": "Depth", "H": "Height", "L": "Length"}
+
+
+def _is_measurement(v):
+    v = (v or "").strip()
+    return bool(v) and v.lower() not in DIM_JUNK and MEASUREMENT_RE.search(v) is not None
+
+
+def _axis_label(k, axis_word):
+    """Build a readable axis label from a spec key, keeping any descriptive
+    prefix. 'W (Width)' -> 'Width'; 'Desk W (Width)' -> 'Desk Width';
+    'Shelf W (Width)' -> 'Shelf Width'; 'H (Total System Height)' -> 'Height'."""
+    key_clean = re.sub(r"\([^)]*\)", "", k).strip()          # drop the "(Width)" part
+    prefix = re.sub(r"\b[WDHL]\b\s*$", "", key_clean, flags=re.I).strip()
+    if not prefix or prefix.lower() == axis_word.lower():
+        return axis_word
+    if prefix.lower().endswith(axis_word.lower()):
+        return prefix
+    return f"{prefix} {axis_word}"
+
+
+def _dims_from_spec_axes(specs):
+    """Assemble per-axis rows (W/Width, D/Depth, H/Height, L/Length) into one
+    clean string. Handles tables like: 'Dimension | Estimate', 'W (Width) | 60 in
+    (152 cm)', 'D (Depth) | 30 in (76 cm)' — where the real numbers live in the
+    axis rows, NOT the 'Dimension' header row (whose value is often 'Estimate').
+    Keeps descriptive prefixes so 'Desk W' and 'Shelf W' don't both become 'Width'."""
+    parts = []
     for k, v in specs.items():
-        if re.search(r"dimension|size|measurement", k, re.I):
-            return v
-    # Variant options are usually colour/config ("Black", "Pink", "Without mirror",
-    # "Estimate") — only use one as a dimension if it actually encodes a size, i.e.
-    # it contains a number (e.g. "4 seater - 2.5ft by 5ft", "2 Door - 4' by 6.5'").
-    for v in p.get("variants") or []:
-        for opt in ("option1", "option2"):
-            val = (v.get(opt) or "").strip()
-            if val and val.lower() != "default title" and re.search(r"\d", val):
-                return val
+        val = (v or "").strip()
+        if not _is_measurement(val):
+            continue
+        axis = DIM_AXIS_RE.search(k)
+        letter = DIM_LETTER_RE.match(k)
+        if axis:
+            axis_word = axis.group(1).capitalize()
+        elif letter:
+            axis_word = LETTER_AXIS.get(letter.group(1).upper())
+        else:
+            continue
+        entry = f"{_axis_label(k, axis_word)}: {val}"
+        if entry not in parts:
+            parts.append(entry)
+    return ", ".join(parts)
+
+
+def _dims_from_options(p):
+    """Some products encode size in an option's values, one size PER
+    configuration — dining sets ('Dinning Table Seats': '4 seater - 2.5ft by
+    5ft' ...) and bedroom wardrobes ('Cupboard & Wardrobe': 'Without Cupboard',
+    "2 Door - 4' by 6.5'", ...). Present every SIZED value clearly (dropping
+    non-size choices like 'Without Cupboard'), keeping the config as a
+    meaningful label. Requires >=2 sized values so a stray number in, say, a
+    colour option can't masquerade as a dimension."""
+    for opt in p.get("options") or []:
+        vals = [str(x).strip() for x in (opt.get("values") or []) if str(x).strip()]
+        sized = [v for v in vals if _is_measurement(v)]
+        if len(sized) < 2:
+            continue
+        out = []
+        for v in sized:
+            m = re.match(r"\s*(.+?)\s*[-–—:]\s*(.+)", v)   # "<config> - <size>"
+            if m and MEASUREMENT_RE.search(m.group(2)):
+                cfg = re.sub(r"\s+", " ", m.group(1)).strip()
+                size = re.sub(r"\s+by\s+", " x ", m.group(2).strip(), flags=re.I)
+                out.append(f"{cfg}: {size}")
+            else:
+                out.append(re.sub(r"\s+by\s+", " x ", v, flags=re.I))
+        if out:
+            return "; ".join(out)
     return ""
+
+
+def dimensions_of(p, specs):
+    # 1. Real per-axis measurements from the spec table (W/D/H/L rows).
+    axes = _dims_from_spec_axes(specs)
+    if axes:
+        return axes
+    # 2. A single 'Dimensions/Size/Measurement' spec value — but only if it is an
+    #    actual measurement, never a placeholder like 'Estimate'.
+    for k, v in specs.items():
+        if re.search(r"dimension|size|measurement", k, re.I) and _is_measurement(v):
+            return v.strip()
+    # 3. Per-configuration size options (dining sets etc.).
+    return _dims_from_options(p)
 
 
 def category_of(p):
