@@ -112,17 +112,20 @@ def _int_price(v):
 
 
 SEAT_COUNT_RE = re.compile(r"^\s*(\d+(?:\s*\+\s*\d+)*)\s*seaters?\s*$", re.I)
+SINGLE_SEATER_RE = re.compile(r"^\s*single\s*seater\s*$", re.I)
+PAIR_SEATER_RE = re.compile(r"^\s*pair\s*of\s*single\s*seaters?\s*$", re.I)
 
 
 def seat_count(value):
-    """Parse a 'Number of Seats' option value into a total seat count, but ONLY
-    for genuine continuous-sofa configurations ('2 seater', '3 + 2 Seater',
-    '3 + 2 + 1 + 1 Seater'). Deliberately excludes 'Single Seater' and 'Pair of
-    Single Seaters' — those are a separate standalone-armchair SKU bundled onto
-    the same product page, priced on different economics, and mixing them in
-    would corrupt the per-seat rate (verified on real data: they break the
-    otherwise-perfectly-linear PKR/seat pattern of the true sofa configs)."""
-    m = SEAT_COUNT_RE.match((value or "").strip())
+    """Parse a 'Number of Seats' option value into a total seat count — covers
+    every real form seen on the site: 'Single Seater' (1), 'Pair of Single
+    Seaters' (2), 'N seater', and 'N + M [+ ...] Seater' (summed)."""
+    v = (value or "").strip()
+    if SINGLE_SEATER_RE.match(v):
+        return 1
+    if PAIR_SEATER_RE.match(v):
+        return 2
+    m = SEAT_COUNT_RE.match(v)
     if not m:
         return None
     return sum(int(x) for x in m.group(1).split("+"))
@@ -130,31 +133,30 @@ def seat_count(value):
 
 def per_seat_price(p, variants):
     """If this product has a genuine seat-count option (e.g. Shopify option
-    named 'Number of Seats' with values like '2 seater' / '3 + 2 Seater'),
-    return (rate_per_seat, True). Each seat-count config is priced separately
-    on the site, but they're normally linear (PKR/seat is constant) — take the
-    most common ratio (mode), so one-off pricing typos don't skew it; on a
-    genuine tie, use the smallest ratio found (favours the customer). Returns
-    (None, False) when no such option exists — the product should then be
-    quoted as a flat, whole-set price, never 'per seat' (e.g. a sectional with
-    a single 'Default Title' variant has ONE price for the entire set)."""
-    ratios = []
+    named 'Number of Seats'), return (rate_per_seat, True): the headline price
+    must match something a customer can ACTUALLY buy, so use the CHEAPEST
+    listed configuration's own price, divided by its own seat count — not a
+    marginal/bulk rate computed across the larger configs, which doesn't
+    correspond to any real purchase (verified: for a family priced Single
+    Seater 45k / 2 seater 70k / 3 seater 105k / 3+2 175k / 3+2+1+1 245k, the
+    linear 2-seater-and-up rate is 35k/seat, but nothing is actually sold at
+    35k — the cheapest real purchase is the 45k Single Seater, so THAT is the
+    correct 'per seat' headline). Returns (None, False) when no seat-count
+    option exists at all — quote a flat whole-set price instead (e.g. a
+    sectional with a single 'Default Title' variant)."""
+    priced = []
     for v in variants:
         for opt in ("option1", "option2", "option3"):
             n = seat_count(v.get(opt))
             if n:
                 amt = _int_price(v.get("price"))
                 if amt:
-                    ratios.append(amt / n)
+                    priced.append((amt, n))
                 break
-    if not ratios:
+    if not priced:
         return None, False
-    counts = {}
-    for r in ratios:
-        counts[r] = counts.get(r, 0) + 1
-    best = max(counts.values())
-    candidates = sorted(r for r, c in counts.items() if c == best)
-    return int(round(candidates[0])), True
+    cheapest_amt, cheapest_seats = min(priced, key=lambda t: t[0])
+    return int(round(cheapest_amt / cheapest_seats)), True
 
 
 def price_of(p):

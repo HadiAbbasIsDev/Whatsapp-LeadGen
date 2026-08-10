@@ -488,7 +488,7 @@
       "name": "Sleevo BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 32000,
+        "amount": 33000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -533,7 +533,7 @@
       "name": "Veloura BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 32000,
+        "amount": 33000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -698,7 +698,7 @@
       "name": "CloudNest BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 32000,
+        "amount": 37500,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -783,7 +783,7 @@
       "name": "Elite Comforter BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 40000,
+        "amount": 42000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -828,7 +828,7 @@
       "name": "Convertix BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 32000,
+        "amount": 34000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -913,7 +913,7 @@
       "name": "CasaFlex BedSofa",
       "category": "sofa bed, sofacumbed",
       "price": {
-        "amount": 40000,
+        "amount": 42000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -1544,7 +1544,7 @@
       "name": "The Elysian Cloud Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -1782,7 +1782,7 @@
       "name": "The Ivory Haven Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -2021,7 +2021,7 @@
       "name": "The Muse Lounger Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -2260,7 +2260,7 @@
       "name": "The Sculptura Lounge Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -2499,7 +2499,7 @@
       "name": "The Cloud Luxe Curve Sofa V1",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -2738,7 +2738,7 @@
       "name": "The Cloud Luxe Curve Sofa V4",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -2977,7 +2977,7 @@
       "name": "The Cloud Luxe Curve Sofa V3",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -3216,7 +3216,7 @@
       "name": "The Cloud Luxe Sofa V2",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -3455,7 +3455,7 @@
       "name": "The Curve Luxe Sofa",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -13147,7 +13147,7 @@
       "name": "Vera Sofa Set",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -13380,7 +13380,7 @@
       "name": "Mocha Sofa Set",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -13610,7 +13610,7 @@
       "name": "Lisbon Sofa Set",
       "category": "Sofa Sets",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -13840,7 +13840,7 @@
       "name": "Astor Sofa Set",
       "category": "Sofa Set",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -14410,7 +14410,7 @@
       "name": "Stella Sofa Set",
       "category": "Sofa Set",
       "price": {
-        "amount": 35000,
+        "amount": 45000,
         "currency": "PKR"
       },
       "per_seat": true,
@@ -14643,7 +14643,7 @@
       "name": "Anka Sofa Set",
       "category": "Sofa Set",
       "price": {
-        "amount": 6429,
+        "amount": 35000,
         "currency": "PKR"
       },
       "per_seat": true,
