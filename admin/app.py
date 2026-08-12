@@ -776,7 +776,7 @@ PAGE = r"""<!doctype html>
       <h2 style="margin:0">Customers</h2>
       <span class="foot" id="total"></span>
       <div class="grow"></div>
-      <input type="search" id="q" placeholder="Search name, number, notes…" oninput="render()">
+      <input type="search" id="q" placeholder="Search number (0345… or +92…), name, notes…" oninput="render()">
       <button class="ghost" onclick="exportCSV()">⬇ CSV</button>
     </div>
     <div class="tablewrap">
@@ -870,11 +870,30 @@ function chips(){
 }
 function setFilter(f){ filter=f; render(); }
 
+// Match a phone however it was typed. Numbers are stored E.164 (+923452368623)
+// but people type "03452368623", "0345 2368623", "+92 345-2368623" etc. Compare
+// digits-only, and treat a local leading 0 as the 92 country code, so every one
+// of those finds the same customer.
+function phoneKey(s){
+  let d = String(s||'').replace(/\D/g,'');
+  if(d.startsWith('00')) d = d.slice(2);
+  if(d.startsWith('0')) d = '92' + d.slice(1);   // 0345... -> 92345...
+  return d;
+}
 function visibleRows(){
-  const q = (document.getElementById('q').value||'').toLowerCase().trim();
+  const raw = (document.getElementById('q').value||'').trim();
+  const q = raw.toLowerCase();
   let rows = (DATA.customers||[]).slice();
   if(filter!=='all') rows = rows.filter(x=>(x.category||'').toLowerCase()===filter);
-  if(q) rows = rows.filter(x=>[x.name,x.phone,x.email,x.notes,x.category,x.status].some(v=>String(v||'').toLowerCase().includes(q)));
+  if(q){
+    const qd = phoneKey(raw);                     // digits the user typed
+    const numeric = qd.length >= 3 && /\d/.test(raw);
+    rows = rows.filter(x=>{
+      if(numeric && phoneKey(x.phone).includes(qd)) return true;
+      return [x.name,x.phone,x.email,x.notes,x.category,x.status]
+        .some(v=>String(v||'').toLowerCase().includes(q));
+    });
+  }
   rows.sort((a,b)=>{
     let av=a[sortK], bv=b[sortK];
     if(sortK==='lead_score'){ av=av==null?-1:+av; bv=bv==null?-1:+bv; }
