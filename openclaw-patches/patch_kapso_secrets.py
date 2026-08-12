@@ -66,7 +66,22 @@ function __scLoadSecrets() {
     __scSecrets = [...vals].filter(Boolean);
     return __scSecrets;
 }
-function __scScrub(text) {
+// Admins (workspace/data/admins.json) legitimately need to see customer phone
+// numbers — e.g. "give me the numbers of all junk leads". Customers must never
+// see staff/owner numbers. So the phone redaction below is applied ONLY when
+// the recipient is not an admin. Re-read per call (cheap, and picks up admins
+// added via the dashboard without a restart).
+function __scIsAdmin(to) {
+    try {
+        const d = String(to || "").replace(/\D/g, "");
+        if (!d) return false;
+        const raw = __scRead((process.env.WA_LEADGEN_DIR || (__scHome() + "/wa-lead-gen")) +
+                             "/workspace/data/admins.json", "utf8");
+        const list = (JSON.parse(raw).admins || []).map((n) => String(n).replace(/\D/g, ""));
+        return list.includes(d);
+    } catch { return false; }
+}
+function __scScrub(text, to) {
     try {
         if (typeof text !== "string" || !text) return text;
         let out = text, hit = false;
@@ -94,10 +109,12 @@ function __scScrub(text) {
             // looks like a Pakistani mobile is redacted rather than dropped, so
             // the surrounding sentence still makes sense.
             const PUBLIC_NUMS = ["923326189654", "923059756149"];
-            out = out.replace(/(\+?92[\s-]?3\d{2}[\s-]?\d{7})|(\b03\d{2}[\s-]?\d{7}\b)/g, (mm) => {
-                const digits = mm.replace(/\D/g, "").replace(/^0/, "92");
-                return PUBLIC_NUMS.includes(digits) ? mm : "our team";
-            });
+            if (!__scIsAdmin(to)) {
+                out = out.replace(/(\+?92[\s-]?3\d{2}[\s-]?\d{7})|(\b03\d{2}[\s-]?\d{7}\b)/g, (mm) => {
+                    const digits = mm.replace(/\D/g, "").replace(/^0/, "92");
+                    return PUBLIC_NUMS.includes(digits) ? mm : "our team";
+                });
+            }
             const labelDump = (line) => {
                 const m = String(line).match(LABEL);
                 return !!m && new Set(m.map((s) => s.toLowerCase())).size >= 3;
@@ -127,7 +144,7 @@ BODY_ANCHOR = """    const client = await (params.clientFactory ?? createKapsoCl
         to,
         body: params.text,"""
 BODY_REPLACE = """    const client = await (params.clientFactory ?? createKapsoClient)(account, params.signal);
-    const __scBody = __scScrub(params.text);
+    const __scBody = __scScrub(params.text, to);
     // Nothing left after scrubbing => the message was pure internal narration.
     // Skip the send rather than deliver an empty bubble to the customer.
     if (typeof __scBody === "string" && !__scBody.trim()) {
@@ -161,8 +178,8 @@ def main():
     # Also scrub MEDIA captions — a leak/error sent as a photo caption would
     # otherwise bypass the text scrubber entirely.
     cap_before = out.count("caption: params.text")
-    out = out.replace("caption: params.text", "caption: __scScrub(params.text)")
-    out = out.replace("{ caption: params.text }", "{ caption: __scScrub(params.text) }")
+    out = out.replace("caption: params.text", "caption: __scScrub(params.text, to)")
+    out = out.replace("{ caption: params.text }", "{ caption: __scScrub(params.text, to) }")
     print(f"scrubbed {cap_before} media-caption site(s)")
     open(TARGET, "w").write(out)
 
