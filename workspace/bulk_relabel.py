@@ -78,6 +78,9 @@ def main():
     ap.add_argument("--no-reply-hours", type=float, required=True,
                     help="only chats with no inbound message from the customer in the last N hours")
     ap.add_argument("--apply", action="store_true", help="actually make the changes (default: preview)")
+    ap.add_argument("--confirm-token", default="",
+                    help="required with --apply: the token printed by the preview run, which the "
+                         "admin must approve first (stops a bulk change happening unreviewed)")
     ap.add_argument("--include-buyers", action="store_true",
                     help="also sweep customers who have an order/lead on record (default: protect them)")
     ap.add_argument("--limit", type=int, default=1000)
@@ -132,6 +135,15 @@ def main():
     if not args.include_buyers:
         rows = [r for r in rows if digits(r["phone"]) not in buyers]
 
+    # Token binds an --apply to the exact operation the admin reviewed. If the
+    # matched set changes (someone replies, labels move), the token changes and
+    # the apply is refused — so a bulk change can never run unreviewed.
+    import hashlib
+    token = hashlib.sha256(
+        ("|".join([",".join(sorted(from_cats)), to_cat, str(args.no_reply_hours)]
+                  + sorted(r["phone"] for r in rows))).encode()
+    ).hexdigest()[:8]
+
     label = f"no customer reply in {args.no_reply_hours:g}h"
     if not rows:
         print(f"No chats match: {' / '.join(from_cats)} with {label}. Nothing to do.")
@@ -150,8 +162,15 @@ def main():
                 print(f"  {r['phone']}  [{r['category']}]")
         if swept_protected:
             print(f"NOTE: includes human-owned/finished labels: {', '.join(swept_protected)}")
-        print("\nNothing changed. Re-run with --apply to make these changes.")
+        print(f"\nNothing changed. Show this list to the admin and get their OK, then run:")
+        print(f"  --apply --confirm-token {token}")
         return 0
+
+    if args.confirm_token != token:
+        print("[FAIL] --apply needs the --confirm-token from a preview of this exact set.")
+        print("Run the same command WITHOUT --apply first, show the admin the list,")
+        print(f"and only apply once they approve. Correct token for this set: {token}")
+        return 1
 
     moved = failed = 0
     for r in rows:

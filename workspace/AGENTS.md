@@ -287,11 +287,12 @@ When an **admin** asks to relabel MANY chats at once — "all leads that haven't
 python3 /home/it-admin/wa-lead-gen/workspace/bulk_relabel.py --requester "<sender_id>" \
   --from "new customer,followup" --to junk --no-reply-hours 48
 
-# then apply, only after the admin confirms
+# then apply — ONLY after the admin has seen the list and said yes.
+# --confirm-token is printed by the preview; --apply is refused without it.
 python3 /home/it-admin/wa-lead-gen/workspace/bulk_relabel.py --requester "<sender_id>" \
-  --from "new customer,followup" --to junk --no-reply-hours 48 --apply
+  --from "new customer,followup" --to junk --no-reply-hours 48 --apply --confirm-token <token>
 ```
-- **Show the admin the preview and ask them to confirm before running `--apply`.** It is a bulk, hard-to-undo change.
+- **You MUST run the preview, send the admin the list, and WAIT for their reply before applying.** Do not run both steps in one turn. It is a bulk, hard-to-undo change, and the token is per-exact-set so it changes if the list changes.
 - It protects customers who have an order/lead on record (they are listed as PROTECTED and skipped) — mention that if any appear.
 - Admin-gated; refuses anyone not in `admins.json`. Send its output as-is.
 
