@@ -102,6 +102,7 @@ python3 /home/it-admin/wa-lead-gen/workspace/replied_to.py --phone "<customer_ph
 ```
 - `PRODUCT: <id> <name> [variant] — <price> — <category>` → that's the exact product. Answer about THAT product, quoting the price shown (for a catalogue item, the specific variant's price they actually saw — e.g. "3 + 2 + 1 + 1 Seater — PKR 245,000" — never the cheaper base price). **Done — do not run step 2.**
 - `PHOTO: <url>` → they replied to a photo THEY sent earlier. Re-identify it: `match_photo.py --url "<the URL>"`, then send those products with `send_product.py`. **Done — do not run step 2.**
+- `AD: they are asking about the ad they clicked` → they replied to their **own ad-click greeting**, so the ad IS the product they mean. It prints the exact command — run that (`match_photo.py --url "<ad image>"`), then send those products. **Never reply "which product do you mean?" to one of these — the ad already tells you.** **Done — do not run step 2.**
 - `NO_REPLY_CONTEXT` → they were NOT replying to a specific message. This is the NORMAL result for an ad click — **continue to step 2, do not answer yet.**
 
 **Step 2 — ONLY if step 1 said NO_REPLY_CONTEXT — check if they clicked an ad:**

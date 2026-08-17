@@ -189,6 +189,31 @@ def main():
                                reason="replied to a photo they sent — hand to a human (photos are not auto-identified)")
                     print(json.dumps(out) if args.json else f"HANDOFF — {out['reason']}")
                     return 1
+                ref = own.get("referral") or {}
+                if ref:
+                    # They replied to their OWN ad-click greeting ("Hello! Can I get
+                    # more info on this?"). That message carries the ad they came
+                    # from, so this IS answerable — the ad creative identifies the
+                    # product. Without this the bot kept asking "which product?"
+                    # even though the customer was pointing at the ad every time.
+                    note = " / ".join(x for x in (ref.get("headline"), ref.get("body")) if x)
+                    img = ref.get("image_url")
+                    out.update(ok=True, source="ad_click", ad_text=note[:300],
+                               ad_image_url=img,
+                               reason="replied to the ad they clicked")
+                    if args.json:
+                        print(json.dumps(out))
+                    else:
+                        print("AD: they are asking about the ad they clicked"
+                              + (f" ({note[:120]})" if note else ""))
+                        # Hand back the EXACT ad image. --phone would miss it once
+                        # the ad click is older than its lookback window, which is
+                        # common when the chat continues for hours.
+                        if img:
+                            print(f'  Run: match_photo.py --url "{img}"  → then send those products')
+                        else:
+                            print(f'  Run: match_photo.py --phone "{args.phone}"')
+                    return 0
             p = product_from_text(content, catalog)
             if p:
                 out.update(ok=True, id=str(p["id"]), name=p["name"],
