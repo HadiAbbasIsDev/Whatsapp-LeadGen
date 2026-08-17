@@ -51,6 +51,9 @@ SEEN_MAX = 1000
 PAGE_LIMIT = 50
 MAX_PAGES = 10
 WATERMARK_GRACE = 120  # seconds
+# How long to wait for Kapso to finish transcribing a voice note before
+# delivering it untranscribed (see poll_cycle).
+TRANSCRIPT_WAIT = 45  # seconds
 # Backlog handling (e.g. bot off overnight): a message older than this when we
 # pick it up is a catch-up, not real-time. For those we skip any chat a HUMAN
 # already replied to while we were off (their last outbound is newer than the
@@ -125,6 +128,20 @@ def msg_id(m):
 
 def msg_ts(m):
     return to_epoch_seconds(first(m.get("timestamp"), m.get("created_at"), m.get("inserted_at"))) or 0
+
+
+def kapso_transcript(kapso_extra):
+    """Kapso's own voice-note transcript, if it has finished transcribing.
+    Seen as {"transcript": {"text": "..."}}; tolerate a plain string too."""
+    if not isinstance(kapso_extra, dict):
+        return None
+    for key in ("transcript", "transcription"):
+        tr = kapso_extra.get(key)
+        if isinstance(tr, dict):
+            tr = tr.get("text")
+        if isinstance(tr, str) and tr.strip():
+            return tr.strip()
+    return None
 
 
 _CATALOG_CACHE = None
@@ -207,6 +224,14 @@ def map_message(m):
         (m.get("content") or {}).get("text") if isinstance(m.get("content"), dict) else None,
         m.get("body"),
     )
+    if not text and mtype in ("audio", "voice"):
+        # Kapso transcribes voice notes itself (Urdu/Hindi/English) and returns it
+        # in kapso.transcript.text. Without this the agent only saw "Received a
+        # audio message", fell back to downloading the audio (which 401s on the
+        # Meta URL) and told the customer "sorry, I couldn't hear that". Kapso's
+        # transcript is more accurate and always available, so use it as the
+        # message text and treat the voice note like a normal message.
+        text = kapso_transcript(kapso_extra)
     if not text and mtype == "order" and isinstance(m.get("order"), dict):
         # Native catalog checkout has no text field at all — synthesize one so
         # the agent actually sees what was ordered (see order_summary_text).
@@ -371,6 +396,15 @@ def poll_cycle(state, dry_run=False):
         ts = msg_ts(m)
         if ts and ts < state["watermark"] - WATERMARK_GRACE:
             discard.append(mid)  # pre-watermark history
+            continue
+        # Kapso transcribes voice notes a few seconds after they arrive. If the
+        # transcript isn't ready yet, leave the message unseen and retry next
+        # cycle rather than delivering a bare "Received a audio message" (which
+        # makes the bot apologise instead of answering). Bounded, so a voice note
+        # Kapso never transcribes is still delivered rather than lost.
+        if (str(first(m.get("message_type"), m.get("type"), "")).lower() in ("audio", "voice")
+                and not kapso_transcript(m.get("kapso") if isinstance(m.get("kapso"), dict) else {})
+                and ts and (int(time.time()) - ts) < TRANSCRIPT_WAIT):
             continue
         event = map_message(m)
         if event is None:
